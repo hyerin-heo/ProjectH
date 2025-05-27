@@ -5,6 +5,7 @@
 
 APHPlayerController::APHPlayerController()
 {
+	bShowMouseCursor = true;
 }
 
 void APHPlayerController::PostInitializeComponents()
