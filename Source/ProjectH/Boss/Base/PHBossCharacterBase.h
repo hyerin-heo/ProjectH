@@ -57,37 +57,37 @@ protected:
 	
 
 	// current phase. only can set 0~7
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=Phase)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=Custom)
 	uint8 CurrentPhaseLevel;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=Common)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=Custom)
 	UPHBossDataAsset* DataAsset;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Common)
+	UPROPERTY()
 	TMap<uint8, FBossPhaseInfo> PhaseMap;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Common)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Custom)
 	float MaxHP;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Common)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Custom)
 	float HP;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Attack)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Custom)
 	uint8 bIsUnableToAttack:1;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Common)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Custom)
 	float DetectionRadius;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Attack)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Custom)
 	float AttackRange;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Common)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Custom)
 	float Speed;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Attack)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Custom)
 	float AttackSpeed;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Common)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Custom)
 	float Armor;
 	
 public:	
@@ -97,9 +97,9 @@ public:
 	float GetHpPercent() const {return HP / MaxHP;}
 private:
 	// Phase Trigger
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Phase, meta=(allowPrivateAccess="true"))
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category=Custom, meta=(allowPrivateAccess="true"))
 	EBossPhaseTriggerType TriggerType;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Phase, meta=(allowPrivateAccess="true"))
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category=Custom, meta=(allowPrivateAccess="true"))
 	float TriggerValue = 1.0f;
 
 	UPROPERTY()
