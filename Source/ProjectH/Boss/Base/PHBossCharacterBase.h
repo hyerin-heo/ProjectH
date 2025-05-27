@@ -8,6 +8,31 @@
 #include "ProjectH/DataAsset/PHBossDataAsset.h"
 #include "PHBossCharacterBase.generated.h"
 
+DECLARE_DELEGATE(FOnCommonAttackPattern);
+USTRUCT(BlueprintType)
+struct FCommonAttackPatternDelegateWrapper
+{
+	GENERATED_BODY()
+
+	FCommonAttackPatternDelegateWrapper() {}
+	FCommonAttackPatternDelegateWrapper(const FOnCommonAttackPattern& InDelegate)
+		: ItemDelegate(InDelegate) {}
+
+	FOnCommonAttackPattern ItemDelegate;
+};
+DECLARE_DELEGATE(FOnSpecialAttackPattern);
+USTRUCT(BlueprintType)
+struct FSpecialAttackPatternDelegateWrapper
+{
+	GENERATED_BODY()
+
+	FSpecialAttackPatternDelegateWrapper() {}
+	FSpecialAttackPatternDelegateWrapper(const FOnSpecialAttackPattern& InDelegate)
+		: ItemDelegate(InDelegate) {}
+
+	FOnSpecialAttackPattern ItemDelegate;
+};
+
 UCLASS()
 class PROJECTH_API APHBossCharacterBase : public ACharacter, public IPHBossPatternInterface
 {
@@ -25,22 +50,45 @@ protected:
 	virtual void SpecialPattern() override;
 	virtual void SetPhase(uint8 level) override;
 	
+	UPROPERTY()
+	TArray<FCommonAttackPatternDelegateWrapper> CommonAttackPatternActions;
+	UPROPERTY()
+	TArray<FSpecialAttackPatternDelegateWrapper> SpecialAttackPatternActions;
+	
 
 	// current phase. only can set 0~7
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Phase")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=Phase)
 	uint8 CurrentPhaseLevel;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Common")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=Common)
 	UPHBossDataAsset* DataAsset;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Common")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Common)
 	TMap<uint8, FBossPhaseInfo> PhaseMap;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Common")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Common)
 	float MaxHP;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Common")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Common)
 	float HP;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Attack)
+	uint8 bIsUnableToAttack:1;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Common)
+	float DetectionRadius;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Attack)
+	float AttackRange;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Common)
+	float Speed;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Attack)
+	float AttackSpeed;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Common)
+	float Armor;
 	
 public:	
 
@@ -49,7 +97,12 @@ public:
 	float GetHpPercent() const {return HP / MaxHP;}
 private:
 	// Phase Trigger
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Phase, meta=(allowPrivateAccess="true"))
 	EBossPhaseTriggerType TriggerType;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Phase, meta=(allowPrivateAccess="true"))
 	float TriggerValue = 1.0f;
+
+	UPROPERTY()
+	FTimerHandle PhaseTimerHandle;
 
 };

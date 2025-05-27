@@ -37,6 +37,16 @@ class PROJECTH_API UPHBossDataAsset : public UPrimaryDataAsset
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Common)
 	float MaxHp;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Common)
+	float DetectionRadius;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Common)
+	float AttackRange;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Common)
+	float Speed;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Common)
+	float AttackSpeed;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Common)
+	float Armor;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Phase")
 	TMap<uint8, FBossPhaseInfo> PhaseMap;
