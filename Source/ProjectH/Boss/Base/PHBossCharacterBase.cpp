@@ -1,12 +1,37 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "PHBossCharacterBase.h"
+#include "Boss/Base/PHBossCharacterBase.h"
 
 // Sets default values
 APHBossCharacterBase::APHBossCharacterBase()
 {
 
+}
+
+float APHBossCharacterBase::GetDetectionRadius()
+{
+	return DetectionRadius;
+}
+
+float APHBossCharacterBase::GetAttackRange()
+{
+	return AttackRange;
+}
+
+float APHBossCharacterBase::GetSpeed()
+{
+	return Speed;
+}
+
+float APHBossCharacterBase::GetAttackSpeed()
+{
+	return AttackSpeed;
+}
+
+float APHBossCharacterBase::GetArmor()
+{
+	return Armor;
 }
 
 // Called when the game starts or when spawned

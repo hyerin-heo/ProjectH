@@ -4,8 +4,8 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
-#include "ProjectH/Interface/Boss/PHBossPatternInterface.h"
-#include "ProjectH/DataAsset/PHBossDataAsset.h"
+#include "Interface/Boss/PHBossAIInterface.h"
+#include "DataAsset/PHBossDataAsset.h"
 #include "PHBossCharacterBase.generated.h"
 
 DECLARE_DELEGATE(FOnCommonAttackPattern);
@@ -34,21 +34,27 @@ struct FSpecialAttackPatternDelegateWrapper
 };
 
 UCLASS()
-class PROJECTH_API APHBossCharacterBase : public ACharacter, public IPHBossPatternInterface
+class PROJECTH_API APHBossCharacterBase : public ACharacter, public IPHBossAIInterface
 {
 	GENERATED_BODY()
 
 public:
 	// Sets default values for this character's properties
 	APHBossCharacterBase();
+	
+	virtual float GetDetectionRadius() override;
+	virtual float GetAttackRange() override;
+	virtual float GetSpeed() override;
+	virtual float GetAttackSpeed() override;
+	virtual float GetArmor() override;
 
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 	
-	virtual void CommonPattern() override;
-	virtual void SpecialPattern() override;
-	virtual void SetPhase(uint8 level) override;
+	virtual void CommonPattern();
+	virtual void SpecialPattern();
+	virtual void SetPhase(uint8 level);
 	
 	UPROPERTY()
 	TArray<FCommonAttackPatternDelegateWrapper> CommonAttackPatternActions;
