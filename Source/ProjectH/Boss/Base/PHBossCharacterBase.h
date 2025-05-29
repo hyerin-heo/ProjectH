@@ -47,12 +47,13 @@ public:
 	virtual float GetSpeed() override;
 	virtual float GetAttackSpeed() override;
 	virtual float GetArmor() override;
+	virtual bool IsPhase() override;
+	virtual void CommonPattern() override;
 
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 	
-	virtual void CommonPattern();
 	virtual void SpecialPattern();
 	virtual void SetPhase(uint8 level);
 	

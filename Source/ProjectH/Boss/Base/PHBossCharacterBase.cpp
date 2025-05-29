@@ -34,6 +34,51 @@ float APHBossCharacterBase::GetArmor()
 	return Armor;
 }
 
+bool APHBossCharacterBase::IsPhase()
+{
+	if (const FBossPhaseInfo* FoundInfo = PhaseMap.Find(CurrentPhaseLevel+1))
+	{
+		switch (FoundInfo->TriggerType)
+		{
+		case EBossPhaseTriggerType::HealthPercent:
+			{
+				if (GetHpPercent() < TriggerValue)
+				{
+					// @PHTODO 페이즈임
+					++CurrentPhaseLevel;
+					return true;
+				}
+				break;	
+			}
+		case EBossPhaseTriggerType::Timer:
+			{
+				if (!PhaseTimerHandle.IsValid())
+				{
+					GetWorldTimerManager().SetTimer(PhaseTimerHandle, [&]()
+					{
+						// @PHTODO 어떻게 해야할지 확인 필요
+						++CurrentPhaseLevel;
+						// return true;
+						// SpecialPattern();
+					}, TriggerValue, false);
+				}
+				break;
+			}
+		}
+		
+	}
+	return false;
+}
+
+void APHBossCharacterBase::CommonPattern()
+{
+	checkf(CommonAttackPatternActions.Num() > 0, TEXT("Common attack pattern action is empty!"));
+
+	int index = FMath::RandRange(0, CommonAttackPatternActions.Num() - 1);
+
+	CommonAttackPatternActions[index].ItemDelegate.Execute();
+}
+
 // Called when the game starts or when spawned
 void APHBossCharacterBase::BeginPlay()
 {
@@ -54,15 +99,6 @@ void APHBossCharacterBase::BeginPlay()
 		Armor = DataAsset->Armor;
 		bIsUnableToAttack = false;
 	}
-}
-
-void APHBossCharacterBase::CommonPattern()
-{
-	checkf(CommonAttackPatternActions.Num() > 0, TEXT("Common attack pattern action is empty!"));
-
-	int index = FMath::RandRange(0, CommonAttackPatternActions.Num() - 1);
-
-	CommonAttackPatternActions[index].ItemDelegate.Execute();
 }
 
 void APHBossCharacterBase::SpecialPattern()

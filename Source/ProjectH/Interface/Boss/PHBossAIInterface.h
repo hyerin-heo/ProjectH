@@ -27,4 +27,8 @@ public:
 	virtual float GetSpeed() = 0;
 	virtual float GetAttackSpeed() = 0;
 	virtual float GetArmor() = 0;
+
+	virtual bool IsPhase() = 0;
+
+	virtual void CommonPattern() = 0;
 };
