@@ -10,9 +10,13 @@
 #include "EnhancedInputComponent.h"
 #include "InputMappingContext.h"
 #include "EnhancedInputSubsystems.h"
+#include "ProjectH.h"
+#include "Engine/AssetManager.h"
+#include "GameFramework/PlayerState.h"
 
 // Sets default values
-APHCharacterBase::APHCharacterBase()
+APHCharacterBase::APHCharacterBase(const FObjectInitializer& ObjectInitializer)
+	:Super(ObjectInitializer)
 {
 	// SpringArm
 	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
@@ -43,6 +47,9 @@ APHCharacterBase::APHCharacterBase()
 	GetCharacterMovement()->MaxWalkSpeed = 500.f;
 	GetCharacterMovement()->BrakingDecelerationWalking = 2000.f;
 
+	//Montage
+	
+	
 	//Input Section.
 	static ConstructorHelpers::FObjectFinder<UInputMappingContext>InputMappingContextObject(TEXT("/Game/ProjectH/Input/IM_PlayerBase.IM_PlayerBase"));
 	if (InputMappingContextObject.Object)
@@ -54,6 +61,16 @@ APHCharacterBase::APHCharacterBase()
 	if (InputMouseClickRef.Object)
 	{
 		MouseClickMoveAction = InputMouseClickRef.Object;
+	}
+	static ConstructorHelpers::FObjectFinder<UInputAction> InputMouseClickStateActionRef(TEXT("/Game/ProjectH/Input/Actions/IA_ActionClick.IA_ActionClick"));
+	if (InputMouseClickStateActionRef.Object)
+	{
+		MouseClickStateAction = InputMouseClickStateActionRef.Object;
+	}
+	static ConstructorHelpers::FObjectFinder<UInputAction> InputAttackActionRef(TEXT("/Game/ProjectH/Input/Actions/IA_NormalAttack.IA_NormalAttack"));
+	if (InputAttackActionRef.Object)
+	{
+		AttackAction = InputAttackActionRef.Object;
 	}
 	
  	bReplicates = true;
@@ -80,6 +97,33 @@ void APHCharacterBase::BeginPlay()
 	
 }
 
+//Owner가 빙의 되는 함수.(클라이언트에서는 호출이 안된다.)
+void APHCharacterBase::PossessedBy(AController* NewController)
+{
+	Super::PossessedBy(NewController);
+
+	//서버의 경우 로컬 플레이어를 PossessedBy를 통해서 진행.
+	UpdateMeshFromPlayerState();
+
+	bActioning = false;
+	CurrentActionType = EPlayerActionType::None;
+}
+
+void APHCharacterBase::OnRep_Owner()
+{
+	Super::OnRep_Owner();
+}
+
+void APHCharacterBase::PostNetInit()
+{
+	Super::PostNetInit();
+}
+
+void APHCharacterBase::OnRep_PlayerState()
+{
+	Super::OnRep_PlayerState();
+}
+
 // Called every frame
 void APHCharacterBase::Tick(float DeltaTime)
 {
@@ -95,10 +139,22 @@ void APHCharacterBase::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 	UEnhancedInputComponent* EnhancedInputComponent = CastChecked<UEnhancedInputComponent>(PlayerInputComponent);
 
 	EnhancedInputComponent->BindAction(MouseClickMoveAction, ETriggerEvent::Triggered, this, &APHCharacterBase::MouseClickMove);
+	EnhancedInputComponent->BindAction(MouseClickStateAction, ETriggerEvent::Triggered, this, &APHCharacterBase::SetAction);
+	EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Triggered, this, &APHCharacterBase::NormalAttackUI);
 }
 
 void APHCharacterBase::MouseClickMove()
 {
+	if (bActioning)
+	{
+		CurrentActionType = EPlayerActionType::None;
+		bActioning = false;
+		PH_LOG(LogPHCharacter, Log, TEXT("NormalAttack Or Skill Canceled"));
+		//@PHTODO : 나중에 스킬를 눌르고 스킬 범위를 취소할때 오른쪽 눌르면 이동이 아니고 취소되게 해야한다.
+		
+		return;
+	}
+	
 	APlayerController* const PC = Cast<APlayerController>(GetController());
 	
 	if (!PC) return;
@@ -134,5 +190,78 @@ void APHCharacterBase::SetNewDirection(FVector NewDirection)
 	{
 		UAIBlueprintHelperLibrary::SimpleMoveToLocation(GetController(), NewDirection);
 	}
+}
+
+void APHCharacterBase::SetAction()
+{
+	if (!bActioning) return; //아무런 행동을 안하고 있으면  return.
+	
+	bActioning = false;
+	switch (CurrentActionType)
+	{
+		case EPlayerActionType::NormalAttack:
+			{
+				NormalAttack();
+				break;
+			}
+			
+	}
+}
+
+void APHCharacterBase::NormalAttackUI()
+{
+	//현재 무슨 행동중이면 return.
+	if (bActioning) return;
+	
+	CurrentActionType = EPlayerActionType::NormalAttack;
+	bActioning = true;
+	PH_LOG(LogPHCharacter, Log, TEXT("SHOW Base NormalAttackUI"));
+}
+
+void APHCharacterBase::NormalAttack()
+{
+	PH_LOG(LogPHCharacter, Log, TEXT("Base NormalAttack!!!!"));
+	
+}
+
+void APHCharacterBase::MeshLoadCompleted()
+{
+	if (MeshHandle.IsValid())
+	{
+		USkeletalMesh* NewMesh = Cast<USkeletalMesh>(MeshHandle->GetLoadedAsset());
+		if (NewMesh)
+		{
+			GetMesh()->SetSkeletalMesh(NewMesh);
+			GetMesh()->SetHiddenInGame(false);
+		}
+	}
+
+	MeshHandle->ReleaseHandle();
+}
+
+void APHCharacterBase::UpdateMeshFromPlayerState()
+{
+	// @PHTODO: 나중에 플레이어가 고른 캐릭터로 매쉬 로드 해야함.
+	//PlayerID를 활용해서 인덱스 값 설정.()
+	//int32 MeshIndex = FMath::Clamp(GetPlayerState()->GetPlayerId() % PlayerMeshes.Num(), 0, PlayerMeshes.Num() - 1);
+
+	if (PlayerMeshes.Num() <= 0)
+	{
+		PH_LOG(LogPHCharacter, Log, TEXT("Is Not PlayerCharacterMeshes"));
+		return;
+	}
+
+	int32 MeshIndex = FMath::RandRange(0, PlayerMeshes.Num() - 1);
+	
+	
+	MeshHandle = UAssetManager::Get().GetStreamableManager().RequestAsyncLoad(PlayerMeshes[MeshIndex], FStreamableDelegate::CreateUObject(this, &APHCharacterBase::MeshLoadCompleted));
+}
+
+void APHCharacterBase::SetDead()
+{
+}
+
+void APHCharacterBase::PlayDeadAnimation()
+{
 }
 
