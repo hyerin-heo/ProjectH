@@ -6,6 +6,8 @@
 #include "UObject/Interface.h"
 #include "PHBossAIInterface.generated.h"
 
+DECLARE_DELEGATE(FAIPhaseFinished);
+
 // This class does not need to be modified.
 UINTERFACE(MinimalAPI)
 class UPHBossAIInterface : public UInterface
@@ -31,4 +33,6 @@ public:
 	virtual bool IsPhase() = 0;
 
 	virtual void CommonPattern() = 0;
+	virtual void SpecialPattern() = 0;
+	virtual void SetAIPhaseDelegate(const FAIPhaseFinished& InOnPhaseFinished) = 0;
 };

@@ -108,6 +108,9 @@ void APHBossCharacterBase::SpecialPattern()
 	int index = FMath::RandRange(0, SpecialAttackPatternActions.Num() - 1);
 
 	SpecialAttackPatternActions[index].ItemDelegate.Execute();
+
+	// @PHTODO pattern 공격 끝났을 시 delegate call.
+	// OnPhaseFinished.Execute();
 }
 
 void APHBossCharacterBase::SetPhase(uint8 level)
@@ -126,5 +129,10 @@ void APHBossCharacterBase::SetPhase(uint8 level)
 			}, TriggerValue, false);
 		}
 	}
+}
+
+void APHBossCharacterBase::SetAIPhaseDelegate(const FAIPhaseFinished& InOnPhaseFinished)
+{
+	OnPhaseFinished = InOnPhaseFinished;
 }
 

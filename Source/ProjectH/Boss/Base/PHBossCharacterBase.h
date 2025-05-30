@@ -49,13 +49,16 @@ public:
 	virtual float GetArmor() override;
 	virtual bool IsPhase() override;
 	virtual void CommonPattern() override;
+	virtual void SpecialPattern() override;
 
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
-	
-	virtual void SpecialPattern();
 	virtual void SetPhase(uint8 level);
+
+	virtual void SetAIPhaseDelegate(const FAIPhaseFinished& InOnPhaseFinished) override;
+
+	FAIPhaseFinished OnPhaseFinished;
 	
 	UPROPERTY()
 	TArray<FCommonAttackPatternDelegateWrapper> CommonAttackPatternActions;
