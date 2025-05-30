@@ -21,6 +21,10 @@ void APHPlayerController::PostNetInit()
 void APHPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
+
+	//마우스 클릭 이동이라 필요 없음.
+	//FInputModeGameOnly GameOnlyInputMode;
+	//SetInputMode(GameOnlyInputMode);	
 }
 
 void APHPlayerController::OnPossess(APawn* InPawn)

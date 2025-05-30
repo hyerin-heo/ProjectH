@@ -42,8 +42,10 @@ protected:
 
 	void MeshLoadCompleted();
 	void UpdateMeshFromPlayerState();
-
+	
 	//State Section.
+	void SetActionEnd(UAnimMontage* TargetMontage, bool IsProperlyEnded);
+	void SetMontageEndDelegate();
 	virtual void SetDead();
 	void PlayDeadAnimation();
 	
@@ -53,17 +55,43 @@ public:
 
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+	//프로퍼티 리플리케이션
+	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
 
 	//Input FuncSection.
 public:
 	void MouseClickMove();
-	void SetNewDirection(FVector NewDirection);
+	void RotateToCursor();
+	void SetNewLocation(FVector NewLocation);
 
 	// Attack/Skill Action
 	void SetAction();
 	//Attack.
 	virtual void NormalAttackUI();
 	virtual void NormalAttack();
+
+	//Server RPC
+	UFUNCTION(Server, Unreliable)
+	void ServerRPCSetNewLocation(FVector NewLocation);
+	UFUNCTION(Server, Unreliable)
+	void ServerRPCSetActionTargetRotation(FRotator TargetRotation);
+
+	UFUNCTION(Server, Unreliable)
+	void ServerRPCNormalAttack();
+
+	//clientRPC
+	UFUNCTION(Client, Unreliable)
+	void ClientRPCPlayAnimation(APHCharacterBase* CharacterPlayer);
+
+	//MulticastRPC
+	UFUNCTION(NetMulticast, Unreliable)
+	void MulticastRPCSetNewLocation(FVector NewLocation);
+	UFUNCTION(NetMulticast, Unreliable)
+	void MulticastRPCAttack();
+	
+	//On_RepFunction
+	UFUNCTION()
+	void OnRep_ActionTargetRotation();
 	
 protected:
 	// Camera Section
@@ -103,11 +131,16 @@ protected:
 
 protected:
 	//어택/스킬을 몽타주에서 실행 시켜줄때 해당 FName을 활용하여 Montage_JumpToSection을 호출.
+	UPROPERTY(Replicated)
 	FName PlaySectionName = "";
 
 	EPlayerActionType CurrentActionType;
 	//현재 공격/스킬을 사용할려고 누른 상태인지를 체크할 bool값.
-	int8 bActioning : 1;
+	UPROPERTY(Replicated)
+	uint8 bActioning : 1;
+
+	UPROPERTY(ReplicatedUsing=OnRep_ActionTargetRotation)
+	FRotator ActionTargetRotation;
 
 	//CharacterMesh Section.
 	//비동기식으로 로딩 하기위해 FStreamableHandle사용. 

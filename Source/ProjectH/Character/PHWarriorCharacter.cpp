@@ -4,6 +4,7 @@
 #include "Character/PHWarriorCharacter.h"
 
 #include "ProjectH.h"
+#include "GameFramework/CharacterMovementComponent.h"
 
 APHWarriorCharacter::APHWarriorCharacter(const FObjectInitializer& ObjectInitializer)
 	:Super(ObjectInitializer)
@@ -13,6 +14,7 @@ APHWarriorCharacter::APHWarriorCharacter(const FObjectInitializer& ObjectInitial
 	{
 		ActionMontage = ActionMontageRef.Object;
 	}
+	bReplicates = true;
 }
 
 void APHWarriorCharacter::Tick(float DeltaTime)
@@ -28,11 +30,14 @@ void APHWarriorCharacter::NormalAttackUI()
 
 void APHWarriorCharacter::NormalAttack()
 {
-	PlaySectionName = "NormalAttack";
-	PH_LOG(LogPHCharacter, Log, TEXT("SHOW NormalAttack!!!!!!"));
 	Super::NormalAttack();
+	
+	if (!HasAuthority())
+	{
+	
+		PlayAnimMontage(ActionMontage, 1.0f, PlaySectionName);
+		SetMontageEndDelegate();	
+	}
 
-	PlayAnimMontage(ActionMontage, 1.0f, PlaySectionName);
-	
-	
+	ServerRPCNormalAttack();
 }
