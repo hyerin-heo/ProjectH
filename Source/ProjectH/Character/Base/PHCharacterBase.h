@@ -13,7 +13,7 @@ enum class EPlayerActionType : uint8
 {
 	None = 0,
 	NormalAttack,
-	Dodge,
+	Evasion,
 	Skill1,
 	Skill2,
 	Skill3,
@@ -39,6 +39,7 @@ protected:
 	virtual void PostNetInit() override;
 	//플레이어 스테이트가 클라이언트에 동기화 될때 호출.
 	virtual void OnRep_PlayerState() override;
+	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override; 
 
 	void MeshLoadCompleted();
 	void UpdateMeshFromPlayerState();
@@ -69,7 +70,19 @@ public:
 	//Attack.
 	virtual void NormalAttackUI();
 	virtual void NormalAttack();
+	//Evasion(회피)
+	virtual void Evasion();
+	//Skill
+	virtual void Skill1UI();
+	virtual void Skill1();
+	virtual void Skill2UI();
+	virtual void Skill2();
+	virtual void Skill3UI();
+	virtual void Skill3();
+	virtual void Skill4UI();
+	virtual void Skill4();
 
+	
 	//Server RPC
 	UFUNCTION(Server, Unreliable)
 	void ServerRPCSetNewLocation(FVector NewLocation);
@@ -92,6 +105,8 @@ public:
 	//On_RepFunction
 	UFUNCTION()
 	void OnRep_ActionTargetRotation();
+	UFUNCTION()
+	void OnRep_MeshIndex();
 	
 protected:
 	// Camera Section
@@ -117,7 +132,7 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, Meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<class UInputAction> AttackAction;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, Meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<class UInputAction> DodgeAction;//회피(Space Bar).
+	TObjectPtr<class UInputAction> EvasionAction;//회피(Space Bar).
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, Meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<class UInputAction> Skill1Action;
@@ -139,6 +154,9 @@ protected:
 	UPROPERTY(Replicated)
 	uint8 bActioning : 1;
 
+	UPROPERTY(ReplicatedUsing= OnRep_MeshIndex)
+	int32 MeshIndex;
+
 	UPROPERTY(ReplicatedUsing=OnRep_ActionTargetRotation)
 	FRotator ActionTargetRotation;
 
@@ -147,5 +165,8 @@ protected:
 	TSharedPtr<FStreamableHandle> MeshHandle;
 	UPROPERTY(config)
 	TArray<FSoftObjectPath> PlayerMeshes;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Equipment, Meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<class UStaticMeshComponent> Weapon;
 
 };

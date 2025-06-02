@@ -14,6 +14,11 @@ APHWarriorCharacter::APHWarriorCharacter(const FObjectInitializer& ObjectInitial
 	{
 		ActionMontage = ActionMontageRef.Object;
 	}
+
+	// Weapon Component
+	Weapon = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Weapon"));
+	Weapon->SetupAttachment(GetMesh(), TEXT("hand_lSocket"));
+	Weapon->SetIsReplicated(true);
 	bReplicates = true;
 }
 

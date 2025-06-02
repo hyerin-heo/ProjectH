@@ -79,8 +79,40 @@ APHCharacterBase::APHCharacterBase(const FObjectInitializer& ObjectInitializer)
 	{
 		AttackAction = InputAttackActionRef.Object;
 	}
+	static ConstructorHelpers::FObjectFinder<UInputAction> InputEvasionActionRef(
+	TEXT("/Game/ProjectH/Input/Actions/IA_Evasion.IA_Evasion"));
+	if (InputEvasionActionRef.Object)
+	{
+		EvasionAction = InputEvasionActionRef.Object;
+	}
+	static ConstructorHelpers::FObjectFinder<UInputAction> InputSkill1ActionRef(
+	TEXT("/Game/ProjectH/Input/Actions/IA_Skill1.IA_Skill1"));
+	if (InputSkill1ActionRef.Object)
+	{
+		Skill1Action = InputSkill1ActionRef.Object;
+	}
+	static ConstructorHelpers::FObjectFinder<UInputAction> InputSkill2ActionRef(
+	TEXT("/Game/ProjectH/Input/Actions/IA_Skill1.IA_Skill2"));
+	if (InputSkill2ActionRef.Object)
+	{
+		Skill2Action = InputSkill2ActionRef.Object;
+	}
+	static ConstructorHelpers::FObjectFinder<UInputAction> InputSkill3ActionRef(
+	TEXT("/Game/ProjectH/Input/Actions/IA_Skill1.IA_Skill3"));
+	if (InputSkill3ActionRef.Object)
+	{
+		Skill3Action = InputSkill3ActionRef.Object;
+	}
+	static ConstructorHelpers::FObjectFinder<UInputAction> InputSkill4ActionRef(
+	TEXT("/Game/ProjectH/Input/Actions/IA_Skill1.IA_Skill4"));
+	if (InputSkill4ActionRef.Object)
+	{
+		Skill4Action = InputSkill4ActionRef.Object;
+	}
+	
 
 	bReplicates = true;
+	MeshIndex = -1;
 	//SetReplicatingMovement(true);
 	//SetReplicateMovement(true);
 	bActioning = false;
@@ -122,8 +154,19 @@ void APHCharacterBase::PossessedBy(AController* NewController)
 {
 	Super::PossessedBy(NewController);
 
-	//서버의 경우 로컬 플레이어를 PossessedBy를 통해서 진행.
-	UpdateMeshFromPlayerState();
+	if (HasAuthority())
+	{
+		if (PlayerMeshes.Num() == 0)
+		{
+			UE_LOG(LogPHCharacter, Warning, TEXT("PlayerMeshes is Empty"));
+			return;
+		}
+
+		MeshIndex = FMath::RandRange(0, PlayerMeshes.Num() - 1);
+
+		//서버의 경우 로컬 플레이어를 PossessedBy를 통해서 진행.
+		UpdateMeshFromPlayerState();
+	}
 }
 
 void APHCharacterBase::OnRep_Owner()
@@ -139,6 +182,12 @@ void APHCharacterBase::PostNetInit()
 void APHCharacterBase::OnRep_PlayerState()
 {
 	Super::OnRep_PlayerState();
+}
+
+float APHCharacterBase::TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent,
+	class AController* EventInstigator, AActor* DamageCauser)
+{
+	return Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
 }
 
 // Called every frame
@@ -167,6 +216,7 @@ void APHCharacterBase::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty
 
 	DOREPLIFETIME(APHCharacterBase, bActioning);
 	DOREPLIFETIME(APHCharacterBase, ActionTargetRotation);
+	DOREPLIFETIME(APHCharacterBase, MeshIndex);
 	//DOREPLIFETIME(APHCharacterBase, NormalAttackTargetRotation);
 }
 
@@ -252,6 +302,31 @@ void APHCharacterBase::SetAction()
 			NormalAttack();
 			break;
 		}
+	case EPlayerActionType::Evasion:
+		{
+			Evasion();
+			break;
+		}
+	case EPlayerActionType::Skill1:
+		{
+			Skill1();
+			break;
+		}
+	case EPlayerActionType::Skill2:
+		{
+			Skill2();
+			break;
+		}
+	case EPlayerActionType::Skill3:
+		{
+			Skill3();
+			break;
+		}
+	case EPlayerActionType::Skill4:
+		{
+			Skill4();
+			break;
+		}
 	}
 }
 
@@ -288,6 +363,82 @@ void APHCharacterBase::NormalAttack()
 	// Movement Setting
 	GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_None);
 	PlaySectionName = "NormalAttack";
+}
+
+void APHCharacterBase::Evasion()
+{
+}
+
+void APHCharacterBase::Skill1UI()
+{
+	//현재 무슨 행동중이면 return.
+	if (bActioning) return;
+
+	CurrentActionType = EPlayerActionType::Skill1;
+	bActioning = true;
+}
+
+void APHCharacterBase::Skill1()
+{
+	RotateToCursor();
+	// Movement Setting
+	//@PHTODO: 해당 셋팅은 스킬마다 다르게 셋팅 되어야 한다.
+	//GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_None);
+	PlaySectionName = "Skill1";
+}
+
+void APHCharacterBase::Skill2UI()
+{
+	//현재 무슨 행동중이면 return.
+	if (bActioning) return;
+
+	CurrentActionType = EPlayerActionType::Skill2;
+	bActioning = true;
+}
+
+void APHCharacterBase::Skill2()
+{
+	RotateToCursor();
+	// Movement Setting
+	//@PHTODO: 해당 셋팅은 스킬마다 다르게 셋팅 되어야 한다.
+	//GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_None);
+	PlaySectionName = "Skill2";
+}
+
+void APHCharacterBase::Skill3UI()
+{
+	//현재 무슨 행동중이면 return.
+	if (bActioning) return;
+
+	CurrentActionType = EPlayerActionType::Skill3;
+	bActioning = true;
+}
+
+void APHCharacterBase::Skill3()
+{
+	RotateToCursor();
+	// Movement Setting
+	//@PHTODO: 해당 셋팅은 스킬마다 다르게 셋팅 되어야 한다.
+	//GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_None);
+	PlaySectionName = "Skill3";
+}
+
+void APHCharacterBase::Skill4UI()
+{
+	//현재 무슨 행동중이면 return.
+	if (bActioning) return;
+
+	CurrentActionType = EPlayerActionType::Skill4;
+	bActioning = true;
+}
+
+void APHCharacterBase::Skill4()
+{
+	RotateToCursor();
+	// Movement Setting
+	//@PHTODO: 해당 셋팅은 스킬마다 다르게 셋팅 되어야 한다.
+	//GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_None);
+	PlaySectionName = "Skill4";
 }
 
 void APHCharacterBase::ServerRPCSetActionTargetRotation_Implementation(FRotator TargetRotation)
@@ -335,6 +486,16 @@ void APHCharacterBase::OnRep_ActionTargetRotation()
 	}
 }
 
+void APHCharacterBase::OnRep_MeshIndex()
+{
+	// 클라이언트에서만 호출되는 콜백. 
+	// MeshIndex가 유효한(0 이상) 값으로 복제되었을 때 로드 시작
+	if (MeshIndex >= 0 && PlayerMeshes.IsValidIndex(MeshIndex))
+	{
+		UpdateMeshFromPlayerState();
+	}
+}
+
 void APHCharacterBase::ServerRPCNormalAttack_Implementation()
 {
 	GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_None);
@@ -377,7 +538,7 @@ void APHCharacterBase::ClientRPCPlayAnimation_Implementation(APHCharacterBase* C
 {
 	if (CharacterPlayer)
 	{
-		PlayAnimMontage(ActionMontage, 1.0f, PlaySectionName);
+		CharacterPlayer->PlayAnimMontage(ActionMontage, 1.0f, PlaySectionName);
 	}
 }
 
@@ -394,6 +555,7 @@ void APHCharacterBase::MeshLoadCompleted()
 	}
 
 	MeshHandle->ReleaseHandle();
+	MeshHandle.Reset();
 }
 
 void APHCharacterBase::UpdateMeshFromPlayerState()
@@ -402,17 +564,22 @@ void APHCharacterBase::UpdateMeshFromPlayerState()
 	//PlayerID를 활용해서 인덱스 값 설정.()
 	//int32 MeshIndex = FMath::Clamp(GetPlayerState()->GetPlayerId() % PlayerMeshes.Num(), 0, PlayerMeshes.Num() - 1);
 
-	if (PlayerMeshes.Num() <= 0)
+	if (!PlayerMeshes.IsValidIndex(MeshIndex))
 	{
-		PH_LOG(LogPHCharacter, Log, TEXT("Is Not PlayerCharacterMeshes"));
+		UE_LOG(LogTemp, Warning, TEXT("Invalid MeshIndex: %d"), MeshIndex);
 		return;
 	}
 
-	int32 MeshIndex = FMath::RandRange(0, PlayerMeshes.Num() - 1);
+	// 만약 이미 로드 요청이 남아 있다면 해제(중복 방지)
+	if (MeshHandle.IsValid())
+	{
+		MeshHandle->ReleaseHandle();
+		MeshHandle.Reset();
+	}
 
-
+	// TSoftObjectPtr 에서 Load 요청
 	MeshHandle = UAssetManager::Get().GetStreamableManager().RequestAsyncLoad(
-		PlayerMeshes[MeshIndex], FStreamableDelegate::CreateUObject(this, &APHCharacterBase::MeshLoadCompleted));
+		PlayerMeshes[MeshIndex],FStreamableDelegate::CreateUObject(this, &APHCharacterBase::MeshLoadCompleted));
 }
 
 void APHCharacterBase::RotateToCursor()
