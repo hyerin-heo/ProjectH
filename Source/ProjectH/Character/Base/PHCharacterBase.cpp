@@ -92,19 +92,19 @@ APHCharacterBase::APHCharacterBase(const FObjectInitializer& ObjectInitializer)
 		Skill1Action = InputSkill1ActionRef.Object;
 	}
 	static ConstructorHelpers::FObjectFinder<UInputAction> InputSkill2ActionRef(
-	TEXT("/Game/ProjectH/Input/Actions/IA_Skill1.IA_Skill2"));
+	TEXT("/Game/ProjectH/Input/Actions/IA_Skill2.IA_Skill2"));
 	if (InputSkill2ActionRef.Object)
 	{
 		Skill2Action = InputSkill2ActionRef.Object;
 	}
 	static ConstructorHelpers::FObjectFinder<UInputAction> InputSkill3ActionRef(
-	TEXT("/Game/ProjectH/Input/Actions/IA_Skill1.IA_Skill3"));
+	TEXT("/Game/ProjectH/Input/Actions/IA_Skill3.IA_Skill3"));
 	if (InputSkill3ActionRef.Object)
 	{
 		Skill3Action = InputSkill3ActionRef.Object;
 	}
 	static ConstructorHelpers::FObjectFinder<UInputAction> InputSkill4ActionRef(
-	TEXT("/Game/ProjectH/Input/Actions/IA_Skill1.IA_Skill4"));
+	TEXT("/Game/ProjectH/Input/Actions/IA_Skill4.IA_Skill4"));
 	if (InputSkill4ActionRef.Object)
 	{
 		Skill4Action = InputSkill4ActionRef.Object;
