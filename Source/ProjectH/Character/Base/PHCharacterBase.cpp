@@ -13,6 +13,7 @@
 #include "InputMappingContext.h"
 #include "EnhancedInputSubsystems.h"
 #include "ProjectH.h"
+#include "Character/Component/PHCharacterStatComponent.h"
 #include "Engine/AssetManager.h"
 #include "GameFramework/PlayerState.h"
 #include "Net/UnrealNetwork.h"
@@ -34,6 +35,9 @@ APHCharacterBase::APHCharacterBase(const FObjectInitializer& ObjectInitializer)
 	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName);
 	FollowCamera->bUsePawnControlRotation = false; //폰의 회전에 영향을 주지 않게 false.
+	
+	// // Stat Component 
+	StatDataComponent = CreateDefaultSubobject<UPHCharacterStatComponent>(TEXT("StatData"));
 
 	GetCapsuleComponent()->InitCapsuleSize(42.0f, 96.0f);
 
@@ -49,8 +53,6 @@ APHCharacterBase::APHCharacterBase(const FObjectInitializer& ObjectInitializer)
 	GetCharacterMovement()->bSnapToPlaneAtStart = true; //시작할때 캐릭터의 위치가 평편을 벗어난 상태라면 가까운 평면을 붙혀서 시작하도록 true.
 	GetCharacterMovement()->MaxWalkSpeed = 500.f;
 	GetCharacterMovement()->BrakingDecelerationWalking = 2000.f;
-
-	//Montage
 
 
 	//Input Section.
@@ -122,6 +124,8 @@ APHCharacterBase::APHCharacterBase(const FObjectInitializer& ObjectInitializer)
 void APHCharacterBase::PostInitializeComponents()
 {
 	Super::PostInitializeComponents();
+	
+	StatDataComponent->OnHpZero.AddUObject(this, &APHCharacterBase::SetDead);
 }
 
 // Called when the game starts or when spawned

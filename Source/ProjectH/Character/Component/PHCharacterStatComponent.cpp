@@ -11,11 +11,11 @@ UPHCharacterStatComponent::UPHCharacterStatComponent()
 	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
 	// off to improve performance if you don't need them.
 	//PrimaryComponentTick.bCanEverTick = true;
-
-	CurrentLevel = 1;
+	
 	AttackRadius = 50.0f;
 	
 	bWantsInitializeComponent = true;
+	PrimaryComponentTick.bCanEverTick = true;
 	
 }
 
@@ -25,10 +25,8 @@ void UPHCharacterStatComponent::InitializeComponent()
 
 	ResetStat();
 	
-	//스탯 변경 이벤트에 최대 체력 설정 함수 등록.
-	OnStatChanged.AddUObject(this, &UPHCharacterStatComponent::SetNewMaxHp);
-
 	SetIsReplicated(true);
+
 }
 
 // Called when the game starts
@@ -36,7 +34,22 @@ void UPHCharacterStatComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
-	// ...
+	
+	
+}
+
+void UPHCharacterStatComponent::TickComponent(float DeltaTime, enum ELevelTick TickType,
+	FActorComponentTickFunction* ThisTickFunction)
+{
+	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+
+	// 오직 서버 권한일 때만 쿨타임 감소 처리
+	AActor* OwnerActor = GetOwner();
+	if (!OwnerActor || !OwnerActor->HasAuthority())
+	{
+		return;
+	}
+
 	
 }
 
@@ -54,8 +67,8 @@ void UPHCharacterStatComponent::GetLifetimeReplicatedProps(TArray<class FLifetim
 	DOREPLIFETIME(UPHCharacterStatComponent, MaxHp);
 
 	//캐릭터를 소유한 클라이언트만 전송하도록 설정.
-	DOREPLIFETIME_CONDITION(UPHCharacterStatComponent, BaseStat, COND_OwnerOnly);
-	DOREPLIFETIME_CONDITION(UPHCharacterStatComponent, ModifierStat, COND_OwnerOnly);
+	DOREPLIFETIME_CONDITION(UPHCharacterStatComponent, StatData, COND_OwnerOnly);
+	DOREPLIFETIME_CONDITION(UPHCharacterStatComponent, RemainingCooldowns, COND_OwnerOnly);
 }
 
 void UPHCharacterStatComponent::OnRep_CurrentHp()
@@ -79,13 +92,8 @@ void UPHCharacterStatComponent::OnRep_MaxHp()
 void UPHCharacterStatComponent::OnRep_BaseStat()
 {
 	//스탯 변경 이벤트 발행.
-	OnStatChanged.Broadcast(BaseStat, ModifierStat);
-}
 
-void UPHCharacterStatComponent::OnRep_ModifierStat()
-{
-	//스탯 변경 이벤트 발행.
-	OnStatChanged.Broadcast(BaseStat, ModifierStat);
+	ResetStat();
 }
 
 void UPHCharacterStatComponent::SetHp(float NewHp)
@@ -110,14 +118,45 @@ float UPHCharacterStatComponent::ApplyDamage(float InDamage)
 	return ActualDamage;
 }
 
-void UPHCharacterStatComponent::SetNewMaxHp(const FPHCharacterStat& InBaseStat, const FPHCharacterStat& InModifierStat)
-{
-}
 
 void UPHCharacterStatComponent::ResetStat()
 {
-	MaxHp = BaseStat.MaxHp;
-	SetHp(MaxHp);
+	if (StatData)
+	{
+		MaxHp = StatData->MaxHp;
+		AttackRadius = StatData->AttackRange;
+		SetHp(MaxHp);
+
+		for (const auto& KeyValue : StatData->AttackStatMap)
+		{
+			RemainingCooldowns.Add(FSkillCooldownData(KeyValue.Key, 0));
+		}
+	}
+}
+
+void UPHCharacterStatComponent::StartSkillCooldown()
+{
+}
+
+float UPHCharacterStatComponent::GetSkillCooldown(EAttackType InAttackType)
+{
+	if (!StatData) return 1.0f;
+	
+	for (auto& RemainingCooldown : RemainingCooldowns)
+	{
+		if (InAttackType == RemainingCooldown.SkillType)
+		{
+			return RemainingCooldown.RemainingTime;
+		}
+		
+		// if (InAttackType == RemainingCooldown.SkillType)
+		// {
+		// 	if (StatData->AttackStatMap.Contains(InAttackType))
+		// 	{
+		// 		RemainingCooldown.RemainingTime = StatData->AttackStatMap[InAttackType].CoolTime;
+		// 	}
+		// }
+	}
 }
 
 

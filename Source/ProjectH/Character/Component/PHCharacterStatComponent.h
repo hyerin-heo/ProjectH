@@ -4,12 +4,30 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
-#include "../CharacterData/Base/PHCharacterStat.h"
+#include "DataAsset/PHCharacterStatDataAsset.h"
 #include "PHCharacterStatComponent.generated.h"
 
 DECLARE_MULTICAST_DELEGATE(FOnHpZeroDelegate);
-DECLARE_MULTICAST_DELEGATE_TwoParams(FOnHpChangedDelegate, float, float); //Max, Current
-DECLARE_MULTICAST_DELEGATE_TwoParams(FOnStatChangedDelegate, const FPHCharacterStat& /*BaseStat*/, const FPHCharacterStat& /*ModifierStat*/);
+DECLARE_MULTICAST_DELEGATE_TwoParams(FOnHpChangedDelegate, float/*Max*/, float/*Current*/);
+DECLARE_MULTICAST_DELEGATE_TwoParams(FOnCooldownChangedDelegate, EAttackType /*SkillType*/, float /*RemainingTime*/);
+
+USTRUCT(BlueprintType)
+struct FSkillCooldownData
+{
+	GENERATED_BODY()
+
+	// 스킬 타입 열거형
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Cooldown")
+	EAttackType SkillType = EAttackType::None;
+
+	// 남은 쿨타임(초)
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Cooldown")
+	float RemainingTime = 0.f;
+
+	FSkillCooldownData() {}
+	FSkillCooldownData(EAttackType InType, float InTime)
+		: SkillType(InType), RemainingTime(InTime) {}
+};
 
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
@@ -28,6 +46,8 @@ protected:
 	virtual void ReadyForReplication() override;
 	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
 
+	virtual void TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+
 	UFUNCTION()
 	void OnRep_CurrentHp();
 
@@ -37,28 +57,24 @@ protected:
 	UFUNCTION()
 	void OnRep_BaseStat();
 
-	UFUNCTION()
-	void OnRep_ModifierStat();
-
 	void SetHp(float NewHp);
 
 public:
 	FOnHpZeroDelegate OnHpZero;
 	FOnHpChangedDelegate OnHpChanged;
-	FOnStatChangedDelegate OnStatChanged;
+	//쿨타임 변경(시작 혹은 감소) 시 알림
+	FOnCooldownChangedDelegate OnCooldownChanged;
 	
-	FORCEINLINE void AddBaseStat(const FPHCharacterStat& InAddBaseStat) { BaseStat = BaseStat + InAddBaseStat; OnStatChanged.Broadcast(GetBaseStat(), GetModifierStat()); }
-	FORCEINLINE const FPHCharacterStat& GetBaseStat() const { return BaseStat; }
-	FORCEINLINE const FPHCharacterStat& GetModifierStat() const { return ModifierStat; }
-	FORCEINLINE FPHCharacterStat GetTotalStat() const { return BaseStat + ModifierStat; }
+	FORCEINLINE const UPHCharacterStatDataAsset& GetBaseStat() const { return *StatData; }
 	FORCEINLINE float GetCurrentHp() const { return CurrentHp; }
 	FORCEINLINE float GetMaxHp() const { return MaxHp; }
-	FORCEINLINE void HealHp(float InHealAmount) { CurrentHp = FMath::Clamp(CurrentHp + InHealAmount, 0, GetTotalStat().MaxHp); OnHpChanged.Broadcast(CurrentHp, MaxHp); }
+	FORCEINLINE void HealHp(float InHealAmount) { CurrentHp = FMath::Clamp(CurrentHp + InHealAmount, 0, StatData->MaxHp); OnHpChanged.Broadcast(CurrentHp, MaxHp); }
 	FORCEINLINE float GetAttackRadius() const { return AttackRadius; }
 	float ApplyDamage(float InDamage);
-	void SetNewMaxHp(const FPHCharacterStat& InBaseStat, const FPHCharacterStat& InModifierStat);
 
 	void ResetStat();
+	void StartSkillCooldown();
+	float GetSkillCooldown(EAttackType InAttackType);
 
 protected:
 	UPROPERTY(ReplicatedUsing= OnRep_CurrentHp, Transient, VisibleInstanceOnly, Category= Stat)
@@ -67,16 +83,13 @@ protected:
 	UPROPERTY(ReplicatedUsing= OnRep_MaxHp, Transient, VisibleInstanceOnly, Category= Stat)
 	float MaxHp;
 
-	UPROPERTY(Transient, VisibleInstanceOnly, Category = Stat)
-	float CurrentLevel;
-
 	UPROPERTY(VisibleInstanceOnly, Category = Stat, Meta = (AllowPrivateAccess = "true"))
 	float AttackRadius;
+
+	UPROPERTY(Replicated)
+	TArray<FSkillCooldownData>RemainingCooldowns;
 	
-	UPROPERTY(Transient, ReplicatedUsing=OnRep_BaseStat, VisibleInstanceOnly, Category = Stat, Meta = (AllowPrivateAccess = "true"))
-	FPHCharacterStat BaseStat;
-	
-	UPROPERTY(Transient, ReplicatedUsing=OnRep_ModifierStat, VisibleInstanceOnly, Category = Stat, Meta = (AllowPrivateAccess = "true"))
-	FPHCharacterStat ModifierStat;
+	UPROPERTY(Transient, ReplicatedUsing=OnRep_BaseStat, EditAnywhere, BlueprintReadWrite, Category = Stat, Meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UPHCharacterStatDataAsset> StatData;
 		
 };

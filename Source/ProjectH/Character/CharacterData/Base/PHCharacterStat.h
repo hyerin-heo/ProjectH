@@ -5,7 +5,6 @@
 #include "PHCharacterStat.generated.h"
 
 USTRUCT(BlueprintType)
-
 struct FPHCharacterStat : public FTableRowBase
 {
 	GENERATED_BODY()
