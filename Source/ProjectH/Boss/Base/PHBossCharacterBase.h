@@ -3,34 +3,25 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Common/PHUInt8.h"
 #include "GameFramework/Character.h"
 #include "Interface/Boss/PHBossAIInterface.h"
 #include "DataAsset/PHBossDataAsset.h"
 #include "PHBossCharacterBase.generated.h"
 
-DECLARE_DELEGATE(FOnCommonAttackPattern);
+
+DECLARE_DELEGATE(FOnAttackPattern);
 USTRUCT(BlueprintType)
-struct FCommonAttackPatternDelegateWrapper
+struct FAttackPatternDelegateWrapper
 {
 	GENERATED_BODY()
 
-	FCommonAttackPatternDelegateWrapper() {}
-	FCommonAttackPatternDelegateWrapper(const FOnCommonAttackPattern& InDelegate)
-		: ItemDelegate(InDelegate) {}
+	FAttackPatternDelegateWrapper() {}
+	FAttackPatternDelegateWrapper(const FOnAttackPattern& InDelegate, const FBossPatternInfo& InPatternInfo)
+		: ItemDelegate(InDelegate), PatternInfo(InPatternInfo) {}
 
-	FOnCommonAttackPattern ItemDelegate;
-};
-DECLARE_DELEGATE(FOnSpecialAttackPattern);
-USTRUCT(BlueprintType)
-struct FSpecialAttackPatternDelegateWrapper
-{
-	GENERATED_BODY()
-
-	FSpecialAttackPatternDelegateWrapper() {}
-	FSpecialAttackPatternDelegateWrapper(const FOnSpecialAttackPattern& InDelegate)
-		: ItemDelegate(InDelegate) {}
-
-	FOnSpecialAttackPattern ItemDelegate;
+	FOnAttackPattern ItemDelegate;
+	FBossPatternInfo PatternInfo;
 };
 
 UCLASS()
@@ -48,27 +39,31 @@ public:
 	virtual float GetAttackSpeed() override;
 	virtual float GetArmor() override;
 	virtual bool IsPhase() override;
-	virtual void CommonPattern() override;
-	virtual void SpecialPattern() override;
+	virtual void AttackAction() override;
+	virtual void PatternAction() override;
+	virtual void PhasePatternAction() override;
 
+	virtual bool IsCoolTime() override;
+	virtual void SetCoolTime() override;
+
+	void AttackActionEnd(UAnimMontage* AnimMontage, bool bArg);
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
-	virtual void SetPhase(uint8 level);
 
-	virtual void SetAIPhaseDelegate(const FAIPhaseFinished& InOnPhaseFinished) override;
+	virtual void SetAIAttackDelegate(const FAIAttackFinished& InOnAttackFinished) override;
 
-	FAIPhaseFinished OnPhaseFinished;
+	FAIAttackFinished OnAttackFinished;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Animation)
+	TObjectPtr<class UAnimMontage> ActionMontage;
 	
 	UPROPERTY()
-	TArray<FCommonAttackPatternDelegateWrapper> CommonAttackPatternActions;
-	UPROPERTY()
-	TArray<FSpecialAttackPatternDelegateWrapper> SpecialAttackPatternActions;
-	
+	TArray<FAttackPatternDelegateWrapper> AttackPatternActions;
 
 	// current phase. only can set 0~7
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=Custom)
-	uint8 CurrentPhaseLevel;
+	FPHUInt8 CurrentPhaseLevel;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=Custom)
 	UPHBossDataAsset* DataAsset;
@@ -99,6 +94,8 @@ protected:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Custom)
 	float Armor;
+
+	virtual void PhaseLevelChanged(const uint8& OldPhase, const uint8& NewPhase);
 	
 public:	
 
@@ -106,13 +103,15 @@ public:
 	float GetMaxHP() const {return MaxHP;}
 	float GetHpPercent() const {return HP / MaxHP;}
 private:
-	// Phase Trigger
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category=Custom, meta=(allowPrivateAccess="true"))
-	EBossPhaseTriggerType TriggerType;
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category=Custom, meta=(allowPrivateAccess="true"))
-	float TriggerValue = 1.0f;
 
 	UPROPERTY()
 	FTimerHandle PhaseTimerHandle;
 
+	UPROPERTY()
+	FTimerHandle CoolTimeTimerHandle;
+
+	UPROPERTY()
+	float CurrentPatternCoolTime;
+	UPROPERTY()
+	int32 CurrentPatternIndex;
 };

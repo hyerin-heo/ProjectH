@@ -26,6 +26,34 @@ struct FBossPhaseInfo
 	float TriggerValue = 1.0f;
 };
 
+USTRUCT(BlueprintType)
+struct FBossPatternInfo
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	int PatternIndex;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	float AttackDamage;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	float AttackRange;
+
+	// Which used animation's speed
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	float AttackSpeed;
+
+	// // 0 ~ 1
+	// // 0 -> default Armor. 1 -> invincibility
+	// // Reduces the percentage of damage which taken boss
+	// UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	// float Armor;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	float CoolTime;
+};
+
 /**
  * 
  */
@@ -47,10 +75,15 @@ public:
 	float AttackSpeed;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Common)
 	float Armor;
+	// // All of pattern's cool time is same
+	// // Used when not set pattern info's cool time.
+	// UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Pattern)
+	// float CoolTime;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Phase")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=Phase)
 	TMap<uint8, FBossPhaseInfo> PhaseMap;
 
-	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=Pattern)
+	TMap<uint8, FBossPatternInfo> Patterns;
 	
 };

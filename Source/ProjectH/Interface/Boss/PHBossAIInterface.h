@@ -6,7 +6,7 @@
 #include "UObject/Interface.h"
 #include "PHBossAIInterface.generated.h"
 
-DECLARE_DELEGATE(FAIPhaseFinished);
+DECLARE_DELEGATE(FAIAttackFinished);
 
 // This class does not need to be modified.
 UINTERFACE(MinimalAPI)
@@ -31,8 +31,13 @@ public:
 	virtual float GetArmor() = 0;
 
 	virtual bool IsPhase() = 0;
+	
+	virtual void AttackAction() = 0;
 
-	virtual void CommonPattern() = 0;
-	virtual void SpecialPattern() = 0;
-	virtual void SetAIPhaseDelegate(const FAIPhaseFinished& InOnPhaseFinished) = 0;
+	virtual void PatternAction() = 0;
+	virtual void PhasePatternAction() = 0;
+	virtual void SetAIAttackDelegate(const FAIAttackFinished& InOnAttackFinished) = 0;
+
+	virtual bool IsCoolTime() = 0;
+	virtual void SetCoolTime() = 0;
 };

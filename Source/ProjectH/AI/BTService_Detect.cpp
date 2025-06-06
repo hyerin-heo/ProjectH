@@ -53,15 +53,27 @@ void UBTService_Detect::TickNode(UBehaviorTreeComponent& OwnerComp, uint8* NodeM
 
 	if (bResult)
 	{
+		APawn* NearestPawn = nullptr;
+		float NearestDistanceSq = FLT_MAX;
 		for (auto const& OverlapResult : OverlapResults)
 		{
 			APawn* Pawn = Cast<APawn>(OverlapResult.GetActor());
 			if (Pawn && Pawn->GetController()->IsPlayerController())
 			{
-				OwnerComp.GetBlackboardComponent()->SetValueAsObject(BBKEY_TARGET, Pawn);
-				DrawDebugSphere(World, Center, DetectionRadius, 16, FColor::Green, false, 0.1f);
-				return;
+				float DistanceSq = FVector::DistSquared(Pawn->GetActorLocation(), Center);
+				if (DistanceSq < NearestDistanceSq)
+				{
+					NearestDistanceSq = DistanceSq;
+					NearestPawn = Pawn;
+				}
 			}
+		}
+
+		if (NearestPawn)
+		{
+			OwnerComp.GetBlackboardComponent()->SetValueAsObject(BBKEY_TARGET, NearestPawn);
+			DrawDebugSphere(World, Center, DetectionRadius, 16, FColor::Green, false, 0.1f);
+			return;	
 		}
 	}
 

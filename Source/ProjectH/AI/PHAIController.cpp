@@ -22,7 +22,7 @@ void APHAIController::StopAI()
 void APHAIController::OnPossess(APawn* InPawn)
 {
 	Super::OnPossess(InPawn);
-	// RunAI
+	// Run
 	UBlackboardComponent* BlackboardPtr = Blackboard.Get();
 	if (UseBlackboard(BBData, BlackboardPtr))
 	{

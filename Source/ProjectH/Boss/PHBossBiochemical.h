@@ -17,11 +17,14 @@ public:
 	APHBossBiochemical();
 	virtual void BeginPlay() override;
 	
-	void Attack1();
-	void Attack2();
-	void Attack3();
+	virtual void AttackAction() override;
 	
-	void SpecialAttack1();
-	void SpecialAttack2();
-	void SpecialAttack3();
+	void Pattern1();
+	void Pattern2();
+	void Pattern3();
+	void Pattern4();
+	void Pattern5();
+
+protected:
+	virtual void PhaseLevelChanged(const uint8& OldPhase, const uint8& NewPhase) override;
 };

@@ -4,17 +4,18 @@
 
 #include "CoreMinimal.h"
 #include "BehaviorTree/BTTaskNode.h"
-#include "BTTaskNode_CheckPhase.generated.h"
+#include "UBTTaskNode_PhasePattern.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class PROJECTH_API UBTTaskNode_CheckPhase : public UBTTaskNode
+class PROJECTH_API UUBTTaskNode_PhasePattern : public UBTTaskNode
 {
 	GENERATED_BODY()
 
 public:
-	UBTTaskNode_CheckPhase();
+	UUBTTaskNode_PhasePattern();
+	
 	virtual EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override;
 };
