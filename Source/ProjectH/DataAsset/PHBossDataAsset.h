@@ -32,17 +32,17 @@ struct FBossPatternInfo
 	GENERATED_BODY()
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	int PatternIndex;
+	int32 PatternIndex = 0;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	float AttackDamage;
+	float AttackDamage = 0.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	float AttackRange;
+	float AttackRange = 0.f;
 
 	// Which used animation's speed
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	float AttackSpeed;
+	float AttackSpeed = 0.f;
 
 	// // 0 ~ 1
 	// // 0 -> default Armor. 1 -> invincibility
@@ -51,7 +51,7 @@ struct FBossPatternInfo
 	// float Armor;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	float CoolTime;
+	float CoolTime = 0.f;
 };
 
 /**
@@ -64,17 +64,19 @@ class PROJECTH_API UPHBossDataAsset : public UPrimaryDataAsset
 
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Common)
-	float MaxHp;
+	float MaxHp = 0.f;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Common)
-	float DetectionRadius;
+	float DetectionRadius = 0.f;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Common)
-	float AttackRange;
+	float AttackDamage = 0.f;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Common)
-	float Speed;
+	float AttackRange = 0.f;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Common)
-	float AttackSpeed;
+	float Speed = 0.f;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Common)
-	float Armor;
+	float AttackSpeed = 0.f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Common)
+	float Armor = 0.f;
 	// // All of pattern's cool time is same
 	// // Used when not set pattern info's cool time.
 	// UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Pattern)

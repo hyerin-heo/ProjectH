@@ -25,13 +25,13 @@ EBTNodeResult::Type UBTTaskNode_Pattern::ExecuteTask(UBehaviorTreeComponent& Own
         return EBTNodeResult::Failed;
     }
 
-    FAIAttackFinished AttackFinished;
-    AttackFinished.BindLambda([&]()
+    FAIPatternAttackFinished PatternAttackFinished;
+    PatternAttackFinished.BindLambda([&]()
     {
         FinishLatentTask(OwnerComp, EBTNodeResult::Succeeded);
-        AIPawn->SetCoolTime();
     });
-    AIPawn->SetAIAttackDelegate(AttackFinished);
+    
+    AIPawn->SetAIPatternAttackDelegate(PatternAttackFinished);
     AIPawn->PatternAction();
     return EBTNodeResult::InProgress;
 }

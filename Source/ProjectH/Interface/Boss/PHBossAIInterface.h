@@ -7,6 +7,7 @@
 #include "PHBossAIInterface.generated.h"
 
 DECLARE_DELEGATE(FAIAttackFinished);
+DECLARE_DELEGATE(FAIPatternAttackFinished);
 
 // This class does not need to be modified.
 UINTERFACE(MinimalAPI)
@@ -37,7 +38,7 @@ public:
 	virtual void PatternAction() = 0;
 	virtual void PhasePatternAction() = 0;
 	virtual void SetAIAttackDelegate(const FAIAttackFinished& InOnAttackFinished) = 0;
+	virtual void SetAIPatternAttackDelegate(const FAIPatternAttackFinished& InOnPatternAttackFinished) = 0;
 
 	virtual bool IsCoolTime() = 0;
-	virtual void SetCoolTime() = 0;
 };

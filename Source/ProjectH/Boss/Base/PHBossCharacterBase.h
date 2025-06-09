@@ -44,16 +44,19 @@ public:
 	virtual void PhasePatternAction() override;
 
 	virtual bool IsCoolTime() override;
-	virtual void SetCoolTime() override;
+	virtual void SetCoolTime();
 
 	void AttackActionEnd(UAnimMontage* AnimMontage, bool bArg);
+	void PatternAttackActionEnd(UAnimMontage* AnimMontage, bool bArg);
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
 	virtual void SetAIAttackDelegate(const FAIAttackFinished& InOnAttackFinished) override;
+	virtual void SetAIPatternAttackDelegate(const FAIPatternAttackFinished& InOnPatternAttackFinished) override;
 
 	FAIAttackFinished OnAttackFinished;
+	FAIPatternAttackFinished OnPatternAttackFinished;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Animation)
 	TObjectPtr<class UAnimMontage> ActionMontage;
@@ -82,6 +85,9 @@ protected:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Custom)
 	float DetectionRadius;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Custom)
+	float AttackDamage;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Custom)
 	float AttackRange;
@@ -114,4 +120,7 @@ private:
 	float CurrentPatternCoolTime;
 	UPROPERTY()
 	int32 CurrentPatternIndex;
+
+	UPROPERTY()
+	uint8 bIsPhaseTimerDone :1;
 };

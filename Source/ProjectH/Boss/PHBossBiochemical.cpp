@@ -14,14 +14,13 @@ void APHBossBiochemical::BeginPlay()
 {
 	Super::BeginPlay();
 	
-	checkf(AttackPatternActions.Num() > DataAsset->Patterns.Num(), TEXT("Check Boss Pattern Info!"));
+	// checkf(DataAsset->PhaseMap.Num() > DataAsset->Patterns.Num(), TEXT("Check Boss Pattern Info!"));
 	
-	const FBossPatternInfo* PatternInfo = DataAsset->Patterns.Find(1);
-	AttackPatternActions.Add(FAttackPatternDelegateWrapper(FOnAttackPattern::CreateUObject(this, &APHBossBiochemical::Pattern1), *PatternInfo));
 }
 
 void APHBossBiochemical::AttackAction()
 {
+	Super::AttackAction();
 	PH_LOG(LogPHBoss, Log, TEXT("Called APHBossBiochemical::Attack"));
 }
 
@@ -53,11 +52,18 @@ void APHBossBiochemical::Pattern5()
 void APHBossBiochemical::PhaseLevelChanged(const uint8& OldPhase, const uint8& NewPhase)
 {
 	Super::PhaseLevelChanged(OldPhase, NewPhase);
+	if (!DataAsset)
+	{
+		return;
+	}
 
 	const FBossPatternInfo* PatternInfo = DataAsset->Patterns.Find(CurrentPhaseLevel.GetValue());
 
 	switch (CurrentPhaseLevel.GetValue())
 	{
+	case  1:
+		AttackPatternActions.Add(FAttackPatternDelegateWrapper(FOnAttackPattern::CreateUObject(this, &APHBossBiochemical::Pattern1), *PatternInfo));
+		break;
 	case  2:
 		AttackPatternActions.Add(FAttackPatternDelegateWrapper(FOnAttackPattern::CreateUObject(this, &APHBossBiochemical::Pattern2), *PatternInfo));
 		break;

@@ -10,7 +10,7 @@ struct FPHUInt8
 GENERATED_BODY()
 
 private:
-    UPROPERTY()
+    UPROPERTY(VisibleAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = true))
     uint8 Value;
 public:
     DECLARE_DELEGATE_TwoParams(FOnValueChanged, const uint8& /*OldValue*/, const uint8& /*NewValue*/);
