@@ -71,6 +71,7 @@ public:
 	virtual void NormalAttackUI();
 	virtual void NormalAttack();
 	//Evasion(회피)
+	virtual void EvasionUI();
 	virtual void Evasion();
 	//Skill
 	virtual void Skill1UI();
@@ -90,18 +91,20 @@ public:
 	void ServerRPCSetActionTargetRotation(FRotator TargetRotation);
 
 	UFUNCTION(Server, Unreliable)
-	void ServerRPCNormalAttack();
+	virtual void ServerRPCNormalAttack();
+	UFUNCTION(Server, Unreliable)
+	virtual void ServerRPCSkill1();
+	UFUNCTION(Server, Unreliable)
+	virtual void ServerRPCSkill2();
 
 	//clientRPC
 	UFUNCTION(Client, Unreliable)
-	void ClientRPCPlayAnimation(APHCharacterBase* CharacterPlayer);
+	void ClientRPCPlayAnimation(APHCharacterBase* CharacterPlayer, FName ActionName, float AnimSpeed =1.0f);
 
 	//MulticastRPC
 	UFUNCTION(NetMulticast, Unreliable)
 	void MulticastRPCSetNewLocation(FVector NewLocation);
-	UFUNCTION(NetMulticast, Unreliable)
-	void MulticastRPCAttack();
-	
+
 	//On_RepFunction
 	UFUNCTION()
 	void OnRep_ActionTargetRotation();
@@ -151,11 +154,9 @@ protected:
 
 
 protected:
-	//어택/스킬을 몽타주에서 실행 시켜줄때 해당 FName을 활용하여 Montage_JumpToSection을 호출.
 	UPROPERTY(Replicated)
-	FName PlaySectionName = "";
-
 	EPlayerActionType CurrentActionType;
+	
 	//현재 공격/스킬을 사용할려고 누른 상태인지를 체크할 bool값.
 	UPROPERTY(Replicated)
 	uint8 bActioning : 1;

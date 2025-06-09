@@ -54,9 +54,6 @@ protected:
 	UFUNCTION()
 	void OnRep_MaxHp();
 
-	UFUNCTION()
-	void OnRep_BaseStat();
-
 	void SetHp(float NewHp);
 
 public:
@@ -73,7 +70,7 @@ public:
 	float ApplyDamage(float InDamage);
 
 	void ResetStat();
-	void StartSkillCooldown();
+	void StartSkillCooldown(EAttackType InAttackType);
 	float GetSkillCooldown(EAttackType InAttackType);
 
 protected:
@@ -88,8 +85,9 @@ protected:
 
 	UPROPERTY(Replicated)
 	TArray<FSkillCooldownData>RemainingCooldowns;
-	
-	UPROPERTY(Transient, ReplicatedUsing=OnRep_BaseStat, EditAnywhere, BlueprintReadWrite, Category = Stat, Meta = (AllowPrivateAccess = "true"))
+
+	//Transient를 사용하면 블루프린트에 저장이 되지 않는다.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Stat, Meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UPHCharacterStatDataAsset> StatData;
 		
 };

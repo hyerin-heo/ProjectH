@@ -212,6 +212,8 @@ void APHCharacterBase::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 	EnhancedInputComponent->BindAction(MouseClickStateAction, ETriggerEvent::Triggered, this,
 	                                   &APHCharacterBase::SetAction);
 	EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Triggered, this, &APHCharacterBase::NormalAttackUI);
+	EnhancedInputComponent->BindAction(Skill1Action, ETriggerEvent::Triggered, this, &APHCharacterBase::Skill1UI);
+	EnhancedInputComponent->BindAction(Skill2Action, ETriggerEvent::Triggered, this, &APHCharacterBase::Skill2UI);
 }
 
 void APHCharacterBase::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const
@@ -275,7 +277,7 @@ void APHCharacterBase::SetNewLocation(FVector NewLocation)
 
 void APHCharacterBase::ServerRPCSetNewLocation_Implementation(FVector NewLocation)
 {
-	PH_LOG(LogPHCharacter, Log, TEXT("Begin"));
+	//PH_LOG(LogPHCharacter, Log, TEXT("Begin"));
 
 	float const Distance = FVector::Dist(NewLocation, GetActorLocation());
 	if (Distance > 120.0f)
@@ -366,11 +368,20 @@ void APHCharacterBase::NormalAttack()
 	RotateToCursor();
 	// Movement Setting
 	GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_None);
-	PlaySectionName = "NormalAttack";
+}
+
+void APHCharacterBase::EvasionUI()
+{
+	//현재 무슨 행동중이면 return.
+	if (bActioning) return;
+
+	CurrentActionType = EPlayerActionType::Evasion;
+	bActioning = true;
 }
 
 void APHCharacterBase::Evasion()
 {
+	
 }
 
 void APHCharacterBase::Skill1UI()
@@ -385,10 +396,10 @@ void APHCharacterBase::Skill1UI()
 void APHCharacterBase::Skill1()
 {
 	RotateToCursor();
+	GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_None);
 	// Movement Setting
 	//@PHTODO: 해당 셋팅은 스킬마다 다르게 셋팅 되어야 한다.
 	//GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_None);
-	PlaySectionName = "Skill1";
 }
 
 void APHCharacterBase::Skill2UI()
@@ -406,7 +417,6 @@ void APHCharacterBase::Skill2()
 	// Movement Setting
 	//@PHTODO: 해당 셋팅은 스킬마다 다르게 셋팅 되어야 한다.
 	//GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_None);
-	PlaySectionName = "Skill2";
 }
 
 void APHCharacterBase::Skill3UI()
@@ -424,7 +434,6 @@ void APHCharacterBase::Skill3()
 	// Movement Setting
 	//@PHTODO: 해당 셋팅은 스킬마다 다르게 셋팅 되어야 한다.
 	//GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_None);
-	PlaySectionName = "Skill3";
 }
 
 void APHCharacterBase::Skill4UI()
@@ -442,12 +451,11 @@ void APHCharacterBase::Skill4()
 	// Movement Setting
 	//@PHTODO: 해당 셋팅은 스킬마다 다르게 셋팅 되어야 한다.
 	//GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_None);
-	PlaySectionName = "Skill4";
 }
 
 void APHCharacterBase::ServerRPCSetActionTargetRotation_Implementation(FRotator TargetRotation)
 {
-	PH_LOG(LogPHCharacter, Log, TEXT("TargetRotation: %s"), *TargetRotation.ToCompactString());
+	//PH_LOG(LogPHCharacter, Log, TEXT("TargetRotation: %s"), *TargetRotation.ToCompactString());
 
 	// 서버에서 클라이언트가 공격을 위해 요청한 회전 값 설정. 
 	ActionTargetRotation = TargetRotation;
@@ -468,7 +476,6 @@ void APHCharacterBase::ServerRPCSetActionTargetRotation_Implementation(FRotator 
 		GetCharacterMovement()->StopMovementImmediately();
 	}
 }
-
 
 void APHCharacterBase::OnRep_ActionTargetRotation()
 {
@@ -502,14 +509,12 @@ void APHCharacterBase::OnRep_MeshIndex()
 
 void APHCharacterBase::ServerRPCNormalAttack_Implementation()
 {
+	StatDataComponent->StartSkillCooldown(EAttackType::DefaultAttack);
 	GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_None);
 
-	PlayAnimMontage(ActionMontage, 1.0f, PlaySectionName);
+	PlayAnimMontage(ActionMontage, 1.0f, "NormalAttack");
 	SetMontageEndDelegate();
-
-	//MulticastRPCAttack();
-
-	//@PHTODO : 여기 다시 해야함!! 문제가 있다!!!
+	
 	for (auto* PlayerController : TActorRange<APlayerController>(GetWorld()))
 	{
 		//서버에 있는 플레이어 컨트롤러 거르기.
@@ -524,25 +529,79 @@ void APHCharacterBase::ServerRPCNormalAttack_Implementation()
 				if (OtherPlayer)
 				{
 					//Client RPC를 전송.
-					OtherPlayer->ClientRPCPlayAnimation(this);
+					OtherPlayer->ClientRPCPlayAnimation(this, "NormalAttack");
 				}
 			}
 		}
 	}
 }
 
-void APHCharacterBase::MulticastRPCAttack_Implementation()
+void APHCharacterBase::ServerRPCSkill1_Implementation()
 {
+	//그냥 스킬 애니메이션만 플레이하면 된다면 해당 함수 사용 따로 작업을 해야한다면 오버라이딩 사용.
+	StatDataComponent->StartSkillCooldown(EAttackType::Skill1);
 	GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_None);
-	PlayAnimMontage(ActionMontage, 1.0f, PlaySectionName);
+	
+	PlayAnimMontage(ActionMontage, 1.0f, "Skill1");
 	SetMontageEndDelegate();
+	
+	for (auto* PlayerController : TActorRange<APlayerController>(GetWorld()))
+	{
+		//서버에 있는 플레이어 컨트롤러 거르기.
+		if (PlayerController && GetController() != PlayerController)
+		{
+			//클라이언트 중에서 본인이 아닌지 확인.
+			if (!PlayerController->IsLocalController())
+			{
+				//여기로 넘어온 플레이어 컨트롤러는 서버도 아니고, 본인 클라이언트도 아님.
+				APHCharacterBase* OtherPlayer = Cast<APHCharacterBase>(PlayerController->GetPawn());
+	
+				if (OtherPlayer)
+				{
+					//Client RPC를 전송.
+					OtherPlayer->ClientRPCPlayAnimation(this, "Skill1");
+				}
+			}
+		}
+	}
 }
 
-void APHCharacterBase::ClientRPCPlayAnimation_Implementation(APHCharacterBase* CharacterPlayer)
+void APHCharacterBase::ServerRPCSkill2_Implementation()
+{
+	//그냥 스킬 애니메이션만 플레이하면 된다면 해당 함수 사용 따로 작업을 해야한다면 오버라이딩 사용.
+	StatDataComponent->StartSkillCooldown(EAttackType::Skill2);
+	GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_None);
+	
+	PlayAnimMontage(ActionMontage, 1.0f, "Skill2");
+	SetMontageEndDelegate();
+	
+	for (auto* PlayerController : TActorRange<APlayerController>(GetWorld()))
+	{
+		//서버에 있는 플레이어 컨트롤러 거르기.
+		if (PlayerController && GetController() != PlayerController)
+		{
+			//클라이언트 중에서 본인이 아닌지 확인.
+			if (!PlayerController->IsLocalController())
+			{
+				//여기로 넘어온 플레이어 컨트롤러는 서버도 아니고, 본인 클라이언트도 아님.
+				APHCharacterBase* OtherPlayer = Cast<APHCharacterBase>(PlayerController->GetPawn());
+	
+				if (OtherPlayer)
+				{
+					//Client RPC를 전송.
+					OtherPlayer->ClientRPCPlayAnimation(this, "Skill2");
+				}
+			}
+		}
+	}
+}
+
+
+void APHCharacterBase::ClientRPCPlayAnimation_Implementation(APHCharacterBase* CharacterPlayer, FName ActionName,float AnimSpeed)
 {
 	if (CharacterPlayer)
 	{
-		CharacterPlayer->PlayAnimMontage(ActionMontage, 1.0f, PlaySectionName);
+		CharacterPlayer->PlayAnimMontage(ActionMontage, AnimSpeed, ActionName);
 	}
 }
 

@@ -45,9 +45,15 @@ void UPHCharacterStatComponent::TickComponent(float DeltaTime, enum ELevelTick T
 
 	// 오직 서버 권한일 때만 쿨타임 감소 처리
 	AActor* OwnerActor = GetOwner();
-	if (!OwnerActor || !OwnerActor->HasAuthority())
+	if (OwnerActor && OwnerActor->HasAuthority())
 	{
-		return;
+		for (auto& RemainingCooldown : RemainingCooldowns)
+		{
+			if (RemainingCooldown.RemainingTime > 0.0f)
+			{
+				RemainingCooldown.RemainingTime -= DeltaTime;
+			}
+		}
 	}
 
 	
@@ -67,7 +73,7 @@ void UPHCharacterStatComponent::GetLifetimeReplicatedProps(TArray<class FLifetim
 	DOREPLIFETIME(UPHCharacterStatComponent, MaxHp);
 
 	//캐릭터를 소유한 클라이언트만 전송하도록 설정.
-	DOREPLIFETIME_CONDITION(UPHCharacterStatComponent, StatData, COND_OwnerOnly);
+	//DOREPLIFETIME_CONDITION(UPHCharacterStatComponent, StatData, COND_OwnerOnly);
 	DOREPLIFETIME_CONDITION(UPHCharacterStatComponent, RemainingCooldowns, COND_OwnerOnly);
 }
 
@@ -87,13 +93,6 @@ void UPHCharacterStatComponent::OnRep_MaxHp()
 {
 	//서버로부터 받은 변경된 CurrentHP 정보를 델리게이트를 통해 알림.
 	OnHpChanged.Broadcast(CurrentHp, MaxHp);
-}
-
-void UPHCharacterStatComponent::OnRep_BaseStat()
-{
-	//스탯 변경 이벤트 발행.
-
-	ResetStat();
 }
 
 void UPHCharacterStatComponent::SetHp(float NewHp)
@@ -134,8 +133,24 @@ void UPHCharacterStatComponent::ResetStat()
 	}
 }
 
-void UPHCharacterStatComponent::StartSkillCooldown()
+void UPHCharacterStatComponent::StartSkillCooldown(EAttackType InAttackType)
 {
+	if (!StatData) return;
+
+	if (StatData->AttackStatMap.Contains(InAttackType))
+	{
+		for (auto& RemainingCooldown : RemainingCooldowns)
+		{
+			if (RemainingCooldown.SkillType == InAttackType)
+			{
+				RemainingCooldown.RemainingTime = StatData->AttackStatMap[InAttackType].CoolTime;
+				
+				break;
+			}
+		}
+		
+	}
+		
 }
 
 float UPHCharacterStatComponent::GetSkillCooldown(EAttackType InAttackType)
@@ -149,13 +164,6 @@ float UPHCharacterStatComponent::GetSkillCooldown(EAttackType InAttackType)
 			return RemainingCooldown.RemainingTime;
 		}
 		
-		// if (InAttackType == RemainingCooldown.SkillType)
-		// {
-		// 	if (StatData->AttackStatMap.Contains(InAttackType))
-		// 	{
-		// 		RemainingCooldown.RemainingTime = StatData->AttackStatMap[InAttackType].CoolTime;
-		// 	}
-		// }
 	}
 	return 0;
 }

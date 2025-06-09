@@ -35,10 +35,10 @@ struct FCharacterAttackStat
 	GENERATED_BODY()
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	EAttackStatType AttackStatType;
+	EAttackStatType AttackStatType = EAttackStatType::None;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	float AttackDamage;
+	float AttackDamage = 0.0f;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float minPercent = 1.0f;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)

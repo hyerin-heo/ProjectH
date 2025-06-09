@@ -22,8 +22,36 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 protected:
+	//Server
+	//virtual void ServerRPCSkill1() override;
+	virtual void ServerRPCSkill1_Implementation() override;
+	virtual void ServerRPCSkill2_Implementation() override;
+	
 	//Attack.
 	virtual void NormalAttackUI() override;
 	virtual void NormalAttack() override;
+
+	//Skill
+	virtual void Skill1UI() override;
+	virtual void Skill1() override;
+	virtual void Skill2UI() override;
+	virtual void Skill2() override;
+	
+private:
+	void StartDash();
+	void HandleDashStep();
+	void StartLoopTornadoSkill();
+
+private:
+	FTimerHandle DashTimerHandle;
+	FVector DashStart;
+	FVector DashEnd;
+	float DashDuration = 0.35f;
+	float DashElapsed = 0.0f;
+	float DashInterval = 0.01f;
+
+	//TornadoSkillState;
+	bool bTornadoSkill = false;
+	float TornadoTurningTime = 4.0f;
 	
 };
