@@ -35,5 +35,10 @@ EBTNodeResult::Type UUBTTaskNode_PhasePattern::ExecuteTask(UBehaviorTreeComponen
     
     AIPawn->SetAIPatternAttackDelegate(PatternAttackFinished);
     AIPawn->PhasePatternAction();
+    // @PHTODO
+    // 위는 서버로직이므로 클라에서 애니메이션 동기화 되도록 처리 필요.
+    // 이펙트 및 UI처리도 되어야 함.
+
+    
     return EBTNodeResult::InProgress;
 }

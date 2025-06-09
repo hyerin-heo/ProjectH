@@ -37,6 +37,9 @@ public:
 
 	virtual void PatternAction() = 0;
 	virtual void PhasePatternAction() = 0;
+	
+	virtual void AttackActionRPC() = 0;
+	
 	virtual void SetAIAttackDelegate(const FAIAttackFinished& InOnAttackFinished) = 0;
 	virtual void SetAIPatternAttackDelegate(const FAIPatternAttackFinished& InOnPatternAttackFinished) = 0;
 

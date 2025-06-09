@@ -21,6 +21,7 @@ struct FAttackPatternDelegateWrapper
 		: ItemDelegate(InDelegate), PatternInfo(InPatternInfo) {}
 
 	FOnAttackPattern ItemDelegate;
+	UPROPERTY()
 	FBossPatternInfo PatternInfo;
 };
 
@@ -43,6 +44,22 @@ public:
 	virtual void PatternAction() override;
 	virtual void PhasePatternAction() override;
 
+	// Animation/Effect RPC
+	UFUNCTION(NetMulticast, Reliable)
+	virtual void AttackActionRPC() override;
+	UFUNCTION(NetMulticast, Reliable)
+	virtual void PatternActionRPC(const FAttackPatternDelegateWrapper& InPatternInfo, const FName InMontageName);
+	UFUNCTION(NetMulticast, Reliable)
+	virtual void PhasePatternActionRPC(const FAttackPatternDelegateWrapper& InPhasePatternInfo, const FName InMontageName);
+
+	// Damage RPC
+	// @PHTODO
+
+	UFUNCTION()
+	void OnRep_MaxHP();
+	UFUNCTION()
+	void OnRep_HP();
+
 	virtual bool IsCoolTime() override;
 	virtual void SetCoolTime();
 
@@ -55,8 +72,17 @@ protected:
 	virtual void SetAIAttackDelegate(const FAIAttackFinished& InOnAttackFinished) override;
 	virtual void SetAIPatternAttackDelegate(const FAIPatternAttackFinished& InOnPatternAttackFinished) override;
 
+	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
+
 	FAIAttackFinished OnAttackFinished;
 	FAIPatternAttackFinished OnPatternAttackFinished;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Custom)
+	FName DefaultActionName;
+	// pattern name set PatternActionName1, PatternActionName2,....
+	// Montage section name must Start index 0.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Custom)
+	FName PatternActionName;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Animation)
 	TObjectPtr<class UAnimMontage> ActionMontage;
@@ -74,15 +100,12 @@ protected:
 	UPROPERTY()
 	TMap<uint8, FBossPhaseInfo> PhaseMap;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Custom)
+	UPROPERTY(EditAnywhere, ReplicatedUsing=OnRep_MaxHP, BlueprintReadOnly, Category=Custom)
 	float MaxHP;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Custom)
+	UPROPERTY(EditAnywhere, ReplicatedUsing=OnRep_HP, BlueprintReadOnly, Category=Custom)
 	float HP;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Custom)
-	uint8 bIsUnableToAttack:1;
-	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Custom)
 	float DetectionRadius;
 	

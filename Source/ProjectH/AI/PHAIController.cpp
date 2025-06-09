@@ -22,6 +22,7 @@ APHAIController::APHAIController()
 
 void APHAIController::StopAI()
 {
+	// @PHTODO 죽었을 때 처리해야하는 로직
 	UBehaviorTreeComponent* BTComponent = Cast<UBehaviorTreeComponent>(BrainComponent);
 	if (BTComponent)
 	{
@@ -32,11 +33,14 @@ void APHAIController::StopAI()
 void APHAIController::OnPossess(APawn* InPawn)
 {
 	Super::OnPossess(InPawn);
-	// Run
-	UBlackboardComponent* BlackboardPtr = Blackboard.Get();
-	if (UseBlackboard(BBData, BlackboardPtr))
+	// Run at server
+	if (HasAuthority())
 	{
-		bool RunResult = RunBehaviorTree(BTAsset);
-		ensure(RunResult);
+		UBlackboardComponent* BlackboardPtr = Blackboard.Get();
+		if (UseBlackboard(BBData, BlackboardPtr))
+		{
+			bool RunResult = RunBehaviorTree(BTAsset);
+			ensure(RunResult);
+		}	
 	}
 }

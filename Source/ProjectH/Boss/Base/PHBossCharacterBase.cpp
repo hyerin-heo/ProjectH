@@ -8,6 +8,8 @@
 #include "AI/PHAIController.h"
 #include "Animation/AnimInstance.h"
 #include "Components/SkeletalMeshComponent.h"
+#include "GameFramework/CharacterMovementComponent.h"
+#include "Net/UnrealNetwork.h"
 
 // Sets default values
 APHBossCharacterBase::APHBossCharacterBase()
@@ -89,12 +91,15 @@ bool APHBossCharacterBase::IsPhase()
 
 void APHBossCharacterBase::AttackAction()
 {
-    UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
-    AnimInstance->Montage_Play(ActionMontage, AttackSpeed);
-
+    PlayAnimMontage(ActionMontage, AttackSpeed, DefaultActionName);
+    
     FOnMontageEnded EndDelegate;
     EndDelegate.BindUObject(this, &APHBossCharacterBase::AttackActionEnd);
+    UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
     AnimInstance->Montage_SetEndDelegate(EndDelegate, ActionMontage);
+
+    // client에 attack 전송
+    AttackActionRPC();
 }
 
 void APHBossCharacterBase::AttackActionEnd(UAnimMontage* AnimMontage, bool bArg)
@@ -118,9 +123,10 @@ void APHBossCharacterBase::PatternAction()
         Index = FMath::RandRange(0, AttackPatternActions.Num() - 1);
     }
     while (Index == CurrentPatternIndex && AttackPatternActions.Num() > 1);
-    
-    UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
-    AnimInstance->Montage_Play(ActionMontage, AttackSpeed);
+
+    FName MontageName = FName(*FString::Printf(TEXT("%s%d"),*PatternActionName.ToString(), Index));
+    PlayAnimMontage(ActionMontage, AttackPatternActions[Index].PatternInfo.AttackSpeed, MontageName);
+    // AnimInstance->Montage_Play(ActionMontage, AttackSpeed);
     AttackPatternActions[Index].ItemDelegate.Execute();
     // save cool time
     CurrentPatternCoolTime = AttackPatternActions[Index].PatternInfo.CoolTime;
@@ -129,7 +135,11 @@ void APHBossCharacterBase::PatternAction()
 
     FOnMontageEnded EndDelegate;
     EndDelegate.BindUObject(this, &APHBossCharacterBase::PatternAttackActionEnd);
+    UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
     AnimInstance->Montage_SetEndDelegate(EndDelegate, ActionMontage);
+
+    // client에 attack 전송
+    PatternActionRPC(AttackPatternActions[Index], MontageName);
 }
 
 void APHBossCharacterBase::PhasePatternAction()
@@ -139,7 +149,9 @@ void APHBossCharacterBase::PhasePatternAction()
     auto Phase = AttackPatternActions.Last();
     
     UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
-    AnimInstance->Montage_Play(ActionMontage, Phase.PatternInfo.AttackSpeed);
+    // AnimInstance->Montage_Play(ActionMontage, Phase.PatternInfo.AttackSpeed);
+    FName MontageName = FName(*FString::Printf(TEXT("%s%d"),*PatternActionName.ToString(), AttackPatternActions.Num() - 1));
+    PlayAnimMontage(ActionMontage, Phase.PatternInfo.AttackSpeed, MontageName);
     Phase.ItemDelegate.Execute();
     // save cool time
     CurrentPatternCoolTime = Phase.PatternInfo.CoolTime;
@@ -149,15 +161,56 @@ void APHBossCharacterBase::PhasePatternAction()
     FOnMontageEnded EndDelegate;
     EndDelegate.BindUObject(this, &APHBossCharacterBase::PatternAttackActionEnd);
     AnimInstance->Montage_SetEndDelegate(EndDelegate, ActionMontage);
+    
+    // client에 attack 전송
+    PhasePatternActionRPC(Phase, MontageName);
+}
+
+void APHBossCharacterBase::AttackActionRPC_Implementation()
+{
+    if (HasAuthority())
+    {
+        return;
+    }
+    PH_LOG(LogPHBoss, Log, TEXT("APHBossCharacterBase::AttackActionRPC"));
+    PlayAnimMontage(ActionMontage, AttackSpeed, DefaultActionName);
+    // @PHTODO Effect
+}
+
+void APHBossCharacterBase::PatternActionRPC_Implementation(const FAttackPatternDelegateWrapper& InPatternInfo, const FName InMontageName)
+{
+    if (HasAuthority())
+    {
+        return;
+    }
+    PH_LOG(LogPHBoss, Log, TEXT("APHBossCharacterBase::PatternActionRPC MontageName -> %s, AttackSpeed -> %f"), *InMontageName.ToString(), InPatternInfo.PatternInfo.AttackSpeed);
+    PlayAnimMontage(ActionMontage, InPatternInfo.PatternInfo.AttackSpeed, InMontageName);
+    // @PHTODO Effect
+}
+
+void APHBossCharacterBase::PhasePatternActionRPC_Implementation(const FAttackPatternDelegateWrapper& InPhasePatternInfo, const FName InMontageName)
+{
+    if (HasAuthority())
+    {
+        return;
+    }
+    PH_LOG(LogPHBoss, Log, TEXT("APHBossCharacterBase::PhasePatternActionRPC"));
+    PlayAnimMontage(ActionMontage, InPhasePatternInfo.PatternInfo.AttackSpeed, InMontageName);
+    // @PHTODO Effect
+}
+
+void APHBossCharacterBase::OnRep_MaxHP()
+{
+    // @PHTODO 최대 체력 변경됐을 때, UI업데이트 필요.
+}
+
+void APHBossCharacterBase::OnRep_HP()
+{
+    // @PHTODO 체력 변경됐을 때, UI업데이트 필요.
 }
 
 bool APHBossCharacterBase::IsCoolTime()
 {
-    if (!GetWorldTimerManager().IsTimerActive(CoolTimeTimerHandle))
-    {
-        PH_LOG(LogPHBoss, Log, TEXT("Timer disabled! CoolTimeTimerHandle"));        
-    }
-    
     return GetWorldTimerManager().IsTimerActive(CoolTimeTimerHandle);
 }
 
@@ -196,7 +249,8 @@ void APHBossCharacterBase::BeginPlay()
         AttackRange = DataAsset->AttackRange;
         AttackSpeed = DataAsset->AttackSpeed;
         Armor = DataAsset->Armor;
-        bIsUnableToAttack = false;
+
+        GetCharacterMovement()->MaxWalkSpeed = Speed;
     }
 }
 
@@ -208,4 +262,11 @@ void APHBossCharacterBase::SetAIAttackDelegate(const FAIAttackFinished& InOnAtta
 void APHBossCharacterBase::SetAIPatternAttackDelegate(const FAIPatternAttackFinished& InOnPatternAttackFinished)
 {
     OnPatternAttackFinished = InOnPatternAttackFinished;
+}
+
+void APHBossCharacterBase::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const
+{
+    Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+    DOREPLIFETIME(APHBossCharacterBase, MaxHP); 
+    DOREPLIFETIME(APHBossCharacterBase, HP);
 }
