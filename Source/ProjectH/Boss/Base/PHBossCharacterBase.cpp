@@ -7,9 +7,12 @@
 #include "TimerManager.h"
 #include "AI/PHAIController.h"
 #include "Animation/AnimInstance.h"
+#include "Components/CapsuleComponent.h"
 #include "Components/SkeletalMeshComponent.h"
+#include "Engine/DamageEvents.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Net/UnrealNetwork.h"
+#include "Physics/PHCollision.h"
 
 // Sets default values
 APHBossCharacterBase::APHBossCharacterBase()
@@ -166,6 +169,62 @@ void APHBossCharacterBase::PhasePatternAction()
     PhasePatternActionRPC(Phase, MontageName);
 }
 
+void APHBossCharacterBase::AttackHitCheck()
+{
+    if (!HasAuthority())
+    {
+        return;
+    }
+    PH_LOG(LogPHBoss, Log, TEXT("%s"), TEXT("Begin"));
+
+    FHitResult OutHitResult;
+    FCollisionQueryParams Params(SCENE_QUERY_STAT(Attack), false, this);
+
+    const FVector Forward = GetActorForwardVector();
+    const FVector Start = GetActorLocation() + Forward * GetCapsuleComponent()->GetScaledCapsuleRadius();
+    const FVector End = Start + Forward * AttackRange;
+
+    bool HitDetected = GetWorld()->SweepSingleByChannel(
+        OutHitResult,
+        Start,
+        End,
+        FQuat::Identity,
+        CCHANNEL_ACTION,
+        FCollisionShape::MakeSphere(AttackRadius),
+        Params
+    );
+
+#if WITH_EDITOR
+    // Draw attack range.
+    FVector CapsuleOrigin = Start + (End - Start) * 0.5f;
+    float CapsuleHalfHeight = AttackRange * 0.5f;
+    FColor DrawColor = HitDetected ? FColor::Green : FColor::Red;
+
+    DrawDebugCapsule(GetWorld(),
+        CapsuleOrigin,
+        CapsuleHalfHeight,
+        AttackRadius,
+        FRotationMatrix::MakeFromZ(GetActorForwardVector()).ToQuat(),
+        DrawColor,
+        false,
+        1.0f
+        );
+    
+#endif
+    
+    if (HitDetected)
+    {
+        FDamageEvent DamageEvent;
+        OutHitResult.GetActor()->TakeDamage(AttackDamage, DamageEvent, GetController(), this);
+    }
+}
+
+void APHBossCharacterBase::PatternHitCheck(const int32& InPatternIndex, const uint8& InStep)
+{
+    // @PHTODO Pattern Attack Hit
+    PH_LOG(LogPHBoss, Log, TEXT("Pattern Index : %d, Step : %d"), InPatternIndex, InStep);
+}
+
 void APHBossCharacterBase::AttackActionRPC_Implementation()
 {
     if (HasAuthority())
@@ -197,6 +256,21 @@ void APHBossCharacterBase::PhasePatternActionRPC_Implementation(const FAttackPat
     PH_LOG(LogPHBoss, Log, TEXT("APHBossCharacterBase::PhasePatternActionRPC"));
     PlayAnimMontage(ActionMontage, InPhasePatternInfo.PatternInfo.AttackSpeed, InMontageName);
     // @PHTODO Effect
+}
+
+float APHBossCharacterBase::TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent,
+    class AController* EventInstigator, AActor* DamageCauser)
+{
+    Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
+    const float PrevHp = HP;
+    const float ActualDamage = FMath::Clamp<float>(DamageAmount, 0, DamageAmount);
+    HP = PrevHp-ActualDamage;
+    // @PHTODO Update UI
+    if (HP <= KINDA_SMALL_NUMBER)
+    {
+        // @PHTODO Dead
+    }
+    return DamageAmount;
 }
 
 void APHBossCharacterBase::OnRep_MaxHP()
@@ -247,6 +321,7 @@ void APHBossCharacterBase::BeginPlay()
         Speed = DataAsset->Speed;
         AttackDamage = DataAsset->AttackDamage;
         AttackRange = DataAsset->AttackRange;
+        AttackRadius = DataAsset->AttackRadius;
         AttackSpeed = DataAsset->AttackSpeed;
         Armor = DataAsset->Armor;
 

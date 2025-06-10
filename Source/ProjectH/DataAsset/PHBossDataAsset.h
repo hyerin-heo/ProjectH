@@ -71,6 +71,8 @@ public:
 	float AttackDamage = 0.f;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Common)
 	float AttackRange = 0.f;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	float AttackRadius = 0.f;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Common)
 	float Speed = 0.f;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Common)

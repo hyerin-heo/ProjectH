@@ -7,6 +7,7 @@
 #include "GameFramework/Character.h"
 #include "Interface/Boss/PHBossAIInterface.h"
 #include "DataAsset/PHBossDataAsset.h"
+#include "Interface/Boss/PHBossAnimationAttackInterface.h"
 #include "PHBossCharacterBase.generated.h"
 
 
@@ -26,7 +27,7 @@ struct FAttackPatternDelegateWrapper
 };
 
 UCLASS()
-class PROJECTH_API APHBossCharacterBase : public ACharacter, public IPHBossAIInterface
+class PROJECTH_API APHBossCharacterBase : public ACharacter, public IPHBossAIInterface, public IPHBossAnimationAttackInterface
 {
 	GENERATED_BODY()
 
@@ -44,6 +45,10 @@ public:
 	virtual void PatternAction() override;
 	virtual void PhasePatternAction() override;
 
+	virtual void AttackHitCheck() override;
+
+	virtual void PatternHitCheck(const int32& InPatternIndex, const uint8& InStep) override;
+
 	// Animation/Effect RPC
 	UFUNCTION(NetMulticast, Reliable)
 	virtual void AttackActionRPC() override;
@@ -54,6 +59,8 @@ public:
 
 	// Damage RPC
 	// @PHTODO
+
+	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
 
 	UFUNCTION()
 	void OnRep_MaxHP();
@@ -114,6 +121,9 @@ protected:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Custom)
 	float AttackRange;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Custom)
+	float AttackRadius;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Custom)
 	float Speed;

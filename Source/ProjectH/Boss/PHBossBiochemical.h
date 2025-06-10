@@ -24,6 +24,14 @@ public:
 	void Pattern3();
 	void Pattern4();
 	void Pattern5();
+	
+	void Pattern1HitCheck();
+	void Pattern2HitCheck();
+	void Pattern3HitCheck();
+	void Pattern4HitCheck();
+	void Pattern5HitCheck();
+
+	virtual void PatternHitCheck(const int32& InPatternIndex, const uint8& InStep) override;
 
 protected:
 	virtual void PhaseLevelChanged(const uint8& OldPhase, const uint8& NewPhase) override;
