@@ -27,12 +27,38 @@ APHWarriorCharacter::APHWarriorCharacter(const FObjectInitializer& ObjectInitial
 void APHWarriorCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+	
+	if (bTornadoSkill)
+	{
+		if (TornadoTurningTime > 0.0f)
+		{
+			TornadoTurningTime -= DeltaTime;
+		}
+		else
+		{
+			bTornadoSkill = false;
+			TornadoTurningTime = MAX_TURNINGTIME;
+			EndLoopTornadoSkill();	
+		}
+	}
+
+	if (StatDataComponent->GetCooldownReduction() && HasAuthority())
+	{
+		if (BerserkSkillRemaining > 0.0f)
+		{
+			BerserkSkillRemaining -= DeltaTime;
+		}
+		else
+		{
+			EndBerserkSkill();
+		}
+	}
+	
 }
 
 
 void APHWarriorCharacter::NormalAttackUI()
 {
-	PH_LOG(LogPHCharacter, Log, TEXT("SHOW NormalAttackUI"));
 	Super::NormalAttackUI();
 }
 
@@ -49,7 +75,12 @@ void APHWarriorCharacter::NormalAttack()
 	if (!HasAuthority())
 	{
 		PlayAnimMontage(ActionMontage, 1.0f, "NormalAttack");
-		SetMontageEndDelegate();	
+		FOnMontageEnded EndDelegate;
+		EndDelegate.BindLambda([this](UAnimMontage* Montage, bool bInterrupted)
+		{
+			SetActionEnd();
+		});
+		SetMontageEndDelegate(EndDelegate);	
 	}
 
 	ServerRPCNormalAttack();
@@ -73,8 +104,13 @@ void APHWarriorCharacter::Skill1()
 
 	if (!HasAuthority())
 	{
-		PlayAnimMontage(ActionMontage, 2.0f, "Skill1");
-		SetMontageEndDelegate();
+		PlayAnimMontage(ActionMontage, 1.0f, "Skill1");
+		FOnMontageEnded EndDelegate;
+		EndDelegate.BindLambda([this](UAnimMontage* Montage, bool bInterrupted)
+		{
+			SetActionEnd();
+		});
+		SetMontageEndDelegate(EndDelegate);
 	}
 
 	ServerRPCSkill1();
@@ -97,11 +133,66 @@ void APHWarriorCharacter::Skill2()
 
 	if (!HasAuthority())
 	{
-		PlayAnimMontage(ActionMontage, 1.0f, "Skill2_Start");
-		SetMontageEndDelegate();
+		PlayAnimMontage(ActionMontage, 1.5f, "Skill2_Start");
+		FOnMontageEnded EndDelegate;
+		EndDelegate.BindLambda([this](UAnimMontage* Montage, bool bInterrupted)
+		{
+			StartLoopTornadoSkill();
+		});
+		SetMontageEndDelegate(EndDelegate);
 	}
 
 	ServerRPCSkill2();
+}
+
+void APHWarriorCharacter::Skill3()
+{
+	if (0.0f < StatDataComponent->GetSkillCooldown(EAttackType::Skill3))
+	{
+		PH_LOG(LogPHCharacter, Log, TEXT("Remaining CoolTime : %f"), StatDataComponent->GetSkillCooldown(EAttackType::Skill3));
+		return;
+	}
+
+	Super::Skill3();
+
+	if (!HasAuthority())
+	{
+		PlayAnimMontage(ActionMontage, 1.0f, "Skill3");
+		FOnMontageEnded EndDelegate;
+		EndDelegate.BindLambda([this](UAnimMontage* Montage, bool bInterrupted)
+		{
+			SetActionEnd();
+		});
+		SetMontageEndDelegate(EndDelegate);
+	}
+
+	ServerRPCSkill3();
+	
+}
+
+void APHWarriorCharacter::Skill4()
+{
+	if (0.0f < StatDataComponent->GetSkillCooldown(EAttackType::Skill4))
+	{
+		PH_LOG(LogPHCharacter, Log, TEXT("Remaining CoolTime : %f"), StatDataComponent->GetSkillCooldown(EAttackType::Skill4));
+		return;
+	}
+
+	bActioning = true;
+	//Super::Skill4();
+
+	if (!HasAuthority())
+	{
+		PlayAnimMontage(ActionMontage, 1.0f, "Skill4");
+		FOnMontageEnded EndDelegate;
+		EndDelegate.BindLambda([this](UAnimMontage* Montage, bool bInterrupted)
+		{
+			SetActionEnd();
+		});
+		SetMontageEndDelegate(EndDelegate);
+	}
+
+	ServerRPCSkill4();
 }
 
 void APHWarriorCharacter::ServerRPCSkill1_Implementation()
@@ -109,49 +200,47 @@ void APHWarriorCharacter::ServerRPCSkill1_Implementation()
 	StatDataComponent->StartSkillCooldown(EAttackType::Skill1);
 	GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_None);
 	
-	PlayAnimMontage(ActionMontage, 2.0f, "Skill1");
-	SetMontageEndDelegate();	
+	PlayAnimMontage(ActionMontage, 1.0f, "Skill1");
+	FOnMontageEnded EndDelegate;
+	EndDelegate.BindLambda([this](UAnimMontage* Montage, bool bInterrupted)
+	{
+		SetActionEnd();
+	});
+	SetMontageEndDelegate(EndDelegate);	
 
 	StartDash();
 
-	for (auto* PlayerController : TActorRange<APlayerController>(GetWorld()))
-	{
-		//서버에 있는 플레이어 컨트롤러 거르기.
-		if (PlayerController && GetController() != PlayerController)
-		{
-			//클라이언트 중에서 본인이 아닌지 확인.
-			if (!PlayerController->IsLocalController())
-			{
-				//여기로 넘어온 플레이어 컨트롤러는 서버도 아니고, 본인 클라이언트도 아님.
-				APHCharacterBase* OtherPlayer = Cast<APHCharacterBase>(PlayerController->GetPawn());
-	
-				if (OtherPlayer)
-				{
-					//Client RPC를 전송.
-					OtherPlayer->ClientRPCPlayAnimation(this, "Skill1", 2.0f);
-				}
-			}
-		}
-	}
-	
+	SendClientRPCPlayAnimation("Skill1", 1.0f);
 }
 
 void APHWarriorCharacter::ServerRPCSkill2_Implementation()
 {
-	Super::ServerRPCSkill2_Implementation();
-
 	StatDataComponent->StartSkillCooldown(EAttackType::Skill2);
 	//GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_None);
 
-	PlayAnimMontage(ActionMontage, 1.0f, "Skill2_Start");
-
-	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	PlayAnimMontage(ActionMontage, 1.5f, "Skill2_Start");
+	
 	FOnMontageEnded EndDelegate;
-	EndDelegate.BindUObject(this, &APHCharacterBase::SetActionEnd);
-	if (AnimInstance)
+	EndDelegate.BindLambda([this](UAnimMontage* Montage, bool bInterrupted)
 	{
-		AnimInstance->Montage_SetEndDelegate(EndDelegate, ActionMontage);
-	}
+		StartLoopTornadoSkill();
+	});
+	SetMontageEndDelegate(EndDelegate);
+
+	SendClientRPCPlayAnimation("Skill2_Start", 1.5f);
+}
+
+void APHWarriorCharacter::ServerRPCSkill3_Implementation()
+{
+	Super::ServerRPCSkill3_Implementation();
+}
+
+void APHWarriorCharacter::ServerRPCSkill4_Implementation()
+{
+	Super::ServerRPCSkill4_Implementation();
+
+	StatDataComponent->IsCooldownReduction(true);
+	StatDataComponent->SetCooldownReductionPercentage(2.0f);
 }
 
 void APHWarriorCharacter::StartDash()
@@ -198,7 +287,32 @@ void APHWarriorCharacter::StartLoopTornadoSkill()
 		bTornadoSkill = true;
 	}
 
-	PlayAnimMontage(ActionMontage, 1.0f, "Skill2_Loop");
+	GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_Walking);
 
+	PlayAnimMontage(ActionMontage, 1.5f, "Skill2_Loop");
+
+	SendClientRPCPlayAnimation("Skill2_Loop", 1.5f);
+}
+
+void APHWarriorCharacter::EndLoopTornadoSkill()
+{
+	GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_None);
 	
+	PlayAnimMontage(ActionMontage, 1.5f, "Skill2_End");
+	
+	FOnMontageEnded EndDelegate;
+	EndDelegate.BindLambda([this](UAnimMontage* Montage, bool bInterrupted)
+	{
+		SetActionEnd();
+	});
+	
+	SetMontageEndDelegate(EndDelegate);
+
+	SendClientRPCPlayAnimation("Skill2_End", 1.5f);
+}
+
+void APHWarriorCharacter::EndBerserkSkill()
+{
+	StatDataComponent->IsCooldownReduction(false);
+	BerserkSkillRemaining = MAX_BERSERKTIME;
 }

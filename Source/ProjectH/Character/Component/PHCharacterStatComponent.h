@@ -67,11 +67,14 @@ public:
 	FORCEINLINE float GetMaxHp() const { return MaxHp; }
 	FORCEINLINE void HealHp(float InHealAmount) { CurrentHp = FMath::Clamp(CurrentHp + InHealAmount, 0, StatData->MaxHp); OnHpChanged.Broadcast(CurrentHp, MaxHp); }
 	FORCEINLINE float GetAttackRadius() const { return AttackRadius; }
+	FORCEINLINE bool GetCooldownReduction() const {return bCooldownReduction; }
 	float ApplyDamage(float InDamage);
 
 	void ResetStat();
 	void StartSkillCooldown(EAttackType InAttackType);
 	float GetSkillCooldown(EAttackType InAttackType);
+	void IsCooldownReduction(bool IsReduction);
+	void SetCooldownReductionPercentage(float InCooldownReductionPercentage);
 
 protected:
 	UPROPERTY(ReplicatedUsing= OnRep_CurrentHp, Transient, VisibleInstanceOnly, Category= Stat)
@@ -82,6 +85,12 @@ protected:
 
 	UPROPERTY(VisibleInstanceOnly, Category = Stat, Meta = (AllowPrivateAccess = "true"))
 	float AttackRadius;
+	
+	UPROPERTY(Replicated, Transient, VisibleInstanceOnly, Category= Stat)
+	float CooldownReductionPercentage = 0.0f;
+
+	UPROPERTY(Replicated)
+	uint8 bCooldownReduction : 1;
 
 	UPROPERTY(Replicated)
 	TArray<FSkillCooldownData>RemainingCooldowns;

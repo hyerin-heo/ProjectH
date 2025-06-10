@@ -16,6 +16,8 @@ UPHCharacterStatComponent::UPHCharacterStatComponent()
 	
 	bWantsInitializeComponent = true;
 	PrimaryComponentTick.bCanEverTick = true;
+	CooldownReductionPercentage = 0.0f;
+	bCooldownReduction = false;
 	
 }
 
@@ -51,7 +53,14 @@ void UPHCharacterStatComponent::TickComponent(float DeltaTime, enum ELevelTick T
 		{
 			if (RemainingCooldown.RemainingTime > 0.0f)
 			{
-				RemainingCooldown.RemainingTime -= DeltaTime;
+				if (bCooldownReduction)
+				{
+					RemainingCooldown.RemainingTime -= (DeltaTime * CooldownReductionPercentage);
+				}
+				else
+				{
+					RemainingCooldown.RemainingTime -= DeltaTime;
+				}
 			}
 		}
 	}
@@ -75,6 +84,7 @@ void UPHCharacterStatComponent::GetLifetimeReplicatedProps(TArray<class FLifetim
 	//캐릭터를 소유한 클라이언트만 전송하도록 설정.
 	//DOREPLIFETIME_CONDITION(UPHCharacterStatComponent, StatData, COND_OwnerOnly);
 	DOREPLIFETIME_CONDITION(UPHCharacterStatComponent, RemainingCooldowns, COND_OwnerOnly);
+	DOREPLIFETIME_CONDITION(UPHCharacterStatComponent, CooldownReductionPercentage, COND_OwnerOnly);
 }
 
 void UPHCharacterStatComponent::OnRep_CurrentHp()
@@ -166,6 +176,16 @@ float UPHCharacterStatComponent::GetSkillCooldown(EAttackType InAttackType)
 		
 	}
 	return 0;
+}
+
+void UPHCharacterStatComponent::IsCooldownReduction(bool IsReduction)
+{
+	bCooldownReduction = IsReduction;
+}
+
+void UPHCharacterStatComponent::SetCooldownReductionPercentage(float InCooldownReductionPercentage)
+{
+	CooldownReductionPercentage = InCooldownReductionPercentage;
 }
 
 

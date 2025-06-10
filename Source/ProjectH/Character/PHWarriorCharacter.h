@@ -6,6 +6,8 @@
 #include "Character/Base/PHCharacterBase.h"
 #include "PHWarriorCharacter.generated.h"
 
+#define MAX_TURNINGTIME 7.0f;
+#define MAX_BERSERKTIME 14.0f
 /**
  * 
  */
@@ -26,6 +28,8 @@ protected:
 	//virtual void ServerRPCSkill1() override;
 	virtual void ServerRPCSkill1_Implementation() override;
 	virtual void ServerRPCSkill2_Implementation() override;
+	virtual void ServerRPCSkill3_Implementation() override;
+	virtual void ServerRPCSkill4_Implementation() override;
 	
 	//Attack.
 	virtual void NormalAttackUI() override;
@@ -36,11 +40,15 @@ protected:
 	virtual void Skill1() override;
 	virtual void Skill2UI() override;
 	virtual void Skill2() override;
+	virtual void Skill3() override;
+	virtual void Skill4() override;
 	
 private:
 	void StartDash();
 	void HandleDashStep();
 	void StartLoopTornadoSkill();
+	void EndLoopTornadoSkill();
+	void EndBerserkSkill();
 
 private:
 	FTimerHandle DashTimerHandle;
@@ -52,6 +60,8 @@ private:
 
 	//TornadoSkillState;
 	bool bTornadoSkill = false;
-	float TornadoTurningTime = 4.0f;
-	
+	float TornadoTurningTime = MAX_TURNINGTIME;
+
+	//BerserkSkillState;
+	float BerserkSkillRemaining = MAX_BERSERKTIME;
 };
