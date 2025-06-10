@@ -15,8 +15,8 @@
 #include "ProjectH.h"
 #include "Character/Component/PHCharacterStatComponent.h"
 #include "Engine/AssetManager.h"
-#include "GameFramework/PlayerState.h"
 #include "Net/UnrealNetwork.h"
+#include "NavigationSystem.h"
 
 // Sets default values
 APHCharacterBase::APHCharacterBase(const FObjectInitializer& ObjectInitializer)
@@ -117,6 +117,7 @@ APHCharacterBase::APHCharacterBase(const FObjectInitializer& ObjectInitializer)
 	MeshIndex = -1;
 	//SetReplicatingMovement(true);
 	//SetReplicateMovement(true);
+	bUIActioning = false;
 	bActioning = false;
 	CurrentActionType = EPlayerActionType::None;
 }
@@ -214,27 +215,30 @@ void APHCharacterBase::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 	EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Triggered, this, &APHCharacterBase::NormalAttackUI);
 	EnhancedInputComponent->BindAction(Skill1Action, ETriggerEvent::Triggered, this, &APHCharacterBase::Skill1UI);
 	EnhancedInputComponent->BindAction(Skill2Action, ETriggerEvent::Triggered, this, &APHCharacterBase::Skill2UI);
+	EnhancedInputComponent->BindAction(Skill3Action, ETriggerEvent::Triggered, this, &APHCharacterBase::Skill3UI);
+	EnhancedInputComponent->BindAction(Skill4Action, ETriggerEvent::Triggered, this, &APHCharacterBase::Skill4UI);
 }
 
 void APHCharacterBase::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-	DOREPLIFETIME(APHCharacterBase, bActioning);
+	DOREPLIFETIME(APHCharacterBase, bUIActioning);
 	DOREPLIFETIME(APHCharacterBase, ActionTargetRotation);
 	DOREPLIFETIME(APHCharacterBase, MeshIndex);
+	DOREPLIFETIME(APHCharacterBase, bActioning);
 	//DOREPLIFETIME(APHCharacterBase, NormalAttackTargetRotation);
 }
 
 void APHCharacterBase::MouseClickMove()
 {
-	if (bActioning)
+	if (bUIActioning)
 	{
 		CurrentActionType = EPlayerActionType::None;
-		bActioning = false;
+		bUIActioning = false;
 		PH_LOG(LogPHCharacter, Log, TEXT("NormalAttack Or Skill Canceled"));
 		//@PHTODO : 나중에 스킬를 눌르고 스킬 범위를 취소할때 오른쪽 눌르면 이동이 아니고 취소되게 해야한다.
-
+	
 		return;
 	}
 
@@ -290,16 +294,16 @@ void APHCharacterBase::MulticastRPCSetNewLocation_Implementation(FVector NewLoca
 {
 	if (GetController())
 	{
+		PH_LOG(LogPHCharacter, Log, TEXT("TargetRotation: %d"), GetCharacterMovement()->MovementMode);
 		FVector SightLocation = NewLocation - GetActorLocation();
 		GetController()->SetControlRotation(FRotationMatrix::MakeFromX(SightLocation).Rotator());
 		UAIBlueprintHelperLibrary::SimpleMoveToLocation(GetController(), NewLocation);
-		
 	}
 }
 
 void APHCharacterBase::SetAction()
 {
-	if (!bActioning) return; //아무런 행동을 안하고 있으면  return.
+	if (!bUIActioning || bActioning) return; //아무런 행동을 안하고 있으면  return.
 
 	switch (CurrentActionType)
 	{
@@ -334,19 +338,23 @@ void APHCharacterBase::SetAction()
 			break;
 		}
 	}
+	
+	bUIActioning = false;
 }
 
-void APHCharacterBase::SetActionEnd(UAnimMontage* TargetMontage, bool IsProperlyEnded)
+void APHCharacterBase::SetActionEnd()
 {
 	bActioning = false;
+	bUIActioning = false;
+	PH_LOG(LogPHCharacter, Log, TEXT("SetActionEnd() bActioning : %d"), bActioning);
 	GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_Walking);
 }
 
-void APHCharacterBase::SetMontageEndDelegate()
+void APHCharacterBase::SetMontageEndDelegate(FOnMontageEnded& EndDelegate)
 {
 	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
-	FOnMontageEnded EndDelegate;
-	EndDelegate.BindUObject(this, &APHCharacterBase::SetActionEnd);
+	// FOnMontageEnded EndDelegate;
+	// EndDelegate.BindUObject(this, &APHCharacterBase::SetActionEnd);
 	if (AnimInstance)
 	{
 		AnimInstance->Montage_SetEndDelegate(EndDelegate, ActionMontage);
@@ -357,14 +365,15 @@ void APHCharacterBase::SetMontageEndDelegate()
 void APHCharacterBase::NormalAttackUI()
 {
 	//현재 무슨 행동중이면 return.
-	if (bActioning) return;
+	if (bUIActioning) return;
 
 	CurrentActionType = EPlayerActionType::NormalAttack;
-	bActioning = true;
+	bUIActioning = true;
 }
 
 void APHCharacterBase::NormalAttack()
 {
+	bActioning = true;
 	RotateToCursor();
 	// Movement Setting
 	GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_None);
@@ -373,10 +382,10 @@ void APHCharacterBase::NormalAttack()
 void APHCharacterBase::EvasionUI()
 {
 	//현재 무슨 행동중이면 return.
-	if (bActioning) return;
+	if (bUIActioning) return;
 
 	CurrentActionType = EPlayerActionType::Evasion;
-	bActioning = true;
+	bUIActioning = true;
 }
 
 void APHCharacterBase::Evasion()
@@ -387,14 +396,15 @@ void APHCharacterBase::Evasion()
 void APHCharacterBase::Skill1UI()
 {
 	//현재 무슨 행동중이면 return.
-	if (bActioning) return;
+	if (bUIActioning) return;
 
 	CurrentActionType = EPlayerActionType::Skill1;
-	bActioning = true;
+	bUIActioning = true;
 }
 
 void APHCharacterBase::Skill1()
 {
+	bActioning = true;
 	RotateToCursor();
 	GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_None);
 	// Movement Setting
@@ -405,15 +415,16 @@ void APHCharacterBase::Skill1()
 void APHCharacterBase::Skill2UI()
 {
 	//현재 무슨 행동중이면 return.
-	if (bActioning) return;
+	if (bUIActioning) return;
 
 	CurrentActionType = EPlayerActionType::Skill2;
-	bActioning = true;
+	bUIActioning = true;
 }
 
 void APHCharacterBase::Skill2()
 {
-	RotateToCursor();
+	bActioning = true;
+	//RotateToCursor();
 	// Movement Setting
 	//@PHTODO: 해당 셋팅은 스킬마다 다르게 셋팅 되어야 한다.
 	//GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_None);
@@ -422,14 +433,15 @@ void APHCharacterBase::Skill2()
 void APHCharacterBase::Skill3UI()
 {
 	//현재 무슨 행동중이면 return.
-	if (bActioning) return;
+	if (bUIActioning) return;
 
 	CurrentActionType = EPlayerActionType::Skill3;
-	bActioning = true;
+	bUIActioning = true;
 }
 
 void APHCharacterBase::Skill3()
 {
+	bActioning = true;
 	RotateToCursor();
 	// Movement Setting
 	//@PHTODO: 해당 셋팅은 스킬마다 다르게 셋팅 되어야 한다.
@@ -439,14 +451,15 @@ void APHCharacterBase::Skill3()
 void APHCharacterBase::Skill4UI()
 {
 	//현재 무슨 행동중이면 return.
-	if (bActioning) return;
+	if (bUIActioning) return;
 
 	CurrentActionType = EPlayerActionType::Skill4;
-	bActioning = true;
+	bUIActioning = true;
 }
 
 void APHCharacterBase::Skill4()
 {
+	bActioning = true;
 	RotateToCursor();
 	// Movement Setting
 	//@PHTODO: 해당 셋팅은 스킬마다 다르게 셋팅 되어야 한다.
@@ -513,27 +526,15 @@ void APHCharacterBase::ServerRPCNormalAttack_Implementation()
 	GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_None);
 
 	PlayAnimMontage(ActionMontage, 1.0f, "NormalAttack");
-	SetMontageEndDelegate();
 	
-	for (auto* PlayerController : TActorRange<APlayerController>(GetWorld()))
+	FOnMontageEnded EndDelegate;
+	EndDelegate.BindLambda([this](UAnimMontage* Montage, bool bInterrupted)
 	{
-		//서버에 있는 플레이어 컨트롤러 거르기.
-		if (PlayerController && GetController() != PlayerController)
-		{
-			//클라이언트 중에서 본인이 아닌지 확인.
-			if (!PlayerController->IsLocalController())
-			{
-				//여기로 넘어온 플레이어 컨트롤러는 서버도 아니고, 본인 클라이언트도 아님.
-				APHCharacterBase* OtherPlayer = Cast<APHCharacterBase>(PlayerController->GetPawn());
-	
-				if (OtherPlayer)
-				{
-					//Client RPC를 전송.
-					OtherPlayer->ClientRPCPlayAnimation(this, "NormalAttack");
-				}
-			}
-		}
-	}
+		SetActionEnd();
+	});
+	SetMontageEndDelegate(EndDelegate);
+
+	SendClientRPCPlayAnimation("NormalAttack");
 }
 
 void APHCharacterBase::ServerRPCSkill1_Implementation()
@@ -543,27 +544,14 @@ void APHCharacterBase::ServerRPCSkill1_Implementation()
 	GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_None);
 	
 	PlayAnimMontage(ActionMontage, 1.0f, "Skill1");
-	SetMontageEndDelegate();
-	
-	for (auto* PlayerController : TActorRange<APlayerController>(GetWorld()))
+	FOnMontageEnded EndDelegate;
+	EndDelegate.BindLambda([this](UAnimMontage* Montage, bool bInterrupted)
 	{
-		//서버에 있는 플레이어 컨트롤러 거르기.
-		if (PlayerController && GetController() != PlayerController)
-		{
-			//클라이언트 중에서 본인이 아닌지 확인.
-			if (!PlayerController->IsLocalController())
-			{
-				//여기로 넘어온 플레이어 컨트롤러는 서버도 아니고, 본인 클라이언트도 아님.
-				APHCharacterBase* OtherPlayer = Cast<APHCharacterBase>(PlayerController->GetPawn());
-	
-				if (OtherPlayer)
-				{
-					//Client RPC를 전송.
-					OtherPlayer->ClientRPCPlayAnimation(this, "Skill1");
-				}
-			}
-		}
-	}
+		SetActionEnd();
+	});
+	SetMontageEndDelegate(EndDelegate);
+
+	SendClientRPCPlayAnimation("Skill1");
 }
 
 void APHCharacterBase::ServerRPCSkill2_Implementation()
@@ -573,27 +561,48 @@ void APHCharacterBase::ServerRPCSkill2_Implementation()
 	GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_None);
 	
 	PlayAnimMontage(ActionMontage, 1.0f, "Skill2");
-	SetMontageEndDelegate();
-	
-	for (auto* PlayerController : TActorRange<APlayerController>(GetWorld()))
+	FOnMontageEnded EndDelegate;
+	EndDelegate.BindLambda([this](UAnimMontage* Montage, bool bInterrupted)
 	{
-		//서버에 있는 플레이어 컨트롤러 거르기.
-		if (PlayerController && GetController() != PlayerController)
-		{
-			//클라이언트 중에서 본인이 아닌지 확인.
-			if (!PlayerController->IsLocalController())
-			{
-				//여기로 넘어온 플레이어 컨트롤러는 서버도 아니고, 본인 클라이언트도 아님.
-				APHCharacterBase* OtherPlayer = Cast<APHCharacterBase>(PlayerController->GetPawn());
-	
-				if (OtherPlayer)
-				{
-					//Client RPC를 전송.
-					OtherPlayer->ClientRPCPlayAnimation(this, "Skill2");
-				}
-			}
-		}
-	}
+		SetActionEnd();
+	});
+	SetMontageEndDelegate(EndDelegate);
+
+	SendClientRPCPlayAnimation("Skill2");
+}
+
+void APHCharacterBase::ServerRPCSkill3_Implementation()
+{
+	StatDataComponent->StartSkillCooldown(EAttackType::Skill3);
+	GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_None);
+
+	PlayAnimMontage(ActionMontage, 1.0f, "Skill3");
+
+	FOnMontageEnded EndDelegate;
+	EndDelegate.BindLambda([this](UAnimMontage* Montage, bool bInterrupted)
+	{
+		SetActionEnd();
+	});
+	SetMontageEndDelegate(EndDelegate);
+
+	SendClientRPCPlayAnimation("Skill3");
+}
+
+void APHCharacterBase::ServerRPCSkill4_Implementation()
+{
+	StatDataComponent->StartSkillCooldown(EAttackType::Skill4);
+	GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_None);
+
+	PlayAnimMontage(ActionMontage, 1.0f, "Skill4");
+
+	FOnMontageEnded EndDelegate;
+	EndDelegate.BindLambda([this](UAnimMontage* Montage, bool bInterrupted)
+	{
+		SetActionEnd();
+	});
+	SetMontageEndDelegate(EndDelegate);
+
+	SendClientRPCPlayAnimation("Skill4");
 }
 
 
@@ -677,6 +686,29 @@ void APHCharacterBase::RotateToCursor()
 
 void APHCharacterBase::SetDead()
 {
+}
+
+void APHCharacterBase::SendClientRPCPlayAnimation(FName SectionName, float AnimSpeed)
+{
+	for (auto* PlayerController : TActorRange<APlayerController>(GetWorld()))
+	{
+		//서버에 있는 플레이어 컨트롤러 거르기.
+		if (PlayerController && GetController() != PlayerController)
+		{
+			//클라이언트 중에서 본인이 아닌지 확인.
+			if (!PlayerController->IsLocalController())
+			{
+				//여기로 넘어온 플레이어 컨트롤러는 서버도 아니고, 본인 클라이언트도 아님.
+				APHCharacterBase* OtherPlayer = Cast<APHCharacterBase>(PlayerController->GetPawn());
+	
+				if (OtherPlayer)
+				{
+					//Client RPC를 전송.
+					OtherPlayer->ClientRPCPlayAnimation(this, SectionName, AnimSpeed);
+				}
+			}
+		}
+	}
 }
 
 void APHCharacterBase::PlayDeadAnimation()

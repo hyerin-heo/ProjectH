@@ -8,6 +8,8 @@
 #include "Engine/StreamableManager.h"
 #include "PHCharacterBase.generated.h"
 
+DECLARE_DELEGATE_TwoParams(FOnMontageEnd, UAnimMontage*, bool);
+
 UENUM()
 enum class EPlayerActionType : uint8
 {
@@ -45,12 +47,12 @@ protected:
 	void UpdateMeshFromPlayerState();
 	
 	//State Section.
-public:
-	void SetActionEnd(UAnimMontage* TargetMontage, bool IsProperlyEnded);
-protected:
-	void SetMontageEndDelegate();
-	virtual void SetDead();
+	void SetActionEnd();
+	void SetMontageEndDelegate(FOnMontageEnded& EndDelegate);
 	void PlayDeadAnimation();
+	void SendClientRPCPlayAnimation(FName SectionName, float AnimSpeed = 1.0f);
+	
+	virtual void SetDead();
 	
 public:	
 	// Called every frame
@@ -98,6 +100,10 @@ public:
 	virtual void ServerRPCSkill1();
 	UFUNCTION(Server, Unreliable)
 	virtual void ServerRPCSkill2();
+	UFUNCTION(Server, Unreliable)
+	virtual void ServerRPCSkill3();
+	UFUNCTION(Server, Unreliable)
+	virtual void ServerRPCSkill4();
 
 	//clientRPC
 	UFUNCTION(Client, Unreliable)
@@ -160,6 +166,8 @@ protected:
 	EPlayerActionType CurrentActionType;
 	
 	//현재 공격/스킬을 사용할려고 누른 상태인지를 체크할 bool값.
+	UPROPERTY(Replicated)
+	uint8 bUIActioning : 1;
 	UPROPERTY(Replicated)
 	uint8 bActioning : 1;
 
