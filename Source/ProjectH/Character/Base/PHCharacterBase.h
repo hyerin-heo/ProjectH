@@ -45,7 +45,9 @@ protected:
 	void UpdateMeshFromPlayerState();
 	
 	//State Section.
+public:
 	void SetActionEnd(UAnimMontage* TargetMontage, bool IsProperlyEnded);
+protected:
 	void SetMontageEndDelegate();
 	virtual void SetDead();
 	void PlayDeadAnimation();
