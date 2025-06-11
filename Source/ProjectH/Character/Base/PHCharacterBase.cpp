@@ -409,7 +409,6 @@ void APHCharacterBase::Skill1()
 	GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_None);
 	// Movement Setting
 	//@PHTODO: 해당 셋팅은 스킬마다 다르게 셋팅 되어야 한다.
-	//GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_None);
 }
 
 void APHCharacterBase::Skill2UI()
@@ -445,7 +444,7 @@ void APHCharacterBase::Skill3()
 	RotateToCursor();
 	// Movement Setting
 	//@PHTODO: 해당 셋팅은 스킬마다 다르게 셋팅 되어야 한다.
-	//GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_None);
+	GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_None);
 }
 
 void APHCharacterBase::Skill4UI()
@@ -463,7 +462,7 @@ void APHCharacterBase::Skill4()
 	RotateToCursor();
 	// Movement Setting
 	//@PHTODO: 해당 셋팅은 스킬마다 다르게 셋팅 되어야 한다.
-	//GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_None);
+	GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_None);
 }
 
 void APHCharacterBase::ServerRPCSetActionTargetRotation_Implementation(FRotator TargetRotation)

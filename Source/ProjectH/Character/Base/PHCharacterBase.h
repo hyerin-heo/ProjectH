@@ -51,6 +51,7 @@ protected:
 	void SetMontageEndDelegate(FOnMontageEnded& EndDelegate);
 	void PlayDeadAnimation();
 	void SendClientRPCPlayAnimation(FName SectionName, float AnimSpeed = 1.0f);
+	void SendClientRPCPlayEffect();
 	
 	virtual void SetDead();
 	

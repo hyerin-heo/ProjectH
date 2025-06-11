@@ -7,7 +7,7 @@
 #include "PHWarriorCharacter.generated.h"
 
 #define MAX_TURNINGTIME 7.0f;
-#define MAX_BERSERKTIME 14.0f
+#define MAX_BERSERKTIME 4.0f;
 /**
  * 
  */
@@ -23,6 +23,13 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
+	void SpawnSkill3Object();
+
+private:
+	UFUNCTION(NetMulticast, UnReliable)
+	void Multicast_SetActiveSkill4Effect(bool bEffectActive);
+
+	
 protected:
 	//Server
 	//virtual void ServerRPCSkill1() override;
@@ -46,8 +53,10 @@ protected:
 private:
 	void StartDash();
 	void HandleDashStep();
+
 	void StartLoopTornadoSkill();
 	void EndLoopTornadoSkill();
+
 	void EndBerserkSkill();
 
 private:
@@ -64,4 +73,10 @@ private:
 
 	//BerserkSkillState;
 	float BerserkSkillRemaining = MAX_BERSERKTIME;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Skill")
+	TSubclassOf<class APHWarriorSkill3Object> SkillObjClass;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Effect, Meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<class UNiagaraComponent> Skill4Effect;
 };

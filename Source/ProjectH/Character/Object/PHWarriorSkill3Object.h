@@ -15,22 +15,44 @@ public:
 	// Sets default values for this actor's properties
 	APHWarriorSkill3Object();
 
+	virtual void PostInitializeComponents() override;
+	virtual void Tick(float DeltaTime) override;
+
+	FORCEINLINE class USphereComponent* GetTriggerSphere() {return TriggerSphere;}
+
+	UFUNCTION()
+	// 외부에서 데미지 및 시전자 지정
+	void InitializeSkill(float InDamage, AActor* InInstigator);
+
+	UFUNCTION()
+	void OnTriggerOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepHitResult);
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-public:	
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
-
 private:
-	// UPROPERTY(VisibleDefaultsOnly)
-	// TObjectPtr<USceneComponent> Root;
-	//
-	// UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Effect, Meta = (AllowPrivateAccess = "true"))
-	// TObjectPtr<class UNiagaraComponent> Effect;
-	//
-	// UPROPERTY(EditDefaultsOnly, Category= State)
-	// float LifeTime = 1.5f;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Collision, Meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<class USphereComponent> TriggerSphere;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Effect, Meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<class UNiagaraComponent> FireEffect;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Effect, Meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<class UNiagaraComponent> FloorEffect;
+
+	
+
+	// UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Mesh, Meta = (AllowPrivateAccess = "true"))
+	// TObjectPtr<class UStaticMeshComponent> Mesh;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category= State, Meta = (AllowPrivateAccess = "true"))
+	float LifeTime = 1.5f;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = State, Meta = (AllowPrivateAccess = "true"))
+	float Damage = 0.0f;
+
+	// 시전자
+	UPROPERTY()
+	TObjectPtr<AActor> SkillInstigator;
 
 };

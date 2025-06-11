@@ -18,7 +18,8 @@ public class ProjectH : ModuleRules
 			"UMG", 
 			"NavigationSystem", 
 			"AIModule", 
-			"GameplayTasks"
+			"GameplayTasks",
+			"Niagara"
 		});
 		
 		PublicIncludePaths.AddRange(new string[] { "ProjectH" });

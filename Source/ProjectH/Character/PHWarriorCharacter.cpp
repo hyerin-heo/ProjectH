@@ -4,9 +4,12 @@
 #include "Character/PHWarriorCharacter.h"
 
 #include "EngineUtils.h"
+#include "NiagaraComponent.h"
 #include "ProjectH.h"
 #include "Component/PHCharacterStatComponent.h"
+#include "Components/CapsuleComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Object/PHWarriorSkill3Object.h"
 
 APHWarriorCharacter::APHWarriorCharacter(const FObjectInitializer& ObjectInitializer)
 	:Super(ObjectInitializer)
@@ -17,6 +20,17 @@ APHWarriorCharacter::APHWarriorCharacter(const FObjectInitializer& ObjectInitial
 		ActionMontage = ActionMontageRef.Object;
 	}
 
+	static ConstructorHelpers::FClassFinder<APHWarriorSkill3Object> ClassSkill3ObjectRef(TEXT("/Game/ProjectH/Blueprints/Character/SkillObject/MyPHWarriorSkill3Object.MyPHWarriorSkill3Object_C"));
+
+	if (ClassSkill3ObjectRef.Class)
+	{
+		SkillObjClass = ClassSkill3ObjectRef.Class;
+	}
+
+	Skill4Effect = CreateDefaultSubobject<UNiagaraComponent>(TEXT("FireEffect"));
+	Skill4Effect->SetupAttachment(RootComponent);
+	Skill4Effect->SetAutoActivate(false);
+	
 	// Weapon Component
 	Weapon = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Weapon"));
 	Weapon->SetupAttachment(GetMesh(), TEXT("hand_lSocket"));
@@ -157,7 +171,7 @@ void APHWarriorCharacter::Skill3()
 
 	if (!HasAuthority())
 	{
-		PlayAnimMontage(ActionMontage, 1.0f, "Skill3");
+		PlayAnimMontage(ActionMontage, 1.5f, "Skill3");
 		FOnMontageEnded EndDelegate;
 		EndDelegate.BindLambda([this](UAnimMontage* Montage, bool bInterrupted)
 		{
@@ -193,6 +207,25 @@ void APHWarriorCharacter::Skill4()
 	}
 
 	ServerRPCSkill4();
+	
+}
+
+void APHWarriorCharacter::Multicast_SetActiveSkill4Effect_Implementation(bool bEffectActive)
+{
+	if (bEffectActive)
+	{
+		if (Skill4Effect && !Skill4Effect->IsActive())
+		{
+			Skill4Effect->Activate(true);
+		}	
+	}
+	else
+	{
+		if (Skill4Effect->IsActive())
+		{
+			Skill4Effect->Deactivate();
+		}
+	}
 }
 
 void APHWarriorCharacter::ServerRPCSkill1_Implementation()
@@ -232,7 +265,19 @@ void APHWarriorCharacter::ServerRPCSkill2_Implementation()
 
 void APHWarriorCharacter::ServerRPCSkill3_Implementation()
 {
-	Super::ServerRPCSkill3_Implementation();
+	StatDataComponent->StartSkillCooldown(EAttackType::Skill3);
+	GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_None);
+
+	PlayAnimMontage(ActionMontage, 1.5f, "Skill3");
+
+	FOnMontageEnded EndDelegate;
+	EndDelegate.BindLambda([this](UAnimMontage* Montage, bool bInterrupted)
+	{
+		SetActionEnd();
+	});
+	SetMontageEndDelegate(EndDelegate);
+
+	SendClientRPCPlayAnimation("Skill3", 1.5f);
 }
 
 void APHWarriorCharacter::ServerRPCSkill4_Implementation()
@@ -241,6 +286,9 @@ void APHWarriorCharacter::ServerRPCSkill4_Implementation()
 
 	StatDataComponent->IsCooldownReduction(true);
 	StatDataComponent->SetCooldownReductionPercentage(2.0f);
+	Skill4Effect->Activate(true);
+	Multicast_SetActiveSkill4Effect(true);
+	
 }
 
 void APHWarriorCharacter::StartDash()
@@ -315,4 +363,40 @@ void APHWarriorCharacter::EndBerserkSkill()
 {
 	StatDataComponent->IsCooldownReduction(false);
 	BerserkSkillRemaining = MAX_BERSERKTIME;
+	if (Skill4Effect->IsActive())
+	{
+		Skill4Effect->Deactivate();
+	}
+	Multicast_SetActiveSkill4Effect(false);
+}
+
+void APHWarriorCharacter::SpawnSkill3Object()
+{
+	float Damage = 0.0f;
+	
+	if (StatDataComponent->GetBaseStat().AttackStatMap.Contains(EAttackType::Skill3))
+	{
+		Damage = StatDataComponent->GetBaseStat().AttackStatMap[EAttackType::Skill3].AttackDamage;
+	}
+	
+	for (int i = 1; i <= 3; ++i)
+	{
+		FVector Origin = GetActorLocation();
+		Origin.Z = GetCapsuleComponent()->GetComponentLocation().Z - GetCapsuleComponent()->GetScaledCapsuleHalfHeight();
+		
+		FVector Offset = GetActorForwardVector() * i * 300.f;
+		FVector SpawnLocation = Origin + Offset;
+
+		FTimerHandle TimerHandle;
+		FTimerDelegate Delegate = FTimerDelegate::CreateLambda([=, this]()
+		{
+			auto* SkillObj = GetWorld()->SpawnActor<APHWarriorSkill3Object>(SkillObjClass, SpawnLocation, GetActorRotation());
+			if (SkillObj)
+			{
+				SkillObj->InitializeSkill(Damage, this);
+			}
+		});
+
+		GetWorld()->GetTimerManager().SetTimer(TimerHandle, Delegate, i * 0.3f, false);
+	}
 }
