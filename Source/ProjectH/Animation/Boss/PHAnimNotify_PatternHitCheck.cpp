@@ -1,0 +1,26 @@
+// Fill out your copyright notice in the Description page of Project Settings.
+
+
+#include "Animation/Boss/PHAnimNotify_PatternHitCheck.h"
+
+#include "ProjectH.h"
+#include "Interface/Boss/PHBossAnimationAttackInterface.h"
+
+void UPHAnimNotify_PatternHitCheck::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation,
+                                           const FAnimNotifyEventReference& EventReference)
+{
+	Super::Notify(MeshComp, Animation, EventReference);
+	
+	if (MeshComp)
+	{
+		ENetMode NetMode = MeshComp->GetWorld()->GetNetMode();
+		if (NetMode == NM_DedicatedServer || NetMode == NM_ListenServer || NetMode == NM_Standalone)
+		{
+			IPHBossAnimationAttackInterface* AttackPawn = Cast<IPHBossAnimationAttackInterface>(MeshComp->GetOwner());
+			if (AttackPawn)
+			{
+				AttackPawn->PatternHitCheck(PatternIndex, Step);
+			}
+		}
+	}
+}
