@@ -113,10 +113,6 @@ void ASkillObjectBase::Tick(float DeltaTime)
 void ASkillObjectBase::PostInitializeComponents()
 {
 	Super::PostInitializeComponents();
-	if (GetWorld()->GetNetMode() == NM_Client)
-	{
-		PH_LOG(LogPHBoss, Error, TEXT("Client@!"));
-	}
 	if (!Mesh->IsRenderStateCreated())
 	{
 		Mesh->UnregisterComponent();
@@ -131,10 +127,6 @@ void ASkillObjectBase::PostInitializeComponents()
 
 void ASkillObjectBase::Launch(const FVector& Direction, float InDamage)
 {
-	if (GetWorld()->GetNetMode() == NM_Client)
-	{
-		PH_LOG(LogPHBoss, Error, TEXT("Client@!"));
-	}
 	SetActorTickEnabled(true);
 	SetActorEnableCollision(true);
 	Damage = InDamage;
@@ -145,10 +137,6 @@ void ASkillObjectBase::Launch(const FVector& Direction, float InDamage)
 
 void ASkillObjectBase::Launch(float InDamage, float InLifeTime)
 {
-	if (GetWorld()->GetNetMode() == NM_Client)
-	{
-		PH_LOG(LogPHBoss, Error, TEXT("Client@!"));
-	}
 	Init(InLifeTime);
 	SetActorTickEnabled(true);
 	SetActorEnableCollision(true);
@@ -234,6 +222,10 @@ void ASkillObjectBase::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty
 void ASkillObjectBase::Client_ActivateSkillObject_Implementation(FVector InLocation, FRotator InRotation,
 	FVector InVelocity, float InDamage, float InLifeTime, bool bInReturnToPoolOnHit)
 {
+	if (GetLocalRole() == ROLE_Authority)
+	{
+		return;
+	}
 	// 클라이언트에서 메시를 확실히 보이게 하고 이동 상태 설정
 	SetActorLocation(InLocation);
 	SetActorRotation(InRotation);
@@ -259,14 +251,14 @@ void ASkillObjectBase::Client_ActivateSkillObject_Implementation(FVector InLocat
 	LifeSpanDeltaTime = 0.f;
 	bReturnToPoolOnHit = bInReturnToPoolOnHit;
 	Damage = InDamage;
-
-	PH_LOG(LogPHBoss, Log, TEXT("Client %s: Client_ActivateSkillObject_Implementation called. Loc=%s, Vel=%s, Vis=%s"),
-		   *GetName(), *GetActorLocation().ToString(), *MovementComponent->Velocity.ToString(),
-		   Mesh->IsVisible() ? TEXT("True") : TEXT("False"));
 }
 
 void ASkillObjectBase::Client_ResetProjectile_Implementation()
 {
+	if (GetLocalRole() == ROLE_Authority)
+	{
+		return;
+	}
 	// 클라이언트에서 액터 비활성화
 	SetActorHiddenInGame(true);
 	SetActorEnableCollision(false);

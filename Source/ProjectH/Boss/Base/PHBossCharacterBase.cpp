@@ -228,7 +228,6 @@ void APHBossCharacterBase::AttackActionRPC_Implementation()
     {
         return;
     }
-    PH_LOG(LogPHBoss, Log, TEXT("APHBossCharacterBase::AttackActionRPC"));
     PlayAnimMontage(ActionMontage, AttackSpeed, DefaultActionName);
     // @PHTODO Effect
 }
@@ -239,7 +238,6 @@ void APHBossCharacterBase::PatternActionRPC_Implementation(const FAttackPatternD
     {
         return;
     }
-    PH_LOG(LogPHBoss, Log, TEXT("APHBossCharacterBase::PatternActionRPC MontageName -> %s, AttackSpeed -> %f"), *InMontageName.ToString(), InPatternInfo.PatternInfo.AttackSpeed);
     PlayAnimMontage(ActionMontage, InPatternInfo.PatternInfo.AttackSpeed, InMontageName);
     // @PHTODO Effect
 }
@@ -250,7 +248,6 @@ void APHBossCharacterBase::PhasePatternActionRPC_Implementation(const FAttackPat
     {
         return;
     }
-    PH_LOG(LogPHBoss, Log, TEXT("APHBossCharacterBase::PhasePatternActionRPC"));
     PlayAnimMontage(ActionMontage, InPhasePatternInfo.PatternInfo.AttackSpeed, InMontageName);
     // @PHTODO Effect
 }

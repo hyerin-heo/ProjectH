@@ -22,11 +22,11 @@ void USkillObjectPoolSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 	       GetWorld()->GetNetMode() == NM_ListenServer ? TEXT("Listen Server") : TEXT("Client"));
 
 	// 클라이언트는 서버가 스폰한 풀을 복제하도록 
-	if (GetWorld()->GetNetMode() == NM_DedicatedServer || GetWorld()->GetNetMode() == NM_ListenServer
-		|| GetWorld()->GetNetMode() == NM_Standalone)
-	{
+	// if (GetWorld()->GetNetMode() == NM_DedicatedServer || GetWorld()->GetNetMode() == NM_ListenServer
+	// 	|| GetWorld()->GetNetMode() == NM_Standalone)
+	// {
 		InitializePools();
-	}
+	// }
 }
 
 void USkillObjectPoolSubsystem::Deinitialize()
