@@ -100,8 +100,11 @@ ASkillObjectBase* USkillObjectPoolSubsystem::SpawnAndFireProjectile(
 	FVector Direction = EndLocation - SpawnLocation;
 	ASkillObjectBase* Projectile = SpawnSkillObject(ProjectileClass, SpawnLocation, Direction.Rotation(),
 	                                                InstigatorActor, OwnerActor);
-	Projectile->Init(EndLocation, Speed, LifeTime, ReturnToPoolOnHit);
-	Projectile->Launch(Direction.GetSafeNormal(), Damage);
+	if (Projectile)
+	{
+		Projectile->Init(EndLocation, Speed, LifeTime, ReturnToPoolOnHit);
+		Projectile->Launch(Direction.GetSafeNormal(), Damage);
+	}
 	return Projectile;
 }
 
@@ -113,8 +116,11 @@ ASkillObjectBase* USkillObjectPoolSubsystem::SpawnAndFireProjectile(
 {
 	ASkillObjectBase* Projectile = SpawnSkillObject(ProjectileClass, SpawnLocation, SpawnRotation, InstigatorActor,
 	                                                OwnerActor);
-	Projectile->Init(Speed, LifeTime, ReturnToPoolOnHit);
-	Projectile->Launch(SpawnRotation.Vector(), Damage);
+	if (Projectile)
+	{
+		Projectile->Init(Speed, LifeTime, ReturnToPoolOnHit);
+		Projectile->Launch(SpawnRotation.Vector(), Damage);
+	}
 	return Projectile;
 }
 
@@ -126,7 +132,10 @@ ASkillObjectBase* USkillObjectPoolSubsystem::SpawnAndFireProjectile(
 {
 	ASkillObjectBase* Projectile = SpawnSkillObject(ProjectileClass, SpawnLocation, SpawnRotation, InstigatorActor,
 	                                                OwnerActor);
-	Projectile->Launch(SpawnRotation.Vector(), Damage);
+	if (Projectile)
+	{
+		Projectile->Launch(SpawnRotation.Vector(), Damage);
+	}
 	return Projectile;
 }
 
@@ -150,7 +159,6 @@ ASkillObjectBase* USkillObjectPoolSubsystem::SpawnSkillObject(const TSubclassOf<
 		SkillObject->SetInstigator(InstigatorActor->GetInstigator());
 		SkillObject->SetOwner(OwnerActor);
 
-		UE_LOG(LogTemp, Log, TEXT("Activated SkillObject of type %s from pool."), *SkillObjectClass->GetName());
 		return SkillObject;
 	}
 
@@ -190,7 +198,7 @@ void USkillObjectPoolSubsystem::InitializeSinglePool(FSkillObjectPoolData& PoolD
 		return;
 	}
 	SkillObjectPoolMap.Add(PoolData.SkillObjectClass, FSkillObjectPoolData());
-	FSkillObjectPoolData& PoolRef =SkillObjectPoolMap.FindChecked(PoolData.SkillObjectClass);
+	FSkillObjectPoolData& PoolRef = SkillObjectPoolMap.FindChecked(PoolData.SkillObjectClass);
 	PoolRef.SkillObjectClass = PoolData.SkillObjectClass;
 	PoolRef.PoolSize = PoolData.PoolSize;
 
@@ -209,7 +217,7 @@ void USkillObjectPoolSubsystem::InitializeSinglePool(FSkillObjectPoolData& PoolD
 		// 스폰 실패 시에도 크래시 방지
 		SpawnParams.bNoFail = true;
 
-		FVector SpawnLocation = FVector(0.f, 0.f, -10000.f);
+		FVector SpawnLocation = FVector::Zero();
 		FRotator SpawnRotation = FRotator::ZeroRotator;
 
 		// 서버에만 존재하며 클라에는 복제

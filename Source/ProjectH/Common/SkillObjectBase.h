@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "ProjectH.h"
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/Actor.h"
 #include "GameFramework/ProjectileMovementComponent.h"
@@ -48,6 +49,8 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
+	void PostInitializeComponents() override;
+
 	/**
 	 * Must call after Init
 	 * @param Direction 월드 내에서 이동할 거리와 방향(cm/s).
@@ -71,17 +74,17 @@ public:
 
 	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
 
-	virtual void LifeSpanExpired() override;
+	UFUNCTION(Client, Reliable)
+	void Client_ActivateSkillObject(FVector InLocation, FRotator InRotation, FVector InVelocity, float InDamage, float InLifeTime, bool bInReturnToPoolOnHit);
 
-	virtual void Destroyed() override;
-
-	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
-
+	UFUNCTION(Client, Reliable)
+	void Client_ResetProjectile();
+	
 	// Sphere collision component.
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = SkillObject)
 	UCapsuleComponent* CollisionComponent;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = SkillObject)
+	UPROPERTY(VisibleAnywhere, Replicated, BlueprintReadOnly, Category = SkillObject)
 	UProjectileMovementComponent* MovementComponent;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = SkillObject)

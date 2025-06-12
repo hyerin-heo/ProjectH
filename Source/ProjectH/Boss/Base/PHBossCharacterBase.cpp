@@ -175,8 +175,6 @@ void APHBossCharacterBase::AttackHitCheck()
     {
         return;
     }
-    PH_LOG(LogPHBoss, Log, TEXT("%s"), TEXT("Begin"));
-
     FHitResult OutHitResult;
     FCollisionQueryParams Params(SCENE_QUERY_STAT(Attack), false, this);
 
@@ -222,7 +220,6 @@ void APHBossCharacterBase::AttackHitCheck()
 void APHBossCharacterBase::PatternHitCheck(const int32& InPatternIndex, const uint8& InStep)
 {
     // @PHTODO Pattern Attack Hit
-    PH_LOG(LogPHBoss, Log, TEXT("Pattern Index : %d, Step : %d"), InPatternIndex, InStep);
 }
 
 void APHBossCharacterBase::AttackActionRPC_Implementation()
@@ -292,13 +289,13 @@ void APHBossCharacterBase::SetCoolTime()
 {
     if (GetWorldTimerManager().IsTimerActive(CoolTimeTimerHandle))
     {
-        PH_LOG(LogPHBoss, Log, TEXT("Timer Active! if this log shown when after pattern->phase, it's right. but else, it's error. check it."));
+        // PH_LOG(LogPHBoss, Log, TEXT("Timer Active! if this log shown when after pattern->phase, it's right. but else, it's error. check it."));
         
         GetWorldTimerManager().ClearTimer(CoolTimeTimerHandle);
     }
     GetWorldTimerManager().SetTimer(CoolTimeTimerHandle, [&]()
     {
-        PH_LOG(LogPHBoss, Log, TEXT("Cool time End!!"));
+        // PH_LOG(LogPHBoss, Log, TEXT("Cool time End!!"));
     },CurrentPatternCoolTime , false);
 }
 

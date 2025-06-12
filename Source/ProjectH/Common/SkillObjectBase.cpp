@@ -5,6 +5,7 @@
 
 #include "ProjectH.h"
 #include "Engine/DamageEvents.h"
+#include "Net/UnrealNetwork.h"
 #include "Physics/PHCollision.h"
 
 // Sets default values
@@ -46,6 +47,7 @@ ASkillObjectBase::ASkillObjectBase()
 	MovementComponent->MaxSpeed = 3000.f;
 	MovementComponent->bRotationFollowsVelocity = true;
 	MovementComponent->bShouldBounce = false;
+	MovementComponent->ProjectileGravityScale = 0.f;
 	MovementComponent->SetIsReplicated(true); 
 
 	InitialLifeSpan = 0.0f;
@@ -55,7 +57,6 @@ ASkillObjectBase::ASkillObjectBase()
 void ASkillObjectBase::BeginPlay()
 {
 	Super::BeginPlay();
-	SetActorTickEnabled(false);
 	MovementComponent->InitialSpeed = InitialSpeed;
 	MovementComponent->MaxSpeed = MaxSpeed;
 	MovementComponent->StopMovementImmediately();
@@ -63,6 +64,10 @@ void ASkillObjectBase::BeginPlay()
 	LifeSpanDeltaTime = 0.f;
 	LifeSpan = 0.f;
 	Mesh->Activate();
+	if (GetWorld()->GetNetMode() == NM_Client)
+	{
+		PH_LOG(LogPHBoss, Error, TEXT("Client@!"));
+	}
 }
 
 void ASkillObjectBase::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp,
@@ -105,22 +110,51 @@ void ASkillObjectBase::Tick(float DeltaTime)
 	}
 }
 
+void ASkillObjectBase::PostInitializeComponents()
+{
+	Super::PostInitializeComponents();
+	if (GetWorld()->GetNetMode() == NM_Client)
+	{
+		PH_LOG(LogPHBoss, Error, TEXT("Client@!"));
+	}
+	if (!Mesh->IsRenderStateCreated())
+	{
+		Mesh->UnregisterComponent();
+		Mesh->RegisterComponent();
+	}
+	if (!CollisionComponent->IsRenderStateCreated())
+	{
+		CollisionComponent->UnregisterComponent();
+		CollisionComponent->RegisterComponent();
+	}
+}
+
 void ASkillObjectBase::Launch(const FVector& Direction, float InDamage)
 {
-	
+	if (GetWorld()->GetNetMode() == NM_Client)
+	{
+		PH_LOG(LogPHBoss, Error, TEXT("Client@!"));
+	}
 	SetActorTickEnabled(true);
 	SetActorEnableCollision(true);
 	Damage = InDamage;
 	MovementComponent->Velocity = Direction * InitialSpeed;
-	MovementComponent->Activate();
+	MovementComponent->Activate();// 클라이언트에 액터 활성화 및 초기 이동 상태를 직접 알려주는 RPC 호출
+	Client_ActivateSkillObject(GetActorLocation(), GetActorRotation(), MovementComponent->Velocity, InDamage, LifeSpan, bReturnToPoolOnHit);
 }
 
 void ASkillObjectBase::Launch(float InDamage, float InLifeTime)
 {
+	if (GetWorld()->GetNetMode() == NM_Client)
+	{
+		PH_LOG(LogPHBoss, Error, TEXT("Client@!"));
+	}
 	Init(InLifeTime);
 	SetActorTickEnabled(true);
 	SetActorEnableCollision(true);
 	Damage = InDamage;
+	// 클라이언트에 액터 활성화 및 초기 이동 상태를 직접 알려주는 RPC 호출
+	Client_ActivateSkillObject(GetActorLocation(), GetActorRotation(), MovementComponent->Velocity, InDamage, LifeSpan, bReturnToPoolOnHit);
 }
 
 void ASkillObjectBase::Init(float InSpeed, float InLifeTime, bool ReturnToPoolOnHit)
@@ -186,30 +220,64 @@ void ASkillObjectBase::ResetProjectile()
 	// SetLifeSpan(0.0f);
 	LifeSpan = 0.f;
 	LifeSpanDeltaTime = 0.f;
+
+	Client_ResetProjectile();
 }
 
 void ASkillObjectBase::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-	// DOREPLIFETIME(AMyProjectile, ProjectileMovement);
+	DOREPLIFETIME(ASkillObjectBase, MovementComponent);
 }
 
-void ASkillObjectBase::LifeSpanExpired()
+
+void ASkillObjectBase::Client_ActivateSkillObject_Implementation(FVector InLocation, FRotator InRotation,
+	FVector InVelocity, float InDamage, float InLifeTime, bool bInReturnToPoolOnHit)
 {
-	// Do not destroy
-	// Super::LifeSpanExpired();
-	ResetProjectile();
+	// 클라이언트에서 메시를 확실히 보이게 하고 이동 상태 설정
+	SetActorLocation(InLocation);
+	SetActorRotation(InRotation);
+	SetActorHiddenInGame(false); // 다시 보이게
+	SetActorEnableCollision(true); // 콜리전 활성화
+	SetActorTickEnabled(true); // 틱 활성화
+
+	// 메시 컴포넌트의 가시성도 명시적으로 설정 (안전빵)
+	if (Mesh)
+	{
+		Mesh->SetVisibility(true);
+		// 렌더링 상태가 확실히 업데이트되도록 강제
+		Mesh->MarkRenderStateDirty(); 
+	}
+
+	// 이동 컴포넌트 상태 동기화
+	MovementComponent->InitialSpeed = InVelocity.Size();
+	MovementComponent->MaxSpeed = InVelocity.Size() * 2.0f; // MaxSpeed도 InitialSpeed에 맞춰 설정
+	MovementComponent->Velocity = InVelocity; // 복제된 MovementComponent의 Velocity를 직접 설정
+	MovementComponent->Activate(); // 이동 시작
+
+	LifeSpan = InLifeTime;
+	LifeSpanDeltaTime = 0.f;
+	bReturnToPoolOnHit = bInReturnToPoolOnHit;
+	Damage = InDamage;
+
+	PH_LOG(LogPHBoss, Log, TEXT("Client %s: Client_ActivateSkillObject_Implementation called. Loc=%s, Vel=%s, Vis=%s"),
+		   *GetName(), *GetActorLocation().ToString(), *MovementComponent->Velocity.ToString(),
+		   Mesh->IsVisible() ? TEXT("True") : TEXT("False"));
 }
 
-void ASkillObjectBase::Destroyed()
+void ASkillObjectBase::Client_ResetProjectile_Implementation()
 {
-	Super::Destroyed();
-	PH_LOG(LogPHBoss, Error, TEXT("Destroy!!"));
+	// 클라이언트에서 액터 비활성화
+	SetActorHiddenInGame(true);
+	SetActorEnableCollision(false);
+	SetActorTickEnabled(false);
+	if (Mesh)
+	{
+		Mesh->SetVisibility(false);
+		Mesh->MarkRenderStateDirty();
+	}
+	MovementComponent->StopMovementImmediately();
+	MovementComponent->Deactivate();
+	LifeSpan = 0.f;
+	LifeSpanDeltaTime = 0.f;
 }
-
-void ASkillObjectBase::EndPlay(const EEndPlayReason::Type EndPlayReason)
-{
-	Super::EndPlay(EndPlayReason);
-	PH_LOG(LogPHBoss, Error, TEXT("Destroy!!"));
-}
-

@@ -24,36 +24,30 @@ void APHBossBiochemical::BeginPlay()
 void APHBossBiochemical::AttackAction()
 {
 	Super::AttackAction();
-	PH_LOG(LogPHBoss, Log, TEXT("Called APHBossBiochemical::Attack"));
 }
 
 void APHBossBiochemical::Pattern1()
 {
-	PH_LOG(LogPHBoss, Log, TEXT("Called APHBossBiochemical::Pattern1"));
 	// @PHTODO 패턴 대미지 위치 알려주는 UI및 이펙트 처리? 
 }
 
 void APHBossBiochemical::Pattern2()
 {
-	PH_LOG(LogPHBoss, Log, TEXT("Called APHBossBiochemical::Pattern2"));
 	// @PHTODO 패턴 대미지 위치 알려주는 UI및 이펙트 처리?
 }
 
 void APHBossBiochemical::Pattern3()
 {
-	PH_LOG(LogPHBoss, Log, TEXT("Called APHBossBiochemical::Pattern3"));
 	// @PHTODO 패턴 대미지 위치 알려주는 UI및 이펙트 처리?
 }
 
 void APHBossBiochemical::Pattern4()
 {
-	PH_LOG(LogPHBoss, Log, TEXT("Called APHBossBiochemical::Pattern4"));
 	// @PHTODO 패턴 대미지 위치 알려주는 UI및 이펙트 처리? 
 }
 
 void APHBossBiochemical::Pattern5()
 {
-	PH_LOG(LogPHBoss, Log, TEXT("Called APHBossBiochemical::Pattern5"));
 	// @PHTODO 패턴 대미지 위치 알려주는 UI및 이펙트 처리?
 }
 
@@ -94,20 +88,17 @@ void APHBossBiochemical::Test(float Damage)
 	if (PoolSubsystem)
 	{
 		// const FVector SpawnLocation = GetMesh()->GetSocketLocation(TEXT(""));
-		const FVector SpawnLocation = GetActorLocation();
 		
 		APHSwordAuraSkillObject* NewSkillObject = Cast<APHSwordAuraSkillObject>(PoolSubsystem->SpawnAndFireProjectile(
 			SkillObjectsMap.FindChecked(SkillObjectType::SwordAura),
-			SpawnLocation,
-			GetControlRotation(),
+			GetActorLocation(),
+			GetActorRotation(),
 			this,
 			this,
 			Damage,
-			10.f,
+			1000.f,
 			10.f
 		));
-
-		PH_LOG(LogPHBoss, Error, TEXT("%s is %s"), *NewSkillObject->GetName(), NewSkillObject->IsHidden() ? TEXT("Hidden."):TEXT("Shown."))
 
 		// if (NewSkillObject)
 		// {
