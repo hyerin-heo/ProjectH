@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/GameMode.h"
+#include "Subsystem/SkillObjectPoolSubsystem.h"
 #include "PHGameMode.generated.h"
 
 /**
@@ -25,8 +26,13 @@ public:
 
 	virtual void PostLogin(APlayerController* NewPlayer) override;
 
+	virtual void InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage) override;
+
 	virtual void StartPlay() override;
 
+	UPROPERTY(VisibleAnywhere, Category = Subsystems)
+	TSubclassOf<USkillObjectPoolSubsystem> SkillObjectPoolSubsystem;
+	
 protected:
 	virtual void PostInitializeComponents() override;
 };

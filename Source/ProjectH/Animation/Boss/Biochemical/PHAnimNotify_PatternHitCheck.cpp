@@ -11,7 +11,7 @@ void UPHAnimNotify_PatternHitCheck::Notify(USkeletalMeshComponent* MeshComp, UAn
 	Super::Notify(MeshComp, Animation, EventReference);
 	if (MeshComp)
 	{
-		IPHBossAnimationAttackInterface* AttackPawn = Cast<IPHBossAnimationAttackInterface>(MeshComp);
+		IPHBossAnimationAttackInterface* AttackPawn = Cast<IPHBossAnimationAttackInterface>(MeshComp->GetOwner());
 		if (AttackPawn)
 		{
 			AttackPawn->PatternHitCheck(PatternIndex, Step);
