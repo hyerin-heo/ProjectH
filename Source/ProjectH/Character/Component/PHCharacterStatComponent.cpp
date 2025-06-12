@@ -85,6 +85,7 @@ void UPHCharacterStatComponent::GetLifetimeReplicatedProps(TArray<class FLifetim
 	//DOREPLIFETIME_CONDITION(UPHCharacterStatComponent, StatData, COND_OwnerOnly);
 	DOREPLIFETIME_CONDITION(UPHCharacterStatComponent, RemainingCooldowns, COND_OwnerOnly);
 	DOREPLIFETIME_CONDITION(UPHCharacterStatComponent, CooldownReductionPercentage, COND_OwnerOnly);
+	DOREPLIFETIME_CONDITION(UPHCharacterStatComponent, bCooldownReduction, COND_OwnerOnly);
 }
 
 void UPHCharacterStatComponent::OnRep_CurrentHp()
@@ -176,6 +177,16 @@ float UPHCharacterStatComponent::GetSkillCooldown(EAttackType InAttackType)
 		
 	}
 	return 0;
+}
+
+float UPHCharacterStatComponent::GetDamage(EAttackType InAttackType)
+{
+	if (StatData->AttackStatMap.Contains(InAttackType))
+	{
+		return StatData->AttackStatMap[InAttackType].AttackDamage;
+	}
+	
+	return 0.0f;;
 }
 
 void UPHCharacterStatComponent::IsCooldownReduction(bool IsReduction)

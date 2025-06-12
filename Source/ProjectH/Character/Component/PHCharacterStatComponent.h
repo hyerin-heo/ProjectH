@@ -73,6 +73,7 @@ public:
 	void ResetStat();
 	void StartSkillCooldown(EAttackType InAttackType);
 	float GetSkillCooldown(EAttackType InAttackType);
+	float GetDamage(EAttackType InAttackType);
 	void IsCooldownReduction(bool IsReduction);
 	void SetCooldownReductionPercentage(float InCooldownReductionPercentage);
 

@@ -17,6 +17,7 @@
 #include "Engine/AssetManager.h"
 #include "Net/UnrealNetwork.h"
 #include "NavigationSystem.h"
+#include "Engine/DamageEvents.h"
 
 // Sets default values
 APHCharacterBase::APHCharacterBase(const FObjectInitializer& ObjectInitializer)
@@ -152,6 +153,8 @@ void APHCharacterBase::BeginPlay()
 		Subsystem->ClearAllMappings();
 		Subsystem->AddMappingContext(InputMappingContext, 0);
 	}
+
+	Weapon->OnComponentBeginOverlap.AddDynamic(this, &APHCharacterBase::OnWeaponOverlap);
 }
 
 //Owner가 빙의 되는 함수.(클라이언트에서는 호출이 안된다.)
@@ -230,6 +233,35 @@ void APHCharacterBase::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty
 	//DOREPLIFETIME(APHCharacterBase, NormalAttackTargetRotation);
 }
 
+void APHCharacterBase::OnWeaponOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
+	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	if (!HasAuthority())
+	{
+		return;
+	}
+
+	if (OtherActor && OtherActor != this)
+	{
+		UE_LOG(LogTemp, Log, TEXT("무기 충돌: %s"), *OtherActor->GetName());
+		// 데미지 처리
+		FDamageEvent DamageEvent;
+		OtherActor->TakeDamage(AttackDamage, DamageEvent, GetController(), this);
+	}
+}
+
+void APHCharacterBase::EnableWeaponCollision(bool bActive)
+{
+	if (bActive)
+	{
+		Weapon->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+	}
+	else
+	{
+		Weapon->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	}
+}
+
 void APHCharacterBase::MouseClickMove()
 {
 	if (bUIActioning)
@@ -294,7 +326,6 @@ void APHCharacterBase::MulticastRPCSetNewLocation_Implementation(FVector NewLoca
 {
 	if (GetController())
 	{
-		PH_LOG(LogPHCharacter, Log, TEXT("TargetRotation: %d"), GetCharacterMovement()->MovementMode);
 		FVector SightLocation = NewLocation - GetActorLocation();
 		GetController()->SetControlRotation(FRotationMatrix::MakeFromX(SightLocation).Rotator());
 		UAIBlueprintHelperLibrary::SimpleMoveToLocation(GetController(), NewLocation);
@@ -377,6 +408,7 @@ void APHCharacterBase::NormalAttack()
 	RotateToCursor();
 	// Movement Setting
 	GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_None);
+	AttackDamage = StatDataComponent->GetDamage(EAttackType::DefaultAttack);
 }
 
 void APHCharacterBase::EvasionUI()
@@ -407,6 +439,7 @@ void APHCharacterBase::Skill1()
 	bActioning = true;
 	RotateToCursor();
 	GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_None);
+	AttackDamage = StatDataComponent->GetDamage(EAttackType::Skill1);
 	// Movement Setting
 	//@PHTODO: 해당 셋팅은 스킬마다 다르게 셋팅 되어야 한다.
 }
@@ -423,6 +456,7 @@ void APHCharacterBase::Skill2UI()
 void APHCharacterBase::Skill2()
 {
 	bActioning = true;
+	AttackDamage = StatDataComponent->GetDamage(EAttackType::Skill2);
 	//RotateToCursor();
 	// Movement Setting
 	//@PHTODO: 해당 셋팅은 스킬마다 다르게 셋팅 되어야 한다.
@@ -441,6 +475,7 @@ void APHCharacterBase::Skill3UI()
 void APHCharacterBase::Skill3()
 {
 	bActioning = true;
+	AttackDamage = StatDataComponent->GetDamage(EAttackType::Skill3);
 	RotateToCursor();
 	// Movement Setting
 	//@PHTODO: 해당 셋팅은 스킬마다 다르게 셋팅 되어야 한다.
@@ -463,6 +498,7 @@ void APHCharacterBase::Skill4()
 	// Movement Setting
 	//@PHTODO: 해당 셋팅은 스킬마다 다르게 셋팅 되어야 한다.
 	GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_None);
+	AttackDamage = StatDataComponent->GetDamage(EAttackType::Skill4);
 }
 
 void APHCharacterBase::ServerRPCSetActionTargetRotation_Implementation(FRotator TargetRotation)

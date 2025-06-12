@@ -27,6 +27,12 @@ APHWarriorCharacter::APHWarriorCharacter(const FObjectInitializer& ObjectInitial
 		SkillObjClass = ClassSkill3ObjectRef.Class;
 	}
 
+	Skill1Effect = CreateDefaultSubobject<UNiagaraComponent>(TEXT("DashEffect"));
+	Skill1Effect->SetupAttachment(RootComponent);
+	Skill1Effect->SetAutoActivate(false);
+	Skill2Effect = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("TornadoEffect"));
+	Skill2Effect->SetupAttachment(RootComponent);
+	Skill2Effect->SetAutoActivate(false);
 	Skill4Effect = CreateDefaultSubobject<UNiagaraComponent>(TEXT("FireEffect"));
 	Skill4Effect->SetupAttachment(RootComponent);
 	Skill4Effect->SetAutoActivate(false);
@@ -69,7 +75,6 @@ void APHWarriorCharacter::Tick(float DeltaTime)
 	}
 	
 }
-
 
 void APHWarriorCharacter::NormalAttackUI()
 {
@@ -191,9 +196,8 @@ void APHWarriorCharacter::Skill4()
 		PH_LOG(LogPHCharacter, Log, TEXT("Remaining CoolTime : %f"), StatDataComponent->GetSkillCooldown(EAttackType::Skill4));
 		return;
 	}
-
-	bActioning = true;
-	//Super::Skill4();
+	
+	Super::Skill4();
 
 	if (!HasAuthority())
 	{
@@ -204,6 +208,7 @@ void APHWarriorCharacter::Skill4()
 			SetActionEnd();
 		});
 		SetMontageEndDelegate(EndDelegate);
+		Skill4Effect->Activate(true);
 	}
 
 	ServerRPCSkill4();
@@ -398,5 +403,41 @@ void APHWarriorCharacter::SpawnSkill3Object()
 		});
 
 		GetWorld()->GetTimerManager().SetTimer(TimerHandle, Delegate, i * 0.3f, false);
+	}
+}
+
+void APHWarriorCharacter::EnableSkill1Effect(bool bActive)
+{
+	if (bActive)
+	{
+		if (Skill1Effect && !Skill1Effect->IsActive())
+		{
+			Skill1Effect->Activate(true);
+		}	
+	}
+	else
+	{
+		if (Skill1Effect->IsActive())
+		{
+			Skill1Effect->Deactivate();
+		}
+	}
+}
+
+void APHWarriorCharacter::EnableSkill2Effect(bool bActive)
+{
+	if (bActive)
+	{
+		if (Skill2Effect && !Skill2Effect->IsActive())
+		{
+			Skill2Effect->Activate(true);
+		}	
+	}
+	else
+	{
+		if (Skill2Effect->IsActive())
+		{
+			Skill2Effect->Deactivate();
+		}
 	}
 }

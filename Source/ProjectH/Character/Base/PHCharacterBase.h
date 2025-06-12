@@ -30,8 +30,15 @@ class PROJECTH_API APHCharacterBase : public ACharacter
 public:
 	// Sets default values for this character's properties
 	APHCharacterBase(const FObjectInitializer& ObjectInitializer);
-
+	
 	virtual void PostInitializeComponents() override;
+	// Called every frame
+	virtual void Tick(float DeltaTime) override;
+
+	// Called to bind functionality to input
+	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+	//프로퍼티 리플리케이션
+	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
 
 protected:
 	// Called when the game starts or when spawned
@@ -41,6 +48,7 @@ protected:
 	virtual void PostNetInit() override;
 	//플레이어 스테이트가 클라이언트에 동기화 될때 호출.
 	virtual void OnRep_PlayerState() override;
+	
 	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override; 
 
 	void MeshLoadCompleted();
@@ -52,19 +60,13 @@ protected:
 	void PlayDeadAnimation();
 	void SendClientRPCPlayAnimation(FName SectionName, float AnimSpeed = 1.0f);
 	void SendClientRPCPlayEffect();
+
+	//Collision Section.
+	UFUNCTION()
+	void OnWeaponOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 	
 	virtual void SetDead();
-	
-public:	
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
 
-	// Called to bind functionality to input
-	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
-	//프로퍼티 리플리케이션
-	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
-
-	//Input FuncSection.
 public:
 	void MouseClickMove();
 	void RotateToCursor();
@@ -88,13 +90,15 @@ public:
 	virtual void Skill4UI();
 	virtual void Skill4();
 
+	//EnableCollision.
+	void EnableWeaponCollision(bool bActive);
+
 	
 	//Server RPC
 	UFUNCTION(Server, Unreliable)
 	void ServerRPCSetNewLocation(FVector NewLocation);
 	UFUNCTION(Server, Unreliable)
 	void ServerRPCSetActionTargetRotation(FRotator TargetRotation);
-
 	UFUNCTION(Server, Unreliable)
 	virtual void ServerRPCNormalAttack();
 	UFUNCTION(Server, Unreliable)
@@ -165,6 +169,9 @@ protected:
 protected:
 	UPROPERTY(Replicated)
 	EPlayerActionType CurrentActionType;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Custom)
+	float AttackDamage;
 	
 	//현재 공격/스킬을 사용할려고 누른 상태인지를 체크할 bool값.
 	UPROPERTY(Replicated)

@@ -23,7 +23,10 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
+	void EnableSkill1Effect(bool bActive);
+	void EnableSkill2Effect(bool bActive);
 	void SpawnSkill3Object();
+
 
 private:
 	UFUNCTION(NetMulticast, UnReliable)
@@ -73,10 +76,14 @@ private:
 
 	//BerserkSkillState;
 	float BerserkSkillRemaining = MAX_BERSERKTIME;
-
+	
 	UPROPERTY(EditDefaultsOnly, Category = "Skill")
 	TSubclassOf<class APHWarriorSkill3Object> SkillObjClass;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Effect, Meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<class UNiagaraComponent> Skill1Effect;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Effect, Meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<class UParticleSystemComponent> Skill2Effect;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Effect, Meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<class UNiagaraComponent> Skill4Effect;
 };
