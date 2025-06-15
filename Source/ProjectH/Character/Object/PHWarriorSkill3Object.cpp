@@ -4,6 +4,7 @@
 #include "Character/Object/PHWarriorSkill3Object.h"
 #include "Components/SphereComponent.h"
 #include "NiagaraComponent.h"
+#include "Engine/DamageEvents.h"
 
 
 // Sets default values
@@ -47,7 +48,18 @@ void APHWarriorSkill3Object::InitializeSkill(float InDamage, AActor* InInstigato
 
 void APHWarriorSkill3Object::OnTriggerOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepHitResult)
 {
-	
+	if (!HasAuthority())
+	{
+		return;
+	}
+
+	if (OtherActor && OtherActor != this)
+	{
+		UE_LOG(LogTemp, Log, TEXT("오브젝트 충돌: %s"), *OtherActor->GetName());
+		// 데미지 처리
+		FDamageEvent DamageEvent;
+		OtherActor->TakeDamage(Damage, DamageEvent, SkillInstigator->GetInstigatorController(), this);
+	}
 }
 
 // Called when the game starts or when spawned

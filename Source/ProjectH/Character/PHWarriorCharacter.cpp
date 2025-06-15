@@ -10,6 +10,7 @@
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Object/PHWarriorSkill3Object.h"
+#include "Kismet/GameplayStatics.h"
 
 APHWarriorCharacter::APHWarriorCharacter(const FObjectInitializer& ObjectInitializer)
 	:Super(ObjectInitializer)
@@ -395,10 +396,25 @@ void APHWarriorCharacter::SpawnSkill3Object()
 		FTimerHandle TimerHandle;
 		FTimerDelegate Delegate = FTimerDelegate::CreateLambda([=, this]()
 		{
-			auto* SkillObj = GetWorld()->SpawnActor<APHWarriorSkill3Object>(SkillObjClass, SpawnLocation, GetActorRotation());
+			// auto* SkillObj = GetWorld()->SpawnActor<APHWarriorSkill3Object>(SkillObjClass, SpawnLocation, GetActorRotation());
+			// if (SkillObj)
+			// {
+			// 	SkillObj->InitializeSkill(Damage, this);
+			// }
+			FTransform SpawnTransform(GetActorRotation(), SpawnLocation);
+
+			auto* SkillObj = GetWorld()->SpawnActorDeferred<APHWarriorSkill3Object>(
+				SkillObjClass,
+				SpawnTransform,
+				this,
+				this,
+				ESpawnActorCollisionHandlingMethod::AlwaysSpawn
+			);
+
 			if (SkillObj)
 			{
 				SkillObj->InitializeSkill(Damage, this);
+				UGameplayStatics::FinishSpawningActor(SkillObj, SpawnTransform);
 			}
 		});
 
