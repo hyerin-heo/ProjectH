@@ -11,6 +11,7 @@
 #include "PHBossCharacterBase.generated.h"
 
 
+class ASkillObjectBase;
 DECLARE_DELEGATE(FOnAttackPattern);
 USTRUCT(BlueprintType)
 struct FAttackPatternDelegateWrapper
@@ -57,9 +58,6 @@ public:
 	UFUNCTION(NetMulticast, Reliable)
 	virtual void PhasePatternActionRPC(const FAttackPatternDelegateWrapper& InPhasePatternInfo, const FName InMontageName);
 
-	// Damage RPC
-	// @PHTODO
-
 	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
 	void PlayDeadAnimation();
 
@@ -81,6 +79,26 @@ protected:
 	virtual void SetAIPatternAttackDelegate(const FAIPatternAttackFinished& InOnPatternAttackFinished) override;
 
 	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
+
+	ASkillObjectBase* SpawnSkillObject(
+		const TSubclassOf<ASkillObjectBase>& SkillObjectClass,
+		const FVector& SpawnLocation,
+		const FRotator& SpawnRotation
+	);
+
+	static void LaunchSkillObjectForward(
+		ASkillObjectBase* SkillObject,
+		float InitialSpeed,
+		float Lifetime,
+		float Damage,
+		bool bReturnToPoolOnHit
+	);
+
+	static void LaunchSkillObject(
+		ASkillObjectBase* SkillObject,
+		float Lifetime,
+		float Damage
+	);
 
 	FAIAttackFinished OnAttackFinished;
 	FAIPatternAttackFinished OnPatternAttackFinished;

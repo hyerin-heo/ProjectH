@@ -4,7 +4,6 @@
 #include "PHBossBiochemical.h"
 
 #include "SkillObject/PHNiagaraSkillObject.h"
-#include "Subsystem/SkillObjectPoolSubsystem.h"
 
 APHBossBiochemical::APHBossBiochemical()
 {
@@ -46,509 +45,128 @@ void APHBossBiochemical::Pattern4()
 
 void APHBossBiochemical::Pattern1HitCheck(const FBossPatternInfo& PatternInfo, const uint8& Step)
 {
-	USkillObjectPoolSubsystem* PoolSubsystem = USkillObjectPoolSubsystem::Get(this);
-	if (PoolSubsystem)
+	const TSubclassOf<ASkillObjectBase>& SkillClass = SkillObjectsMap.FindChecked(SkillObjectType::GreenSwordAura);
+	const FVector BaseSpawnLocation = GetActorLocation();
+	const float BaseSpeed = 1000.f;
+	const float BaseLifetime = 3.f;
+	const int32 NumProjectiles = 8 * (Step + 1);
+
+	const float AngleStep = 360.f / NumProjectiles;
+
+	for (int32 i = 0; i < NumProjectiles; ++i)
 	{
-		// const FVector SpawnLocation = GetMesh()->GetSocketLocation(TEXT(""));
-		switch (Step)
-		{
-			case 0:
-				{
-					APHNiagaraSkillObject* NewSkillObject = Cast<APHNiagaraSkillObject>(PoolSubsystem->SpawnSkillObject(
-						SkillObjectsMap.FindChecked(SkillObjectType::GreenSwordAura),
-						GetActorLocation(),
-						GetActorRotation(),
-						this,
-						this
-						));
+		FRotator SpawnRotation = GetActorRotation() + FRotator(0, AngleStep * i, 0);
+		ASkillObjectBase* SkillObject = SpawnSkillObject(
+			SkillClass,
+			BaseSpawnLocation,
+			SpawnRotation
+		);
 
-					APHNiagaraSkillObject* NewSkillObject2 = Cast<APHNiagaraSkillObject>(PoolSubsystem->SpawnSkillObject(
-						SkillObjectsMap.FindChecked(SkillObjectType::GreenSwordAura),
-						GetActorLocation(),
-						GetActorRotation() + FRotator(0, 45.f, 0),
-						this,
-						this
-						));
-
-					APHNiagaraSkillObject* NewSkillObject3 = Cast<APHNiagaraSkillObject>(PoolSubsystem->SpawnSkillObject(
-						SkillObjectsMap.FindChecked(SkillObjectType::GreenSwordAura),
-						GetActorLocation(),
-						GetActorRotation() + FRotator(0, 45.f+45.f, 0),
-						this,
-						this
-						));
-					
-					APHNiagaraSkillObject* NewSkillObject4 = Cast<APHNiagaraSkillObject>(PoolSubsystem->SpawnSkillObject(
-						SkillObjectsMap.FindChecked(SkillObjectType::GreenSwordAura),
-						GetActorLocation(),
-						GetActorRotation() + FRotator(0, 45.f+45.f+45.f, 0),
-						this,
-						this
-						));
-
-					APHNiagaraSkillObject* NewSkillObject5 = Cast<APHNiagaraSkillObject>(PoolSubsystem->SpawnSkillObject(
-						SkillObjectsMap.FindChecked(SkillObjectType::GreenSwordAura),
-						GetActorLocation(),
-						GetActorRotation() + FRotator(0, 45.f+45.f+45.f+45.f, 0),
-						this,
-						this
-						));
-
-					APHNiagaraSkillObject* NewSkillObject6 = Cast<APHNiagaraSkillObject>(PoolSubsystem->SpawnSkillObject(
-						SkillObjectsMap.FindChecked(SkillObjectType::GreenSwordAura),
-						GetActorLocation(),
-						GetActorRotation() + FRotator(0, 45.f+45.f+45.f+45.f+45.f, 0),
-						this,
-						this
-						));
-
-					APHNiagaraSkillObject* NewSkillObject7 = Cast<APHNiagaraSkillObject>(PoolSubsystem->SpawnSkillObject(
-						SkillObjectsMap.FindChecked(SkillObjectType::GreenSwordAura),
-						GetActorLocation(),
-						GetActorRotation() + FRotator(0, 45.f+45.f+45.f+45.f+45.f+45.f, 0),
-						this,
-						this
-						));
-
-					APHNiagaraSkillObject* NewSkillObject8 = Cast<APHNiagaraSkillObject>(PoolSubsystem->SpawnSkillObject(
-						SkillObjectsMap.FindChecked(SkillObjectType::GreenSwordAura),
-						GetActorLocation(),
-						GetActorRotation() + FRotator(0, 45.f+45.f+45.f+45.f+45.f+45.f+45.f, 0),
-						this,
-						this
-					));
-
-					if (NewSkillObject)
-					{
-						// @PHTODO 투사체 속도 세팅 필요
-						NewSkillObject->Init(500.f, 3.f, true);
-						NewSkillObject->Launch(GetActorForwardVector(), PatternInfo.AttackDamage);
-					}
-
-					if (NewSkillObject2)
-					{
-						// @PHTODO 투사체 속도 세팅 필요
-						NewSkillObject2->Init(500.f, 3.f, true);
-						NewSkillObject2->Launch(NewSkillObject2->GetActorForwardVector(), PatternInfo.AttackDamage);
-					}
-
-					if (NewSkillObject3)
-					{
-						// @PHTODO 투사체 속도 세팅 필요
-						NewSkillObject3->Init(500.f, 3.f, true);
-						NewSkillObject3->Launch(NewSkillObject3->GetActorForwardVector(), PatternInfo.AttackDamage);
-					}
-
-					if (NewSkillObject4)
-					{
-						// @PHTODO 투사체 속도 세팅 필요
-						NewSkillObject4->Init(500.f, 3.f, true);
-						NewSkillObject4->Launch(NewSkillObject4->GetActorForwardVector(), PatternInfo.AttackDamage);
-					}
-
-					if (NewSkillObject5)
-					{
-						// @PHTODO 투사체 속도 세팅 필요
-						NewSkillObject5->Init(500.f, 3.f, true);
-						NewSkillObject5->Launch(NewSkillObject5->GetActorForwardVector(), PatternInfo.AttackDamage);
-					}
-
-					if (NewSkillObject6)
-					{
-						// @PHTODO 투사체 속도 세팅 필요
-						NewSkillObject6->Init(500.f, 3.f, true);
-						NewSkillObject6->Launch(NewSkillObject6->GetActorForwardVector(), PatternInfo.AttackDamage);
-					}
-
-					if (NewSkillObject7)
-					{
-						// @PHTODO 투사체 속도 세팅 필요
-						NewSkillObject7->Init(500.f, 3.f, true);
-						NewSkillObject7->Launch(NewSkillObject7->GetActorForwardVector(), PatternInfo.AttackDamage);
-					}
-
-					if (NewSkillObject8)
-					{
-						// @PHTODO 투사체 속도 세팅 필요
-						NewSkillObject8->Init(500.f, 3.f, true);
-						NewSkillObject8->Launch(NewSkillObject8->GetActorForwardVector(), PatternInfo.AttackDamage);
-					}
-				}
-				break;
-			case 1:
-				{
-					APHNiagaraSkillObject* NewSkillObject = Cast<APHNiagaraSkillObject>(PoolSubsystem->SpawnSkillObject(
-						SkillObjectsMap.FindChecked(SkillObjectType::GreenSwordAura),
-						GetActorLocation(),
-						GetActorRotation(),
-						this,
-						this
-						));
-
-					APHNiagaraSkillObject* NewSkillObject2 = Cast<APHNiagaraSkillObject>(PoolSubsystem->SpawnSkillObject(
-						SkillObjectsMap.FindChecked(SkillObjectType::GreenSwordAura),
-						GetActorLocation(),
-						GetActorRotation() + FRotator(0, 25.f, 0),
-						this,
-						this
-						));
-
-					APHNiagaraSkillObject* NewSkillObject3 = Cast<APHNiagaraSkillObject>(PoolSubsystem->SpawnSkillObject(
-						SkillObjectsMap.FindChecked(SkillObjectType::GreenSwordAura),
-						GetActorLocation(),
-						GetActorRotation() + FRotator(0, -25.f, 0),
-						this,
-						this
-						));
-
-					APHNiagaraSkillObject* NewSkillObject4 = Cast<APHNiagaraSkillObject>(PoolSubsystem->SpawnSkillObject(
-						SkillObjectsMap.FindChecked(SkillObjectType::GreenSwordAura),
-						GetActorLocation(),
-						GetActorRotation() + FRotator(0, 50.f, 0),
-						this,
-						this
-						));
-
-					APHNiagaraSkillObject* NewSkillObject5 = Cast<APHNiagaraSkillObject>(PoolSubsystem->SpawnSkillObject(
-						SkillObjectsMap.FindChecked(SkillObjectType::GreenSwordAura),
-						GetActorLocation(),
-						GetActorRotation() + FRotator(0, -50.f, 0),
-						this,
-						this
-					));
-
-					if (NewSkillObject)
-					{
-						// @PHTODO 투사체 속도 세팅 필요
-						NewSkillObject->Init(500.f, 3.f, false);
-						NewSkillObject->Launch(GetActorForwardVector(), PatternInfo.AttackDamage);
-					}
-
-					if (NewSkillObject2)
-					{
-						// @PHTODO 투사체 속도 세팅 필요
-						NewSkillObject2->Init(500.f, 3.f, false);
-						NewSkillObject2->Launch(NewSkillObject2->GetActorForwardVector(), PatternInfo.AttackDamage);
-					}
-
-					if (NewSkillObject3)
-					{
-						// @PHTODO 투사체 속도 세팅 필요
-						NewSkillObject3->Init(500.f, 3.f, false);
-						NewSkillObject3->Launch(NewSkillObject3->GetActorForwardVector(), PatternInfo.AttackDamage);
-					}
-
-					if (NewSkillObject4)
-					{
-						// @PHTODO 투사체 속도 세팅 필요
-						NewSkillObject4->Init(500.f, 3.f, false);
-						NewSkillObject4->Launch(NewSkillObject4->GetActorForwardVector(), PatternInfo.AttackDamage);
-					}
-
-					if (NewSkillObject5)
-					{
-						// @PHTODO 투사체 속도 세팅 필요
-						NewSkillObject5->Init(500.f, 3.f, false);
-						NewSkillObject5->Launch(NewSkillObject5->GetActorForwardVector(), PatternInfo.AttackDamage);
-					}
-				}
-				break;
-			default:
-				break;
-		}
+		LaunchSkillObjectForward(SkillObject, BaseSpeed, BaseLifetime, PatternInfo.AttackDamage, true);
 	}
 }
 
 #pragma endregion
-
 
 
 #pragma region Pattern 2
 
 void APHBossBiochemical::Pattern2HitCheck(const FBossPatternInfo& PatternInfo, const uint8& Step)
 {
-	USkillObjectPoolSubsystem* PoolSubsystem = USkillObjectPoolSubsystem::Get(this);
-	if (PoolSubsystem)
+	const TSubclassOf<ASkillObjectBase>& SkillClass = SkillObjectsMap.FindChecked(SkillObjectType::DarkGreenSwordAura);
+	const FVector BaseSpawnLocation = GetActorLocation();
+	const float BaseSpeed = 1500.f;
+	const float BaseLifetime = 3.f;
+	TArray<float> Angles = {0.f, -10.f, 10.f, -20.f, 20.f, -30.f, 30.f};
+
+	for (float Angle : Angles)
 	{
-		// const FVector SpawnLocation = GetMesh()->GetSocketLocation(TEXT(""));
-
-		APHNiagaraSkillObject* NewSkillObject = Cast<APHNiagaraSkillObject>(PoolSubsystem->SpawnSkillObject(
-			SkillObjectsMap.FindChecked(SkillObjectType::DarkGreenSwordAura),
-			GetActorLocation(),
-			GetActorRotation(),
-			this,
-			this
-		));
-
-		APHNiagaraSkillObject* NewSkillObject2 = Cast<APHNiagaraSkillObject>(PoolSubsystem->SpawnSkillObject(
-			SkillObjectsMap.FindChecked(SkillObjectType::DarkGreenSwordAura),
-			GetActorLocation(),
-			GetActorRotation()+ FRotator(0.0f,-30.0f,0.0f),
-			this,
-			this
-		));
-
-		APHNiagaraSkillObject* NewSkillObject3 = Cast<APHNiagaraSkillObject>(PoolSubsystem->SpawnSkillObject(
-			SkillObjectsMap.FindChecked(SkillObjectType::DarkGreenSwordAura),
-			GetActorLocation(),
-			GetActorRotation() + FRotator(0.0f,30.0f,0.0f),
-			this,
-			this
-		));
-
-		if (NewSkillObject)
-		{
-			// @PHTODO 투사체 속도 세팅 필요
-			NewSkillObject->Init(500.f, 3.f, false);
-			NewSkillObject->Launch(NewSkillObject->GetActorForwardVector(), PatternInfo.AttackDamage);
-		}
-		if (NewSkillObject2)
-		{
-			// @PHTODO 투사체 속도 세팅 필요
-			NewSkillObject2->Init(500.f, 3.f, false);
-			NewSkillObject2->Launch(NewSkillObject2->GetActorForwardVector(), PatternInfo.AttackDamage);
-		}
-		if (NewSkillObject3)
-		{
-			// @PHTODO 투사체 속도 세팅 필요
-			NewSkillObject3->Init(500.f, 3.f, false);
-			NewSkillObject3->Launch(NewSkillObject3->GetActorForwardVector(), PatternInfo.AttackDamage);
-		}
+		FRotator SpawnRotation = GetActorRotation() + FRotator(0, Angle, 0);
+		ASkillObjectBase* SkillObject = SpawnSkillObject(
+			SkillClass,
+			BaseSpawnLocation,
+			SpawnRotation
+		);
+		LaunchSkillObjectForward(SkillObject, BaseSpeed, BaseLifetime, PatternInfo.AttackDamage, false);
 	}
 }
 
 #pragma endregion
-
 
 
 #pragma region Pattern 3
 
 void APHBossBiochemical::Pattern3HitCheck(const FBossPatternInfo& PatternInfo, const uint8& Step)
 {
-	USkillObjectPoolSubsystem* PoolSubsystem = USkillObjectPoolSubsystem::Get(this);
-	if (PoolSubsystem)
+	const TSubclassOf<ASkillObjectBase>& SkillClass = SkillObjectsMap.FindChecked(SkillObjectType::StoneRush);
+	const float BaseLifetime = 4.5f;
+
+	// 5방향으로 AttackRange만큼 떨어진 지점에 스폰
+	const int32 NumProjectiles = 6;
+	const float AngleStep = 360.f / NumProjectiles;
+
+	for (int32 i = 0; i < NumProjectiles; ++i)
 	{
-		// const FVector SpawnLocation = GetMesh()->GetSocketLocation(TEXT(""));
+		FRotator CurrentRotation = GetActorRotation() + FRotator(0.f, AngleStep * i, 0.f);
+		FVector SpawnLocation = GetActorLocation() + (CurrentRotation.Vector() * PatternInfo.AttackRange) - FVector(
+			0.f, 0.f, GetCapsuleComponent()->GetScaledCapsuleHalfHeight());
 
-		APHNiagaraSkillObject* NewSkillObject = Cast<APHNiagaraSkillObject>(PoolSubsystem->SpawnSkillObject(
-			SkillObjectsMap.FindChecked(SkillObjectType::StoneRush),
-			GetActorLocation() + (GetActorForwardVector() * PatternInfo.AttackRange) - FVector(
-				0.f, 0.f, GetCapsuleComponent()->GetScaledCapsuleHalfHeight()),
-			GetActorRotation(),
-			this,
-			this
-		));
-		APHNiagaraSkillObject* NewSkillObject2 = Cast<APHNiagaraSkillObject>(PoolSubsystem->SpawnSkillObject(
-			SkillObjectsMap.FindChecked(SkillObjectType::StoneRush),
-			GetActorLocation() + ((GetActorRotation() + FRotator(0.f, 72.f, 0.f)).Vector() * PatternInfo.AttackRange) - FVector(
-				0.f, 0.f, GetCapsuleComponent()->GetScaledCapsuleHalfHeight()),
-			GetActorRotation()+ FRotator(0.f, 72.f, 0.f),
-			this,
-			this
-			));
-		APHNiagaraSkillObject* NewSkillObject3 = Cast<APHNiagaraSkillObject>(PoolSubsystem->SpawnSkillObject(
-			SkillObjectsMap.FindChecked(SkillObjectType::StoneRush),
-			GetActorLocation() + ((GetActorRotation() + FRotator(0.f, 72.f+72.f, 0.f)).Vector() * PatternInfo.AttackRange) - FVector(
-				0.f, 0.f, GetCapsuleComponent()->GetScaledCapsuleHalfHeight()),
-			GetActorRotation()+ FRotator(0.f, 72.f+72.f, 0.f),
-			this,
-			this
-			));
-		APHNiagaraSkillObject* NewSkillObject4 = Cast<APHNiagaraSkillObject>(PoolSubsystem->SpawnSkillObject(
-			SkillObjectsMap.FindChecked(SkillObjectType::StoneRush),
-			GetActorLocation() + ((GetActorRotation() + FRotator(0.f, 72.f+72.f+72.f, 0.f)).Vector() * PatternInfo.AttackRange) - FVector(
-				0.f, 0.f, GetCapsuleComponent()->GetScaledCapsuleHalfHeight()),
-			GetActorRotation()+ FRotator(0.f, 72.f+72.f+72.f, 0.f),
-			this,
-			this
-			));
-		APHNiagaraSkillObject* NewSkillObject5 = Cast<APHNiagaraSkillObject>(PoolSubsystem->SpawnSkillObject(
-			SkillObjectsMap.FindChecked(SkillObjectType::StoneRush),
-			GetActorLocation() + ((GetActorRotation() + FRotator(0.f, 72.f+72.f+72.f+72.f, 0.f)).Vector() * PatternInfo.AttackRange) - FVector(
-				0.f, 0.f, GetCapsuleComponent()->GetScaledCapsuleHalfHeight()),
-			GetActorRotation() + FRotator(0.f, 72.f+72.f+72.f+72.f, 0.f),
-			this,
-			this
-		));
-
-		if (NewSkillObject)
-		{
-			// @PHTODO 투사체 생명 주기 세팅 필요
-			NewSkillObject->Launch(PatternInfo.AttackDamage, 4.5f);
-		}
-		if (NewSkillObject2)
-		{
-			// @PHTODO 투사체 생명 주기 세팅 필요
-			NewSkillObject2->Launch(PatternInfo.AttackDamage, 4.5f);
-		}
-		if (NewSkillObject3)
-		{
-			// @PHTODO 투사체 생명 주기 세팅 필요
-			NewSkillObject3->Launch(PatternInfo.AttackDamage, 4.5f);
-		}
-		if (NewSkillObject4)
-		{
-			// @PHTODO 투사체 생명 주기 세팅 필요
-			NewSkillObject4->Launch(PatternInfo.AttackDamage, 4.5f);
-		}
-		if (NewSkillObject5)
-		{
-			// @PHTODO 투사체 생명 주기 세팅 필요
-			NewSkillObject5->Launch(PatternInfo.AttackDamage, 4.5f);
-		}
+		ASkillObjectBase* SkillObject = SpawnSkillObject(
+			SkillClass,
+			SpawnLocation,
+			CurrentRotation
+		);
+		LaunchSkillObject(SkillObject, BaseLifetime, PatternInfo.AttackDamage);
 	}
 }
 
 #pragma endregion
 
 
-
 #pragma region Pattern 4
 
 void APHBossBiochemical::Pattern4HitCheck(const FBossPatternInfo& PatternInfo, const uint8& Step)
 {
-	if (Step == 2)
+	if (Step == 2) //Ground Attack
 	{
-		USkillObjectPoolSubsystem* PoolSubsystem = USkillObjectPoolSubsystem::Get(this);
-		if (PoolSubsystem)
+		const TSubclassOf<ASkillObjectBase>& SkillClass = SkillObjectsMap.FindChecked(SkillObjectType::DashMagma);
+		const float BaseLifetime = 4.5f;
+
+		TArray<float> Angles = {0.f, 15.f, -15.f, 30.f, -30.f};
+
+		for (float Angle : Angles)
 		{
-			// const FVector SpawnLocation = GetMesh()->GetSocketLocation(TEXT(""));
+			FRotator CurrentRotation = GetActorRotation() + FRotator(0.f, Angle, 0.f);
+			FVector SpawnLocation = GetActorLocation() + (CurrentRotation.Vector() * PatternInfo.AttackRange) - FVector(
+				0.f, 0.f, GetCapsuleComponent()->GetScaledCapsuleHalfHeight());
 
-			APHNiagaraSkillObject* NewSkillObject = Cast<APHNiagaraSkillObject>(PoolSubsystem->SpawnSkillObject(
-				SkillObjectsMap.FindChecked(SkillObjectType::DashMagma),
-				GetActorLocation() + (GetActorForwardVector() * PatternInfo.AttackRange) - FVector(
-					0.f, 0.f, GetCapsuleComponent()->GetScaledCapsuleHalfHeight()),
-				GetActorRotation(),
-				this,
-				this
-				));
-
-			APHNiagaraSkillObject* NewSkillObject2 = Cast<APHNiagaraSkillObject>(PoolSubsystem->SpawnSkillObject(
-				SkillObjectsMap.FindChecked(SkillObjectType::DashMagma),
-				GetActorLocation() + ((GetActorRotation() + FRotator(0.f, 25.f, 0.f)).Vector() * PatternInfo.AttackRange) - FVector(
-					0.f, 0.f, GetCapsuleComponent()->GetScaledCapsuleHalfHeight()),
-				GetActorRotation() + FRotator(0.f, 25.f, 0.f),
-				this,
-				this
-				));
-
-			APHNiagaraSkillObject* NewSkillObject3 = Cast<APHNiagaraSkillObject>(PoolSubsystem->SpawnSkillObject(
-				SkillObjectsMap.FindChecked(SkillObjectType::DashMagma),
-				GetActorLocation() + ((GetActorRotation() + FRotator(0.f, -25.f, 0.f)).Vector() * PatternInfo.AttackRange) - FVector(
-					0.f, 0.f, GetCapsuleComponent()->GetScaledCapsuleHalfHeight()),
-				GetActorRotation() + FRotator(0.f, -25.f, 0.f),
-				this,
-				this
-			));
-
-			if (NewSkillObject)
-			{
-				// @PHTODO 투사체 생명 주기 세팅 필요
-				NewSkillObject->Launch(PatternInfo.AttackDamage, 4.5f);
-			}
-
-			if (NewSkillObject2)
-			{
-				// @PHTODO 투사체 생명 주기 세팅 필요
-				NewSkillObject2->Launch(PatternInfo.AttackDamage, 4.5f);
-			}
-
-			if (NewSkillObject3)
-			{
-				// @PHTODO 투사체 생명 주기 세팅 필요
-				NewSkillObject3->Launch(PatternInfo.AttackDamage, 4.5f);
-			}
+			ASkillObjectBase* SkillObject = SpawnSkillObject(
+				SkillClass,
+				SpawnLocation,
+				CurrentRotation
+			);
+			LaunchSkillObject(SkillObject, BaseLifetime, PatternInfo.AttackDamage);
 		}
 	}
 	else
 	{
-		USkillObjectPoolSubsystem* PoolSubsystem = USkillObjectPoolSubsystem::Get(this);
-		if (PoolSubsystem)
+		const TSubclassOf<ASkillObjectBase>& SkillClass = SkillObjectsMap.
+			FindChecked(SkillObjectType::DarkRedSwordAura);
+		const float BaseSpeed = 2000.f;
+		const float BaseLifetime = 3.f;
+		const FVector BaseSpawnLocation = GetActorLocation();
+
+		TArray<float> Angles = {5.f, -5.f, 15.f, -15.f, 25.f, -25.f, 35.f, -35.f};
+
+		for (float Angle : Angles)
 		{
-			APHNiagaraSkillObject* NewSkillObject1 = Cast<APHNiagaraSkillObject>(PoolSubsystem->SpawnSkillObject(
-				SkillObjectsMap.FindChecked(SkillObjectType::DarkRedSwordAura),
-				GetActorLocation(),
-				GetActorRotation() + FRotator(0.f,5.f,0.f),
-				this,
-				this
-				));
-			APHNiagaraSkillObject* NewSkillObject2 = Cast<APHNiagaraSkillObject>(PoolSubsystem->SpawnSkillObject(
-				SkillObjectsMap.FindChecked(SkillObjectType::DarkRedSwordAura),
-				GetActorLocation(),
-				GetActorRotation() + FRotator(0.f,-5.f,0.f),
-				this,
-				this
-				));
-			APHNiagaraSkillObject* NewSkillObject3 = Cast<APHNiagaraSkillObject>(PoolSubsystem->SpawnSkillObject(
-				SkillObjectsMap.FindChecked(SkillObjectType::DarkRedSwordAura),
-				GetActorLocation(),
-				GetActorRotation() + FRotator(0.f,15.f,0.f),
-				this,
-				this
-				));
-			APHNiagaraSkillObject* NewSkillObject4 = Cast<APHNiagaraSkillObject>(PoolSubsystem->SpawnSkillObject(
-				SkillObjectsMap.FindChecked(SkillObjectType::DarkRedSwordAura),
-				GetActorLocation(),
-				GetActorRotation() + FRotator(0.f,-15.f,0.f),
-				this,
-				this
-				));
-			APHNiagaraSkillObject* NewSkillObject5 = Cast<APHNiagaraSkillObject>(PoolSubsystem->SpawnSkillObject(
-				SkillObjectsMap.FindChecked(SkillObjectType::DarkRedSwordAura),
-				GetActorLocation(),
-				GetActorRotation() + FRotator(0.f,25.f,0.f),
-				this,
-				this
-				));
-			APHNiagaraSkillObject* NewSkillObject6 = Cast<APHNiagaraSkillObject>(PoolSubsystem->SpawnSkillObject(
-				SkillObjectsMap.FindChecked(SkillObjectType::DarkRedSwordAura),
-				GetActorLocation(),
-				GetActorRotation() + FRotator(0.f,-25.f,0.f),
-				this,
-				this
-			));
-
-			if (NewSkillObject1)
-			{
-				// @PHTODO 투사체 속도 세팅 필요
-				NewSkillObject1->Init(500.f, 3.f, false);
-				NewSkillObject1->Launch(NewSkillObject1->GetActorForwardVector(), PatternInfo.AttackDamage);
-			}
-
-			if (NewSkillObject2)
-			{
-				// @PHTODO 투사체 속도 세팅 필요
-				NewSkillObject2->Init(500.f, 3.f, false);
-				NewSkillObject2->Launch(NewSkillObject2->GetActorForwardVector(), PatternInfo.AttackDamage);
-			}
-
-			if (NewSkillObject3)
-			{
-				// @PHTODO 투사체 속도 세팅 필요
-				NewSkillObject3->Init(500.f, 3.f, false);
-				NewSkillObject3->Launch(NewSkillObject3->GetActorForwardVector(), PatternInfo.AttackDamage);
-			}
-
-			if (NewSkillObject4)
-			{
-				// @PHTODO 투사체 속도 세팅 필요
-				NewSkillObject4->Init(500.f, 3.f, false);
-				NewSkillObject4->Launch(NewSkillObject4->GetActorForwardVector(), PatternInfo.AttackDamage);
-			}
-
-			if (NewSkillObject5)
-			{
-				// @PHTODO 투사체 속도 세팅 필요
-				NewSkillObject5->Init(500.f, 3.f, false);
-				NewSkillObject5->Launch(NewSkillObject5->GetActorForwardVector(), PatternInfo.AttackDamage);
-			}
-
-			if (NewSkillObject6)
-			{
-				// @PHTODO 투사체 속도 세팅 필요
-				NewSkillObject6->Init(500.f, 3.f, false);
-				NewSkillObject6->Launch(NewSkillObject6->GetActorForwardVector(), PatternInfo.AttackDamage);
-			}
+			FRotator SpawnRotation = GetActorRotation() + FRotator(0.f, Angle, 0.f);
+			ASkillObjectBase* SkillObject = SpawnSkillObject(
+				SkillClass,
+				BaseSpawnLocation,
+				SpawnRotation
+			);
+			LaunchSkillObjectForward(SkillObject, BaseSpeed, BaseLifetime, PatternInfo.AttackDamage, false);
 		}
 	}
 }

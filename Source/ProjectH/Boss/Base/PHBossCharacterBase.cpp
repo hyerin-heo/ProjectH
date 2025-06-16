@@ -13,6 +13,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Net/UnrealNetwork.h"
 #include "Physics/PHCollision.h"
+#include "Subsystem/SkillObjectPoolSubsystem.h"
 
 // Sets default values
 APHBossCharacterBase::APHBossCharacterBase()
@@ -374,4 +375,51 @@ void APHBossCharacterBase::GetLifetimeReplicatedProps(TArray<class FLifetimeProp
     Super::GetLifetimeReplicatedProps(OutLifetimeProps);
     DOREPLIFETIME(APHBossCharacterBase, MaxHP); 
     DOREPLIFETIME(APHBossCharacterBase, HP);
+}
+
+ASkillObjectBase* APHBossCharacterBase::SpawnSkillObject(
+    const TSubclassOf<ASkillObjectBase>& SkillObjectClass, const FVector& SpawnLocation,
+    const FRotator& SpawnRotation)
+{
+    USkillObjectPoolSubsystem* PoolSubsystem = USkillObjectPoolSubsystem::Get(this);
+    if (!PoolSubsystem)
+    {
+        return nullptr;
+    }
+
+    ASkillObjectBase* NewSkillObject = Cast<ASkillObjectBase>(
+        PoolSubsystem->SpawnSkillObject(
+            SkillObjectClass,
+            SpawnLocation,
+            SpawnRotation,
+            this, // InInstigator
+            this  // InOwner
+        )
+    );
+    return NewSkillObject;
+}
+
+void APHBossCharacterBase::LaunchSkillObjectForward(ASkillObjectBase* SkillObject, float InitialSpeed, float Lifetime,
+    float Damage, bool bReturnToPoolOnHit)
+{
+    if (SkillObject)
+    {
+#if WITH_EDITOR
+        SkillObject->SetFolderPath(TEXT("SpawnedSkills/BossAttack"));
+#endif
+        SkillObject->Init(InitialSpeed, Lifetime, bReturnToPoolOnHit);
+        // 발사 방향은 스폰될 때 액터의 Forward Vector를 사용 (SpawnRotation에 의해 결정됨)
+        SkillObject->Launch(SkillObject->GetActorForwardVector(), Damage);
+    }
+}
+
+void APHBossCharacterBase::LaunchSkillObject(ASkillObjectBase* SkillObject, float Lifetime, float Damage)
+{
+    if (SkillObject)
+    {
+#if WITH_EDITOR
+        SkillObject->SetFolderPath(TEXT("SpawnedSkills/BossAttack/Stationary")); 
+#endif
+        SkillObject->Launch(Damage, Lifetime);
+    }
 }
