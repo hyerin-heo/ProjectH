@@ -90,57 +90,6 @@ ASkillObjectBase* USkillObjectPoolSubsystem::GetSkillObject(const TSubclassOf<AS
 	return nullptr;
 }
 
-#pragma region PHTODO 추후 Pawn주체 코드로 뺄 것.
-
-ASkillObjectBase* USkillObjectPoolSubsystem::SpawnAndFireProjectile(
-	const TSubclassOf<ASkillObjectBase>& ProjectileClass,
-	const FVector& SpawnLocation, const AActor* InstigatorActor, AActor* OwnerActor, float Damage,
-	const FVector& EndLocation, float Speed, float LifeTime, bool ReturnToPoolOnHit)
-{
-	FVector Direction = EndLocation - SpawnLocation;
-	ASkillObjectBase* Projectile = SpawnSkillObject(ProjectileClass, SpawnLocation, Direction.Rotation(),
-	                                                InstigatorActor, OwnerActor);
-	if (Projectile)
-	{
-		Projectile->Init(EndLocation, Speed, LifeTime, ReturnToPoolOnHit);
-		Projectile->Launch(Direction.GetSafeNormal(), Damage);
-	}
-	return Projectile;
-}
-
-ASkillObjectBase* USkillObjectPoolSubsystem::SpawnAndFireProjectile(
-	const TSubclassOf<ASkillObjectBase>& ProjectileClass,
-	const FVector& SpawnLocation, const FRotator& SpawnRotation, const AActor* InstigatorActor, AActor* OwnerActor,
-	float Damage,
-	float Speed, float LifeTime, bool ReturnToPoolOnHit)
-{
-	ASkillObjectBase* Projectile = SpawnSkillObject(ProjectileClass, SpawnLocation, SpawnRotation, InstigatorActor,
-	                                                OwnerActor);
-	if (Projectile)
-	{
-		Projectile->Init(Speed, LifeTime, ReturnToPoolOnHit);
-		Projectile->Launch(SpawnRotation.Vector(), Damage);
-	}
-	return Projectile;
-}
-
-ASkillObjectBase* USkillObjectPoolSubsystem::SpawnAndFireProjectile(
-	const TSubclassOf<ASkillObjectBase>& ProjectileClass,
-	const FVector& SpawnLocation, const FRotator& SpawnRotation, const AActor* InstigatorActor, AActor* OwnerActor,
-	float Damage,
-	float LifeTime)
-{
-	ASkillObjectBase* Projectile = SpawnSkillObject(ProjectileClass, SpawnLocation, SpawnRotation, InstigatorActor,
-	                                                OwnerActor);
-	if (Projectile)
-	{
-		Projectile->Launch(SpawnRotation.Vector(), Damage);
-	}
-	return Projectile;
-}
-
-#pragma endregion
-
 ASkillObjectBase* USkillObjectPoolSubsystem::SpawnSkillObject(const TSubclassOf<ASkillObjectBase>& SkillObjectClass,
                                                               const FVector& SpawnLocation,
                                                               const FRotator& SpawnRotation,

@@ -56,14 +56,14 @@ public:
 	 * @param Direction 월드 내에서 이동할 거리와 방향(cm/s).
 	 * @param InDamage 적용할 데미지
 	 */
-	void Launch(const FVector& Direction, float InDamage);
+	virtual void Launch(const FVector& Direction, float InDamage);
 	
 	/**
 	 * Must use Static Projectile
 	 * @param InDamage 적용할 데미지
 	 * @param InLifeTime 생명 주기
 	 */
-	void Launch(float InDamage, float InLifeTime);
+	virtual void Launch(float InDamage, float InLifeTime);
 
 	// projectile with Speed or LifeTime.
 	void Init(float InSpeed, float InLifeTime, bool ReturnToPoolOnHit);
@@ -75,10 +75,10 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
 
 	UFUNCTION(NetMulticast, Reliable)
-	void Client_ActivateSkillObject(FVector InLocation, FRotator InRotation, FVector InVelocity, float InDamage, float InLifeTime, bool bInReturnToPoolOnHit);
+	virtual void Client_ActivateSkillObject(FVector InLocation, FRotator InRotation, FVector InVelocity, float InDamage, float InLifeTime, bool bInReturnToPoolOnHit);
 
 	UFUNCTION(NetMulticast, Reliable)
-	void Client_ResetProjectile();
+	virtual void Client_ResetProjectile();
 	
 	// Sphere collision component.
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = SkillObject)
@@ -87,21 +87,12 @@ public:
 	UPROPERTY(VisibleAnywhere, Replicated, BlueprintReadOnly, Category = SkillObject)
 	UProjectileMovementComponent* MovementComponent;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = SkillObject)
-	UStaticMeshComponent* Mesh;
-
 protected:
 	// only spawn.
 	void Init(float InLifeTime);
 	
 	UPROPERTY()
 	uint8 bReturnToPoolOnHit:1;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Movement)
-	float InitialSpeed;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Movement)
-	float MaxSpeed;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Damage)
 	float Damage;

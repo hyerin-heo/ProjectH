@@ -10,7 +10,11 @@
 UENUM(BlueprintType)
 enum class SkillObjectType : uint8
 {
-	SwordAura,
+	GreenSwordAura,
+	DarkGreenSwordAura,
+	DarkRedSwordAura,
+	StoneRush,
+	DashMagma,
 };
 
 /**
@@ -32,12 +36,11 @@ public:
 	void Pattern4();
 	void Pattern5();
 	
-	void Pattern1HitCheck(const FBossPatternInfo& PatternInfo);
-	void Pattern2HitCheck(const FBossPatternInfo& PatternInfo);
-	void Pattern3HitCheck(const FBossPatternInfo& PatternInfo);
-	void Pattern4HitCheck(const FBossPatternInfo& PatternInfo);
-	void Pattern5HitCheck(const FBossPatternInfo& PatternInfo);
-	void Test(float Damage);
+	void Pattern1HitCheck(const FBossPatternInfo& PatternInfo, const uint8& Step);
+	void Pattern2HitCheck(const FBossPatternInfo& PatternInfo, const uint8& Step);
+	void Pattern3HitCheck(const FBossPatternInfo& PatternInfo, const uint8& Step);
+	void Pattern4HitCheck(const FBossPatternInfo& PatternInfo, const uint8& Step);
+	void Pattern5HitCheck(const FBossPatternInfo& PatternInfo, const uint8& Step);
 
 	virtual void PatternHitCheck(const int32& InPatternIndex, const uint8& InStep) override;
 

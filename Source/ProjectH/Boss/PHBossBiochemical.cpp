@@ -3,9 +3,7 @@
 
 #include "PHBossBiochemical.h"
 
-#include "ProjectH.h"
-#include "Game/PHGameMode.h"
-#include "SkillObject/PHSwordAuraSkillObject.h"
+#include "SkillObject/PHNiagaraSkillObject.h"
 #include "Subsystem/SkillObjectPoolSubsystem.h"
 
 APHBossBiochemical::APHBossBiochemical()
@@ -51,61 +49,123 @@ void APHBossBiochemical::Pattern5()
 	// @PHTODO 패턴 대미지 위치 알려주는 UI및 이펙트 처리?
 }
 
-void APHBossBiochemical::Pattern1HitCheck(const FBossPatternInfo& PatternInfo)
+void APHBossBiochemical::Pattern1HitCheck(const FBossPatternInfo& PatternInfo, const uint8& Step)
 {
-	// @PHTODO 프로젝타일 날리기
-	Test(PatternInfo.AttackDamage);
-}
-
-void APHBossBiochemical::Pattern2HitCheck(const FBossPatternInfo& PatternInfo)
-{
-	// @PHTODO 프로젝타일 날리기
-	Test(PatternInfo.AttackDamage);
-}
-
-void APHBossBiochemical::Pattern3HitCheck(const FBossPatternInfo& PatternInfo)
-{
-	// @PHTODO 프로젝타일 날리기
-	Test(PatternInfo.AttackDamage);
-}
-
-void APHBossBiochemical::Pattern4HitCheck(const FBossPatternInfo& PatternInfo)
-{
-	// @PHTODO 프로젝타일 날리기
-	Test(PatternInfo.AttackDamage);
-}
-
-void APHBossBiochemical::Pattern5HitCheck(const FBossPatternInfo& PatternInfo)
-{
-	// @PHTODO 프로젝타일 날리기
-	Test(PatternInfo.AttackDamage);
-}
-
-void APHBossBiochemical::Test(float Damage)
-{
-	// 월드 컨텍스트 객체를 사용하여 서브시스템 인스턴스 가져오기
 	USkillObjectPoolSubsystem* PoolSubsystem = USkillObjectPoolSubsystem::Get(this);
 	if (PoolSubsystem)
 	{
 		// const FVector SpawnLocation = GetMesh()->GetSocketLocation(TEXT(""));
 		
-		APHSwordAuraSkillObject* NewSkillObject = Cast<APHSwordAuraSkillObject>(PoolSubsystem->SpawnAndFireProjectile(
-			SkillObjectsMap.FindChecked(SkillObjectType::SwordAura),
+		APHNiagaraSkillObject* NewSkillObject = Cast<APHNiagaraSkillObject>(PoolSubsystem->SpawnSkillObject(
+			SkillObjectsMap.FindChecked(SkillObjectType::GreenSwordAura),
 			GetActorLocation(),
 			GetActorRotation(),
 			this,
-			this,
-			Damage,
-			1000.f,
-			10.f
+			this
 		));
 
-		// if (NewSkillObject)
-		// {
-		// 	// 발사 방향 설정 (Subsystem에서 위치/회전은 이미 설정됨)
-		// 	FVector ShotDirection = SpawnRotation.Vector();
-		// 	NewSkillObject->FireInDirection(ShotDirection);
-		// }
+		if (NewSkillObject)
+		{
+			// @PHTODO 투사체 속도 세팅 필요
+			NewSkillObject->Init(500.f, 3.f, false);
+			NewSkillObject->Launch(GetActorForwardVector(),PatternInfo.AttackDamage);
+		}
+	}
+}
+
+void APHBossBiochemical::Pattern2HitCheck(const FBossPatternInfo& PatternInfo, const uint8& Step)
+{
+	// @PHTODO 다른 프로젝타일로 할지?
+	USkillObjectPoolSubsystem* PoolSubsystem = USkillObjectPoolSubsystem::Get(this);
+	if (PoolSubsystem)
+	{
+		// const FVector SpawnLocation = GetMesh()->GetSocketLocation(TEXT(""));
+		
+		APHNiagaraSkillObject* NewSkillObject = Cast<APHNiagaraSkillObject>(PoolSubsystem->SpawnSkillObject(
+			SkillObjectsMap.FindChecked(SkillObjectType::DarkGreenSwordAura),
+			GetActorLocation(),
+			GetActorRotation(),
+			this,
+			this
+		));
+
+		if (NewSkillObject)
+		{
+			// @PHTODO 투사체 속도 세팅 필요
+			NewSkillObject->Init(500.f, 3.f, false);
+			NewSkillObject->Launch(GetActorForwardVector(),PatternInfo.AttackDamage);
+		}
+	}
+}
+
+void APHBossBiochemical::Pattern3HitCheck(const FBossPatternInfo& PatternInfo, const uint8& Step)
+{
+	USkillObjectPoolSubsystem* PoolSubsystem = USkillObjectPoolSubsystem::Get(this);
+	if (PoolSubsystem)
+	{
+		// const FVector SpawnLocation = GetMesh()->GetSocketLocation(TEXT(""));
+		
+		APHNiagaraSkillObject* NewSkillObject = Cast<APHNiagaraSkillObject>(PoolSubsystem->SpawnSkillObject(
+			SkillObjectsMap.FindChecked(SkillObjectType::StoneRush),
+			GetActorLocation() + (GetActorForwardVector() * 500.f) - FVector(0.f,0.f,GetCapsuleComponent()->GetScaledCapsuleHalfHeight()),
+			GetActorRotation(),
+			this,
+			this
+		));
+
+		if (NewSkillObject)
+		{
+			// @PHTODO 투사체 생명 주기 세팅 필요
+			NewSkillObject->Launch(PatternInfo.AttackDamage, 4.5f);
+		}
+	}
+}
+
+void APHBossBiochemical::Pattern4HitCheck(const FBossPatternInfo& PatternInfo, const uint8& Step)
+{
+	if (Step == 2)
+	{
+		USkillObjectPoolSubsystem* PoolSubsystem = USkillObjectPoolSubsystem::Get(this);
+		if (PoolSubsystem)
+		{
+			// const FVector SpawnLocation = GetMesh()->GetSocketLocation(TEXT(""));
+		
+			APHNiagaraSkillObject* NewSkillObject = Cast<APHNiagaraSkillObject>(PoolSubsystem->SpawnSkillObject(
+				SkillObjectsMap.FindChecked(SkillObjectType::DashMagma),
+				GetActorLocation() + (GetActorForwardVector() * PatternInfo.AttackRange) - FVector(0.f,0.f,GetCapsuleComponent()->GetScaledCapsuleHalfHeight()),
+				GetActorRotation(),
+				this,
+				this
+			));
+
+			if (NewSkillObject)
+			{
+				// @PHTODO 투사체 생명 주기 세팅 필요
+				NewSkillObject->Launch(PatternInfo.AttackDamage, 4.5f);
+			}
+		}
+	}else
+	{
+		USkillObjectPoolSubsystem* PoolSubsystem = USkillObjectPoolSubsystem::Get(this);
+		if (PoolSubsystem)
+		{
+			// const FVector SpawnLocation = GetMesh()->GetSocketLocation(TEXT(""));
+		
+			APHNiagaraSkillObject* NewSkillObject = Cast<APHNiagaraSkillObject>(PoolSubsystem->SpawnSkillObject(
+				SkillObjectsMap.FindChecked(SkillObjectType::DarkRedSwordAura),
+				GetActorLocation(),
+				GetActorRotation(),
+				this,
+				this
+			));
+
+			if (NewSkillObject)
+			{
+				// @PHTODO 투사체 속도 세팅 필요
+				NewSkillObject->Init(500.f, 3.f, false);
+				NewSkillObject->Launch(GetActorForwardVector(),PatternInfo.AttackDamage);
+			}
+		}
 	}
 }
 
@@ -117,19 +177,16 @@ void APHBossBiochemical::PatternHitCheck(const int32& InPatternIndex, const uint
 	switch (Pattern)
 	{
 	case  1:
-		Pattern1HitCheck(*PatternInfo);
+		Pattern1HitCheck(*PatternInfo, InStep);
 		break;
 	case  2:
-		Pattern2HitCheck(*PatternInfo);
+		Pattern2HitCheck(*PatternInfo, InStep);
 		break;
 	case  3:
-		Pattern3HitCheck(*PatternInfo);
+		Pattern3HitCheck(*PatternInfo, InStep);
 		break;
 	case  4:
-		Pattern4HitCheck(*PatternInfo);
-		break;
-	case  5:
-		Pattern5HitCheck(*PatternInfo);
+		Pattern4HitCheck(*PatternInfo, InStep);
 		break;
 	}
 }
@@ -157,9 +214,6 @@ void APHBossBiochemical::PhaseLevelChanged(const uint8& OldPhase, const uint8& N
 		break;
 	case  4:
 		AttackPatternActions.Add(FAttackPatternDelegateWrapper(FOnAttackPattern::CreateUObject(this, &APHBossBiochemical::Pattern4), *PatternInfo));
-		break;
-	case  5:
-		AttackPatternActions.Add(FAttackPatternDelegateWrapper(FOnAttackPattern::CreateUObject(this, &APHBossBiochemical::Pattern5), *PatternInfo));
 		break;
 	}
 }

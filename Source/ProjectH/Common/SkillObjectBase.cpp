@@ -31,13 +31,7 @@ ASkillObjectBase::ASkillObjectBase()
 
 	RootComponent = CollisionComponent;
 	
-	Mesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("ProjectileMesh"));
-	Mesh->SetVisibility(true);
-	Mesh->SetupAttachment(RootComponent);
-	
 	// Default
-	InitialSpeed = 3000.f;
-	MaxSpeed = 3000.f;
 	Damage = 10.f;
 
 	// Init ProjectileMovementComponent
@@ -57,13 +51,10 @@ ASkillObjectBase::ASkillObjectBase()
 void ASkillObjectBase::BeginPlay()
 {
 	Super::BeginPlay();
-	MovementComponent->InitialSpeed = InitialSpeed;
-	MovementComponent->MaxSpeed = MaxSpeed;
 	MovementComponent->StopMovementImmediately();
 	MovementComponent->Deactivate();
 	LifeSpanDeltaTime = 0.f;
 	LifeSpan = 0.f;
-	Mesh->Activate();
 	if (GetWorld()->GetNetMode() == NM_Client)
 	{
 		PH_LOG(LogPHBoss, Error, TEXT("Client@!"));
@@ -91,7 +82,7 @@ void ASkillObjectBase::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, U
 		// For recycle
 		if (bReturnToPoolOnHit)
 		{
-			LifeSpanExpired();
+			ResetProjectile();
 		}
 	}
 }
@@ -113,11 +104,6 @@ void ASkillObjectBase::Tick(float DeltaTime)
 void ASkillObjectBase::PostInitializeComponents()
 {
 	Super::PostInitializeComponents();
-	if (!Mesh->IsRenderStateCreated())
-	{
-		Mesh->UnregisterComponent();
-		Mesh->RegisterComponent();
-	}
 	if (!CollisionComponent->IsRenderStateCreated())
 	{
 		CollisionComponent->UnregisterComponent();
@@ -130,8 +116,9 @@ void ASkillObjectBase::Launch(const FVector& Direction, float InDamage)
 	SetActorTickEnabled(true);
 	SetActorEnableCollision(true);
 	Damage = InDamage;
-	MovementComponent->Velocity = Direction * InitialSpeed;
-	MovementComponent->Activate();// 클라이언트에 액터 활성화 및 초기 이동 상태를 직접 알려주는 RPC 호출
+	MovementComponent->Velocity = Direction * MovementComponent->InitialSpeed;
+	MovementComponent->Activate();
+	// 클라이언트에 액터 활성화 및 초기 이동 상태를 직접 알려주는 RPC 호출
 	Client_ActivateSkillObject(GetActorLocation(), GetActorRotation(), MovementComponent->Velocity, InDamage, LifeSpan, bReturnToPoolOnHit);
 }
 
@@ -208,7 +195,6 @@ void ASkillObjectBase::ResetProjectile()
 	// SetLifeSpan(0.0f);
 	LifeSpan = 0.f;
 	LifeSpanDeltaTime = 0.f;
-
 	Client_ResetProjectile();
 }
 
@@ -233,13 +219,13 @@ void ASkillObjectBase::Client_ActivateSkillObject_Implementation(FVector InLocat
 	SetActorEnableCollision(true); // 콜리전 활성화
 	SetActorTickEnabled(true); // 틱 활성화
 
-	// 메시 컴포넌트의 가시성도 명시적으로 설정 (안전빵)
-	if (Mesh)
-	{
-		Mesh->SetVisibility(true);
-		// 렌더링 상태가 확실히 업데이트되도록 강제
-		Mesh->MarkRenderStateDirty(); 
-	}
+	// // 메시 컴포넌트의 가시성도 명시적으로 설정 (안전빵)
+	// if (Mesh)
+	// {
+	// 	Mesh->SetVisibility(true);
+	// 	// 렌더링 상태가 확실히 업데이트되도록 강제
+	// 	Mesh->MarkRenderStateDirty(); 
+	// }
 
 	// 이동 컴포넌트 상태 동기화
 	MovementComponent->InitialSpeed = InVelocity.Size();
@@ -263,11 +249,11 @@ void ASkillObjectBase::Client_ResetProjectile_Implementation()
 	SetActorHiddenInGame(true);
 	SetActorEnableCollision(false);
 	SetActorTickEnabled(false);
-	if (Mesh)
-	{
-		Mesh->SetVisibility(false);
-		Mesh->MarkRenderStateDirty();
-	}
+	// if (Mesh)
+	// {
+	// 	Mesh->SetVisibility(false);
+	// 	Mesh->MarkRenderStateDirty();
+	// }
 	MovementComponent->StopMovementImmediately();
 	MovementComponent->Deactivate();
 	LifeSpan = 0.f;
