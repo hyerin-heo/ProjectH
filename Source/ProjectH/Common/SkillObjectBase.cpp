@@ -23,7 +23,7 @@ ASkillObjectBase::ASkillObjectBase()
 	CollisionComponent = CreateDefaultSubobject<UCapsuleComponent>(TEXT("SphereComp"));
 	CollisionComponent->InitCapsuleSize(5.f, 10.f);
 	CollisionComponent->BodyInstance.SetCollisionProfileName(CPROFILE_TRIGGER);
-	CollisionComponent->OnComponentHit.AddDynamic(this, &ASkillObjectBase::OnHit);
+	CollisionComponent->OnComponentBeginOverlap.AddDynamic(this, &ASkillObjectBase::OnHit);
 
 	// Unwalkable
 	CollisionComponent->SetWalkableSlopeOverride(FWalkableSlopeOverride(WalkableSlope_Unwalkable, 0.f));
@@ -61,22 +61,22 @@ void ASkillObjectBase::BeginPlay()
 	}
 }
 
-void ASkillObjectBase::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp,
-							FVector NormalImpulse, const FHitResult& Hit)
+void ASkillObjectBase::OnHit(UPrimitiveComponent* OverlappedComp, AActor* Other,
+	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	if (GetLocalRole() == ROLE_Authority)
 	{
-		if ((OtherActor != nullptr) && (OtherActor != this) && (OtherComp != nullptr) && OtherComp->IsSimulatingPhysics())
+		if ((Other != nullptr) && (Other != this) && (OtherComp != nullptr) && OtherComp->IsSimulatingPhysics())
 		{
 			OtherComp->AddImpulseAtLocation(GetVelocity() * 100.0f, GetActorLocation());
 		}
 
 		// Damage
-		if (OtherActor && OtherActor != this)
+		if (Other && Other != this)
 		{
 			// UGameplayStatics::ApplyDamage(OtherActor, Damage, GetInstigatorController(), this, UDamageType::StaticClass());
 			FDamageEvent DamageEvent;
-			OtherActor->TakeDamage(Damage, DamageEvent, GetInstigatorController(), this);
+			Other->TakeDamage(Damage, DamageEvent, GetInstigatorController(), this);
 		}
 
 		// For recycle
