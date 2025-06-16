@@ -8,7 +8,8 @@
 #include "PHCharacterStatComponent.generated.h"
 
 DECLARE_MULTICAST_DELEGATE(FOnHpZeroDelegate);
-DECLARE_MULTICAST_DELEGATE_TwoParams(FOnHpChangedDelegate, float/*Max*/, float/*Current*/);
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnHpChangedDelegate, float/*Current*/);
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnHpChangedMaxDelegate, float/*Max*/);
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnCooldownChangedDelegate, EAttackType /*SkillType*/, float /*RemainingTime*/);
 
 USTRUCT(BlueprintType)
@@ -59,13 +60,14 @@ protected:
 public:
 	FOnHpZeroDelegate OnHpZero;
 	FOnHpChangedDelegate OnHpChanged;
+	FOnHpChangedMaxDelegate OnMaxHpChanged;
 	//쿨타임 변경(시작 혹은 감소) 시 알림
 	FOnCooldownChangedDelegate OnCooldownChanged;
 	
 	FORCEINLINE const UPHCharacterStatDataAsset& GetBaseStat() const { return *StatData; }
 	FORCEINLINE float GetCurrentHp() const { return CurrentHp; }
 	FORCEINLINE float GetMaxHp() const { return MaxHp; }
-	FORCEINLINE void HealHp(float InHealAmount) { CurrentHp = FMath::Clamp(CurrentHp + InHealAmount, 0, StatData->MaxHp); OnHpChanged.Broadcast(CurrentHp, MaxHp); }
+	FORCEINLINE void HealHp(float InHealAmount) { CurrentHp = FMath::Clamp(CurrentHp + InHealAmount, 0, StatData->MaxHp); OnHpChanged.Broadcast(CurrentHp); }
 	FORCEINLINE float GetAttackRadius() const { return AttackRadius; }
 	FORCEINLINE bool GetCooldownReduction() const {return bCooldownReduction; }
 	float ApplyDamage(float InDamage);

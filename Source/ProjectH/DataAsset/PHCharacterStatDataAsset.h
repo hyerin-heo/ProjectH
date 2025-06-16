@@ -38,6 +38,9 @@ struct FCharacterAttackStat
 	EAttackStatType AttackStatType = EAttackStatType::None;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	TSoftObjectPtr<UTexture2D> IconTexture;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float AttackDamage = 0.0f;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float minPercent = 1.0f;

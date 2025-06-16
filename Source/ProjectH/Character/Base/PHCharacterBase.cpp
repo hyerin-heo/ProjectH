@@ -17,7 +17,9 @@
 #include "Engine/AssetManager.h"
 #include "Net/UnrealNetwork.h"
 #include "NavigationSystem.h"
+#include "Character/Component/PHWidgetComponent.h"
 #include "Engine/DamageEvents.h"
+#include "UI/PHHpBarWidget.h"
 
 // Sets default values
 APHCharacterBase::APHCharacterBase(const FObjectInitializer& ObjectInitializer)
@@ -112,7 +114,18 @@ APHCharacterBase::APHCharacterBase(const FObjectInitializer& ObjectInitializer)
 	{
 		Skill4Action = InputSkill4ActionRef.Object;
 	}
-	
+
+	HpBar = CreateDefaultSubobject<UPHWidgetComponent>(TEXT("Widget"));
+	HpBar->SetupAttachment(GetMesh());
+	HpBar->SetRelativeLocation(FVector(0.0f, 0.0f, 220.0f));
+	static ConstructorHelpers::FClassFinder<UUserWidget> HpBarWidGetRef(TEXT("/Game/ProjectH/UI/CharacterHPBar.CharacterHPBar_C"));
+	if (HpBarWidGetRef.Class)
+	{
+		HpBar->SetWidgetClass(HpBarWidGetRef.Class);
+		HpBar->SetWidgetSpace(EWidgetSpace::Screen);
+		HpBar->SetDrawSize(FVector2D(150.0f, 15.0f));
+		HpBar->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	}
 
 	bReplicates = true;
 	MeshIndex = -1;
@@ -192,10 +205,27 @@ void APHCharacterBase::OnRep_PlayerState()
 	Super::OnRep_PlayerState();
 }
 
-float APHCharacterBase::TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent,
-	class AController* EventInstigator, AActor* DamageCauser)
+void APHCharacterBase::SetupCharacterWidget(class UUserWidget* InWidget)
 {
-	return Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
+	UPHHpBarWidget* HpBarWidget = Cast<UPHHpBarWidget>(InWidget);
+
+	if (HpBarWidget)
+	{
+		HpBarWidget->InitializeHpBar(StatDataComponent->GetMaxHp());
+	}
+
+	StatDataComponent->OnHpChanged.AddUObject(HpBarWidget, &UPHHpBarWidget::UpdateHpBar);
+	StatDataComponent->OnMaxHpChanged.AddUObject(HpBarWidget, &UPHHpBarWidget::UpdateMaxHp);
+}
+
+float APHCharacterBase::TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent,
+                                   class AController* EventInstigator, AActor* DamageCauser)
+{
+	Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
+
+	StatDataComponent->ApplyDamage(DamageAmount);
+
+	return DamageAmount;
 }
 
 // Called every frame
@@ -721,6 +751,8 @@ void APHCharacterBase::RotateToCursor()
 
 void APHCharacterBase::SetDead()
 {
+	SetActorEnableCollision(false);
+	HpBar->SetHiddenInGame(true);
 }
 
 void APHCharacterBase::SendClientRPCPlayAnimation(FName SectionName, float AnimSpeed)

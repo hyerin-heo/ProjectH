@@ -91,7 +91,7 @@ void UPHCharacterStatComponent::GetLifetimeReplicatedProps(TArray<class FLifetim
 void UPHCharacterStatComponent::OnRep_CurrentHp()
 {
 	//서버로부터 받은 변경된 CurrentHP 정보를 델리게이트를 통해 알림.
-	OnHpChanged.Broadcast(CurrentHp, MaxHp);
+	OnHpChanged.Broadcast(CurrentHp);
 	
 	//죽었는지 확인.
 	if (CurrentHp <= KINDA_SMALL_NUMBER)
@@ -102,15 +102,15 @@ void UPHCharacterStatComponent::OnRep_CurrentHp()
 
 void UPHCharacterStatComponent::OnRep_MaxHp()
 {
-	//서버로부터 받은 변경된 CurrentHP 정보를 델리게이트를 통해 알림.
-	OnHpChanged.Broadcast(CurrentHp, MaxHp);
+	//서버로부터 받은 변경된 MaxHP 정보를 델리게이트를 통해 알림.
+	OnMaxHpChanged.Broadcast(MaxHp);
 }
 
 void UPHCharacterStatComponent::SetHp(float NewHp)
 {
 	CurrentHp = FMath::Clamp<float>(NewHp, 0.0f, MaxHp);
 
-	OnHpChanged.Broadcast(CurrentHp, MaxHp);
+	OnHpChanged.Broadcast(CurrentHp);
 }
 
 float UPHCharacterStatComponent::ApplyDamage(float InDamage)

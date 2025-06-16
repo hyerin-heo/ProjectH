@@ -6,6 +6,7 @@
 #include "GameFramework/Character.h"
 #include "InputActionValue.h"
 #include "Engine/StreamableManager.h"
+#include "Interface/Character/PHCharacterWidgetInterface.h"
 #include "PHCharacterBase.generated.h"
 
 DECLARE_DELEGATE_TwoParams(FOnMontageEnd, UAnimMontage*, bool);
@@ -23,7 +24,7 @@ enum class EPlayerActionType : uint8
 };
 
 UCLASS(config=CharacterMesh)
-class PROJECTH_API APHCharacterBase : public ACharacter
+class PROJECTH_API APHCharacterBase : public ACharacter, public IPHCharacterWidgetInterface
 {
 	GENERATED_BODY()
 
@@ -48,9 +49,12 @@ protected:
 	virtual void PostNetInit() override;
 	//플레이어 스테이트가 클라이언트에 동기화 될때 호출.
 	virtual void OnRep_PlayerState() override;
+	//캐릭터HP위젯초기함수.
+	virtual void SetupCharacterWidget(class UUserWidget* InWidget) override;
 	
 	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override; 
 
+	
 	void MeshLoadCompleted();
 	void UpdateMeshFromPlayerState();
 	
@@ -136,6 +140,10 @@ protected:
 	// TObjectPtr<class UPHCharacterStatDataAsset> StatDataAsset;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Stat, Meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<class UPHCharacterStatComponent> StatDataComponent;
+
+	//Widget Section.
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Widget, Meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<class UWidgetComponent> HpBar;
 
 	//Montage Section.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Animation)
