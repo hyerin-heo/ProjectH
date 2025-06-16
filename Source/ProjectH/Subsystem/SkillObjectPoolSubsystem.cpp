@@ -99,14 +99,13 @@ ASkillObjectBase* USkillObjectPoolSubsystem::SpawnSkillObject(const TSubclassOf<
 	if (SkillObject)
 	{
 		// 서버에서 설정하면 클라로 복제됨.
+		SkillObject->SetInstigator(InstigatorActor->GetInstigator());
+		SkillObject->SetOwner(OwnerActor);
 		SkillObject->SetActorLocation(SpawnLocation);
 		SkillObject->SetActorRotation(SpawnRotation);
 		SkillObject->SetActorHiddenInGame(false);
 		SkillObject->SetActorEnableCollision(true);
 		SkillObject->SetActorTickEnabled(true);
-
-		SkillObject->SetInstigator(InstigatorActor->GetInstigator());
-		SkillObject->SetOwner(OwnerActor);
 
 		return SkillObject;
 	}
@@ -169,7 +168,6 @@ void USkillObjectPoolSubsystem::InitializeSinglePool(FSkillObjectPoolData& PoolD
 		FVector SpawnLocation = FVector::Zero();
 		FRotator SpawnRotation = FRotator::ZeroRotator;
 
-		// 서버에만 존재하며 클라에는 복제
 		ASkillObjectBase* NewSkillObject = World->SpawnActor<ASkillObjectBase>(
 			PoolRef.SkillObjectClass, SpawnLocation, SpawnRotation, SpawnParams);
 		if (NewSkillObject)

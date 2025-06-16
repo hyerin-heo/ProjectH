@@ -253,6 +253,10 @@ float APHBossCharacterBase::TakeDamage(float DamageAmount, struct FDamageEvent c
     class AController* EventInstigator, AActor* DamageCauser)
 {
     Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
+    if (DamageCauser == this)
+    {
+        return DamageAmount;
+    }
     if (HP <= KINDA_SMALL_NUMBER)
     {
         // 이미 죽었으면 또 처리 할 필요가 없음.

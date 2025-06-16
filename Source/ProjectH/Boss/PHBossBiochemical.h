@@ -34,13 +34,11 @@ public:
 	void Pattern2();
 	void Pattern3();
 	void Pattern4();
-	void Pattern5();
 	
 	void Pattern1HitCheck(const FBossPatternInfo& PatternInfo, const uint8& Step);
 	void Pattern2HitCheck(const FBossPatternInfo& PatternInfo, const uint8& Step);
 	void Pattern3HitCheck(const FBossPatternInfo& PatternInfo, const uint8& Step);
 	void Pattern4HitCheck(const FBossPatternInfo& PatternInfo, const uint8& Step);
-	void Pattern5HitCheck(const FBossPatternInfo& PatternInfo, const uint8& Step);
 
 	virtual void PatternHitCheck(const int32& InPatternIndex, const uint8& InStep) override;
 

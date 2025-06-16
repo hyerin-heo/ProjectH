@@ -66,23 +66,23 @@ void ASkillObjectBase::OnHit(UPrimitiveComponent* OverlappedComp, AActor* Other,
 {
 	if (GetLocalRole() == ROLE_Authority)
 	{
-		if ((Other != nullptr) && (Other != this) && (OtherComp != nullptr) && OtherComp->IsSimulatingPhysics())
+		if ((Other != nullptr) && (Other != this) && Other != this->Owner && (OtherComp != nullptr) && OtherComp->IsSimulatingPhysics())
 		{
 			OtherComp->AddImpulseAtLocation(GetVelocity() * 100.0f, GetActorLocation());
 		}
 
 		// Damage
-		if (Other && Other != this)
+		if (Other && Other != this && Other != this->Owner)
 		{
 			// UGameplayStatics::ApplyDamage(OtherActor, Damage, GetInstigatorController(), this, UDamageType::StaticClass());
 			FDamageEvent DamageEvent;
 			Other->TakeDamage(Damage, DamageEvent, GetInstigatorController(), this);
-		}
 
-		// For recycle
-		if (bReturnToPoolOnHit)
-		{
-			ResetProjectile();
+			// For recycle
+			if (bReturnToPoolOnHit)
+			{
+				ResetProjectile();
+			}
 		}
 	}
 }
