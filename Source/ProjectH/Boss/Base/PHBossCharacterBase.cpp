@@ -229,7 +229,6 @@ void APHBossCharacterBase::AttackActionRPC_Implementation()
         return;
     }
     PlayAnimMontage(ActionMontage, AttackSpeed, DefaultActionName);
-    // @PHTODO Effect
 }
 
 void APHBossCharacterBase::PatternActionRPC_Implementation(const FAttackPatternDelegateWrapper& InPatternInfo, const FName InMontageName)
@@ -239,7 +238,6 @@ void APHBossCharacterBase::PatternActionRPC_Implementation(const FAttackPatternD
         return;
     }
     PlayAnimMontage(ActionMontage, InPatternInfo.PatternInfo.AttackSpeed, InMontageName);
-    // @PHTODO Effect
 }
 
 void APHBossCharacterBase::PhasePatternActionRPC_Implementation(const FAttackPatternDelegateWrapper& InPhasePatternInfo, const FName InMontageName)
@@ -249,13 +247,17 @@ void APHBossCharacterBase::PhasePatternActionRPC_Implementation(const FAttackPat
         return;
     }
     PlayAnimMontage(ActionMontage, InPhasePatternInfo.PatternInfo.AttackSpeed, InMontageName);
-    // @PHTODO Effect
 }
 
 float APHBossCharacterBase::TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent,
     class AController* EventInstigator, AActor* DamageCauser)
 {
     Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
+    if (HP <= KINDA_SMALL_NUMBER)
+    {
+        // 이미 죽었으면 또 처리 할 필요가 없음.
+        return DamageAmount;
+    }
     const float PrevHp = HP;
     const float ActualDamage = FMath::Clamp<float>(DamageAmount, 0, DamageAmount);
     HP = PrevHp-ActualDamage;
@@ -263,8 +265,34 @@ float APHBossCharacterBase::TakeDamage(float DamageAmount, struct FDamageEvent c
     if (HP <= KINDA_SMALL_NUMBER)
     {
         // @PHTODO Dead
+        PlayDeadAnimation();
     }
     return DamageAmount;
+}
+
+void APHBossCharacterBase::PlayDeadAnimation()
+{
+    UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+    AnimInstance->StopAllMontages(0.0f);
+    AnimInstance->Montage_Play(DeadMontage, 1.0f);
+    APHAIController* ABAIController = Cast<APHAIController>(GetController());
+    if (ABAIController)
+    {
+        ABAIController->StopAI();
+    }
+    SetCanBeDamaged(false);
+    GetCharacterMovement()->DisableMovement();
+    GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+    FTimerHandle DeadTimerHandle;
+    GetWorld()->GetTimerManager().SetTimer(DeadTimerHandle, FTimerDelegate::CreateLambda(
+        [&]()
+        {
+            // @PHTODO 죽었을 떄 Destroy 할지 아니면 다음 레벨로 넘길지 체크
+            PH_LOG(LogPHBoss, Log, TEXT("Boss dead!!"));
+            // Destroy();
+        }
+    ), 5.0f, false);
 }
 
 void APHBossCharacterBase::OnRep_MaxHP()
@@ -275,6 +303,10 @@ void APHBossCharacterBase::OnRep_MaxHP()
 void APHBossCharacterBase::OnRep_HP()
 {
     // @PHTODO 체력 변경됐을 때, UI업데이트 필요.
+    if (HP <= KINDA_SMALL_NUMBER)
+    {
+        PlayDeadAnimation();
+    }
 }
 
 bool APHBossCharacterBase::IsCoolTime()

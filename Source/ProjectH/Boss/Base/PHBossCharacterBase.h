@@ -61,6 +61,7 @@ public:
 	// @PHTODO
 
 	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
+	void PlayDeadAnimation();
 
 	UFUNCTION()
 	void OnRep_MaxHP();
@@ -93,6 +94,9 @@ protected:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Animation)
 	TObjectPtr<class UAnimMontage> ActionMontage;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Animation)
+	TObjectPtr<class UAnimMontage> DeadMontage;
 	
 	UPROPERTY()
 	TArray<FAttackPatternDelegateWrapper> AttackPatternActions;
