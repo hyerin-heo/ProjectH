@@ -20,6 +20,7 @@
 #include "Character/Component/PHWidgetComponent.h"
 #include "Engine/DamageEvents.h"
 #include "UI/PHHpBarWidget.h"
+#include "UI/PHInGameHUDWidget.h"
 
 // Sets default values
 APHCharacterBase::APHCharacterBase(const FObjectInitializer& ObjectInitializer)
@@ -205,7 +206,7 @@ void APHCharacterBase::OnRep_PlayerState()
 	Super::OnRep_PlayerState();
 }
 
-void APHCharacterBase::SetupCharacterWidget(class UUserWidget* InWidget)
+void APHCharacterBase::SetupCharacterWidget(UUserWidget* InWidget)
 {
 	UPHHpBarWidget* HpBarWidget = Cast<UPHHpBarWidget>(InWidget);
 
@@ -218,8 +219,30 @@ void APHCharacterBase::SetupCharacterWidget(class UUserWidget* InWidget)
 	StatDataComponent->OnMaxHpChanged.AddUObject(HpBarWidget, &UPHHpBarWidget::UpdateMaxHp);
 }
 
-float APHCharacterBase::TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent,
-                                   class AController* EventInstigator, AActor* DamageCauser)
+void APHCharacterBase::SetupHUDWidget(UPHInGameHUDWidget* InHUDWidget)
+{
+	if (InHUDWidget)
+	{
+		InHUDWidget->InitializeHpBar(StatDataComponent->GetMaxHp());
+
+		for (auto& StatData : StatDataComponent->GetBaseStat().AttackStatMap)
+		{
+			if (StatData.Key == EAttackType::DefaultAttack)
+			{
+				continue;
+			}
+			
+			InHUDWidget->SetUpSkillIcons(StatData.Key, StatData.Value.IconTexture.LoadSynchronous());	
+		}
+
+		StatDataComponent->OnHpChanged.AddUObject(InHUDWidget, &UPHInGameHUDWidget::UpdateHpBar);
+		StatDataComponent->OnMaxHpChanged.AddUObject(InHUDWidget, &UPHInGameHUDWidget::UpdateMaxHp);
+		StatDataComponent->OnRemainingCollTimeDelegate.AddUObject(InHUDWidget, &UPHInGameHUDWidget::UpdateCooldownTime);
+	}
+}
+
+float APHCharacterBase::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent,
+                                   AController* EventInstigator, AActor* DamageCauser)
 {
 	Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
 
@@ -751,6 +774,8 @@ void APHCharacterBase::RotateToCursor()
 
 void APHCharacterBase::SetDead()
 {
+	GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_None);
+	PlayDeadAnimation();
 	SetActorEnableCollision(false);
 	HpBar->SetHiddenInGame(true);
 }
@@ -780,4 +805,7 @@ void APHCharacterBase::SendClientRPCPlayAnimation(FName SectionName, float AnimS
 
 void APHCharacterBase::PlayDeadAnimation()
 {
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	AnimInstance->StopAllMontages(0.0f);
+	AnimInstance->Montage_Play(DeadMontage, 1.0f);
 }

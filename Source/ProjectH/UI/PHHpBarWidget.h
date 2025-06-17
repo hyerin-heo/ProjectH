@@ -13,9 +13,6 @@ UCLASS()
 class PROJECTH_API UPHHpBarWidget : public UPHUserWidget
 {
 	GENERATED_BODY()
-
-protected:
-	virtual void NativeConstruct() override;
 	
 public:
 	UPHHpBarWidget(const FObjectInitializer& ObjectInitializer);
@@ -25,6 +22,9 @@ public:
 
 	void InitializeHpBar(float NewMaxHp);
 
+protected:
+	virtual void NativeConstruct() override;
+	
 protected:
 	UPROPERTY()
 	TObjectPtr<class UProgressBar> HpProgressBar;

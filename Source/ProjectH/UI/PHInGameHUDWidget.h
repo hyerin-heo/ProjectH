@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
+#include "Common/GlobalEnum.h"
 #include "PHInGameHUDWidget.generated.h"
 
 /**
@@ -15,6 +16,13 @@ class PROJECTH_API UPHInGameHUDWidget : public UUserWidget
 	GENERATED_BODY()
 public:
 	UPHInGameHUDWidget(const FObjectInitializer& InObjectInitializer);
+
+	void InitializeHpBar(float NewMaxHp);
+	void UpdateHpBar(float NewCurrentHp);
+	void UpdateMaxHp(float NewMaxHp);
+
+	void SetUpSkillIcons(EAttackType InAttackType, UTexture2D* NewTexture);
+	void UpdateCooldownTime(EAttackType InAttackType, float CurrentCoolTime, float MaxCoolTime);
 	
 protected:
 	virtual void NativeConstruct() override;
@@ -23,4 +31,7 @@ protected:
 private:
 	UPROPERTY()
 	TObjectPtr<class UPHHpBarWidget> HpBar;
+
+	UPROPERTY()
+	TObjectPtr<class UPHSkillBarWidget> SkillBar;
 };

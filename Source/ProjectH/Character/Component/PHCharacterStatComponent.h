@@ -11,6 +11,7 @@ DECLARE_MULTICAST_DELEGATE(FOnHpZeroDelegate);
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnHpChangedDelegate, float/*Current*/);
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnHpChangedMaxDelegate, float/*Max*/);
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnCooldownChangedDelegate, EAttackType /*SkillType*/, float /*RemainingTime*/);
+DECLARE_MULTICAST_DELEGATE_ThreeParams(FOnRemainingCollTimeDelegate, EAttackType/*SkillType*/, float/*CurrentCoolTime*/, float/*MaxCoolTime*/);
 
 USTRUCT(BlueprintType)
 struct FSkillCooldownData
@@ -19,15 +20,19 @@ struct FSkillCooldownData
 
 	// 스킬 타입 열거형
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Cooldown")
-	EAttackType SkillType = EAttackType::None;
+	EAttackType SkillType = EAttackType::End;
 
 	// 남은 쿨타임(초)
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Cooldown")
-	float RemainingTime = 0.f;
+	float RemainingTime = 0.0f;
+
+	// Max 쿨타임
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Cooldown")
+	float MaxCoolTime = 0.0f;
 
 	FSkillCooldownData() {}
-	FSkillCooldownData(EAttackType InType, float InTime)
-		: SkillType(InType), RemainingTime(InTime) {}
+	FSkillCooldownData(EAttackType InType, float InTime, float InMaxCoolTiime)
+		: SkillType(InType), RemainingTime(InTime), MaxCoolTime(InMaxCoolTiime) {}
 };
 
 
@@ -51,6 +56,8 @@ protected:
 
 	UFUNCTION()
 	void OnRep_CurrentHp();
+	UFUNCTION()
+	void OnRep_RemainingCollTime();
 
 	UFUNCTION()
 	void OnRep_MaxHp();
@@ -63,6 +70,7 @@ public:
 	FOnHpChangedMaxDelegate OnMaxHpChanged;
 	//쿨타임 변경(시작 혹은 감소) 시 알림
 	FOnCooldownChangedDelegate OnCooldownChanged;
+	FOnRemainingCollTimeDelegate OnRemainingCollTimeDelegate;
 	
 	FORCEINLINE const UPHCharacterStatDataAsset& GetBaseStat() const { return *StatData; }
 	FORCEINLINE float GetCurrentHp() const { return CurrentHp; }
@@ -95,7 +103,7 @@ protected:
 	UPROPERTY(Replicated)
 	uint8 bCooldownReduction : 1;
 
-	UPROPERTY(Replicated)
+	UPROPERTY(ReplicatedUsing = OnRep_RemainingCollTime, Transient)
 	TArray<FSkillCooldownData>RemainingCooldowns;
 
 	//Transient를 사용하면 블루프린트에 저장이 되지 않는다.

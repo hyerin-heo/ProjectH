@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
+#include "Common/GlobalEnum.h"
 #include "PHCharacterSkillIconWidget.generated.h"
 
 /**
@@ -21,7 +22,7 @@ protected:
 	virtual void NativeConstruct() override;
 
 public:
-	void InitializeSkillIcon(int32 InSkillNumber, UTexture2D* NewTexture);
+	void InitializeSkillIcon(EAttackType InSkillType, UTexture2D* NewTexture);
 
 	void SetCoolTimeProgress(float CurrentCoolTime, float MaxCoolTime);
 
@@ -39,7 +40,7 @@ private:
 	TObjectPtr<class UTextBlock> InputKeyText;
 
 	UPROPERTY()
-	int32 SkillNumber;
+	EAttackType AttackType;
 	
 	
 };

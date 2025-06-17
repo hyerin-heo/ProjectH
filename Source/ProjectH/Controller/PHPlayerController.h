@@ -23,5 +23,12 @@ protected:
 	virtual void BeginPlay() override;
 
 	virtual void OnPossess(APawn* InPawn) override;
+
+	// UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = HUD)
+	// TSubclassOf<class UPHInGameHUDWidget> PHInGameHUDWidgetClass;
+	//
+	// UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = HUD)
+	// TObjectPtr<class UPHInGameHUDWidget> PHInGameHUDWidget;
+	
 	
 };

@@ -3,8 +3,17 @@
 
 #include "Controller/PHPlayerController.h"
 
+#include "UI/PHInGameHUDWidget.h"
+
 APHPlayerController::APHPlayerController()
 {
+	// static ConstructorHelpers::FClassFinder<UPHInGameHUDWidget> InGameHUDWidgetRef(TEXT("/Game/ProjectH/UI/WBP_PHInGameHUD.WBP_PHInGameHUD_C"));
+	//
+	// if (InGameHUDWidgetRef.Class)
+	// {
+	// 	PHInGameHUDWidgetClass = InGameHUDWidgetRef.Class;
+	// }
+	
 	bShowMouseCursor = true;
 }
 

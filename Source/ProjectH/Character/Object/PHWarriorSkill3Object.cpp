@@ -5,6 +5,7 @@
 #include "Components/SphereComponent.h"
 #include "NiagaraComponent.h"
 #include "Engine/DamageEvents.h"
+#include "Interface/Boss/PHBossAIInterface.h"
 
 
 // Sets default values
@@ -53,13 +54,26 @@ void APHWarriorSkill3Object::OnTriggerOverlap(UPrimitiveComponent* OverlappedCom
 		return;
 	}
 
-	if (OtherActor && OtherActor != this)
+	if (OtherActor)
 	{
-		UE_LOG(LogTemp, Log, TEXT("오브젝트 충돌: %s"), *OtherActor->GetName());
-		// 데미지 처리
-		FDamageEvent DamageEvent;
-		OtherActor->TakeDamage(Damage, DamageEvent, SkillInstigator->GetInstigatorController(), this);
+		IPHBossAIInterface* BossActor = Cast<IPHBossAIInterface>(OtherActor);
+
+		if (BossActor)
+		{
+			UE_LOG(LogTemp, Log, TEXT("오브젝트 충돌: %s"), *OtherActor->GetName());
+			// 데미지 처리
+			FDamageEvent DamageEvent;
+			OtherActor->TakeDamage(Damage, DamageEvent, SkillInstigator->GetInstigatorController(), this);
+		}
 	}
+
+	// if (OtherActor && OtherActor != this)
+	// {
+	// 	UE_LOG(LogTemp, Log, TEXT("오브젝트 충돌: %s"), *OtherActor->GetName());
+	// 	// 데미지 처리
+	// 	FDamageEvent DamageEvent;
+	// 	OtherActor->TakeDamage(Damage, DamageEvent, SkillInstigator->GetInstigatorController(), this);
+	// }
 }
 
 // Called when the game starts or when spawned

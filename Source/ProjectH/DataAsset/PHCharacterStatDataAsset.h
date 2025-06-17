@@ -4,30 +4,12 @@
 
 #include "CoreMinimal.h"
 #include "Engine/DataAsset.h"
+#include "Common/GlobalEnum.h"
 #include "PHCharacterStatDataAsset.generated.h"
 
 /**
  * 
  */
-UENUM(BlueprintType)
-enum class EAttackType : uint8
-{
-	None = 0,
-	DefaultAttack,
-	Skill1,
-	Skill2,
-	Skill3,
-	Skill4,
-};
-
-UENUM(BlueprintType)
-enum class EAttackStatType : uint8
-{
-	None = 0,
-	Damage,
-	Heal,
-	Armor
-};
 
 USTRUCT(BlueprintType)
 struct FCharacterAttackStat

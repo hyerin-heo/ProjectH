@@ -28,35 +28,35 @@ void UPHCharacterSkillIconWidget::NativeConstruct()
 	ensure(SkillImage);
 }
 
-void UPHCharacterSkillIconWidget::InitializeSkillIcon(int32 InSkillNumber, UTexture2D* NewTexture)
+void UPHCharacterSkillIconWidget::InitializeSkillIcon(EAttackType InSkillType, UTexture2D* NewTexture)
 {
-	CoolTimeProgressBar->SetPercent(1.0f);
+	CoolTimeProgressBar->SetPercent(0.0f);
 	
-	switch (InSkillNumber)
+	switch (InSkillType)
 	{
-	case 1:
+	case EAttackType::Skill1:
 		{
 			InputKeyText->SetText(FText::FromString("Q"));
 			break;
 		}
-	case 2:
-		{
-			InputKeyText->SetText(FText::FromString("E"));
-			break;
-		}
-	case 3:
+	case EAttackType::Skill2:
 		{
 			InputKeyText->SetText(FText::FromString("W"));
 			break;
 		}
-	case 4:
+	case EAttackType::Skill3:
+		{
+			InputKeyText->SetText(FText::FromString("E"));
+			break;
+		}
+	case EAttackType::Skill4:
 		{
 			InputKeyText->SetText(FText::FromString("R"));
 			break;
 		}
 	}
 
-	SkillImage->SetBrushFromSoftTexture(NewTexture);
+	SkillImage->SetBrushFromTexture(NewTexture);
 }
 
 void UPHCharacterSkillIconWidget::SetCoolTimeProgress(float CurrentCoolTime, float MaxCoolTime)

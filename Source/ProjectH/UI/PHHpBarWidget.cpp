@@ -65,7 +65,7 @@ void UPHHpBarWidget::UpdateHpBar(float NewCurrentHp)
 
 void UPHHpBarWidget::InitializeHpBar(float NewMaxHp)
 {
-	MaxHp = NewMaxHp;
+   	MaxHp = NewMaxHp;
 	CurrentHp = MaxHp;
 
 	if (HpProgressBar)

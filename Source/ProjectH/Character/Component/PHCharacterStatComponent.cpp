@@ -3,6 +3,7 @@
 
 #include "Character/Component/PHCharacterStatComponent.h"
 
+#include "ProjectH.h"
 #include "Net/UnrealNetwork.h"
 
 // Sets default values for this component's properties
@@ -60,12 +61,13 @@ void UPHCharacterStatComponent::TickComponent(float DeltaTime, enum ELevelTick T
 				else
 				{
 					RemainingCooldown.RemainingTime -= DeltaTime;
+					
 				}
+
+				OnRemainingCollTimeDelegate.Broadcast(RemainingCooldown.SkillType, RemainingCooldown.RemainingTime, RemainingCooldown.MaxCoolTime);
 			}
 		}
 	}
-
-	
 }
 
 void UPHCharacterStatComponent::ReadyForReplication()
@@ -97,6 +99,18 @@ void UPHCharacterStatComponent::OnRep_CurrentHp()
 	if (CurrentHp <= KINDA_SMALL_NUMBER)
 	{
 		OnHpZero.Broadcast();
+	}
+}
+
+void UPHCharacterStatComponent::OnRep_RemainingCollTime()
+{
+	for (auto& RemainingCooldown : RemainingCooldowns)
+	{
+		if (RemainingCooldown.RemainingTime > 0.0f)
+		{
+			//UE_LOG(LogPHCommon, Log, TEXT("Client CoolTime : %f"), RemainingCooldown.RemainingTime);
+			OnRemainingCollTimeDelegate.Broadcast(RemainingCooldown.SkillType, RemainingCooldown.RemainingTime, RemainingCooldown.MaxCoolTime);
+		}
 	}
 }
 
@@ -139,7 +153,7 @@ void UPHCharacterStatComponent::ResetStat()
 
 		for (const auto& KeyValue : StatData->AttackStatMap)
 		{
-			RemainingCooldowns.Add(FSkillCooldownData(KeyValue.Key, 0));
+			RemainingCooldowns.Add(FSkillCooldownData(KeyValue.Key, 0, KeyValue.Value.CoolTime));
 		}
 	}
 }
