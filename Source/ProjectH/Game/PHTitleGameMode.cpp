@@ -37,18 +37,4 @@ void APHTitleGameMode::BeginPlay()
 void APHTitleGameMode::PostLogin(APlayerController* NewPlayer)
 {
 	Super::PostLogin(NewPlayer);
-	if (TitleWidgetClass)
-	{
-		if (UUserWidget* TitleWidget = CreateWidget<UUserWidget>(NewPlayer, TitleWidgetClass))
-		{
-			TitleWidget->AddToViewport();
-
-			// UI 전용 입력 모드로 설정
-			FInputModeUIOnly InputModeData;
-			InputModeData.SetWidgetToFocus(TitleWidget->TakeWidget());
-			InputModeData.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
-			NewPlayer->SetInputMode(InputModeData);
-			NewPlayer->bShowMouseCursor = true;
-		}
-	}
 }
