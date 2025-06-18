@@ -19,7 +19,11 @@ public class ProjectH : ModuleRules
 			"NavigationSystem", 
 			"AIModule", 
 			"GameplayTasks",
-			"Niagara"
+			"Niagara",
+			"HTTP",  // http연결
+			"Sockets",
+			"Json",
+			"JsonUtilities"
 		});
 		
 		PublicIncludePaths.AddRange(new string[] { "ProjectH" });

@@ -45,7 +45,7 @@ void APHBossBiochemical::Pattern4()
 
 void APHBossBiochemical::Pattern1HitCheck(const FBossPatternInfo& PatternInfo, const uint8& Step)
 {
-	const TSubclassOf<ASkillObjectBase>& SkillClass = SkillObjectsMap.FindChecked(SkillObjectType::GreenSwordAura);
+	const TSubclassOf<ASkillObjectBase>& SkillClass = SkillObjectsMap.FindChecked(ESkillObjectType::GreenSwordAura);
 	const FVector BaseSpawnLocation = GetActorLocation();
 	const float BaseSpeed = 1000.f;
 	const float BaseLifetime = 3.f;
@@ -73,7 +73,7 @@ void APHBossBiochemical::Pattern1HitCheck(const FBossPatternInfo& PatternInfo, c
 
 void APHBossBiochemical::Pattern2HitCheck(const FBossPatternInfo& PatternInfo, const uint8& Step)
 {
-	const TSubclassOf<ASkillObjectBase>& SkillClass = SkillObjectsMap.FindChecked(SkillObjectType::DarkGreenSwordAura);
+	const TSubclassOf<ASkillObjectBase>& SkillClass = SkillObjectsMap.FindChecked(ESkillObjectType::DarkGreenSwordAura);
 	const FVector BaseSpawnLocation = GetActorLocation();
 	const float BaseSpeed = 1500.f;
 	const float BaseLifetime = 3.f;
@@ -98,7 +98,7 @@ void APHBossBiochemical::Pattern2HitCheck(const FBossPatternInfo& PatternInfo, c
 
 void APHBossBiochemical::Pattern3HitCheck(const FBossPatternInfo& PatternInfo, const uint8& Step)
 {
-	const TSubclassOf<ASkillObjectBase>& SkillClass = SkillObjectsMap.FindChecked(SkillObjectType::StoneRush);
+	const TSubclassOf<ASkillObjectBase>& SkillClass = SkillObjectsMap.FindChecked(ESkillObjectType::StoneRush);
 	const float BaseLifetime = 4.5f;
 
 	// 5방향으로 AttackRange만큼 떨어진 지점에 스폰
@@ -129,7 +129,7 @@ void APHBossBiochemical::Pattern4HitCheck(const FBossPatternInfo& PatternInfo, c
 {
 	if (Step == 2) //Ground Attack
 	{
-		const TSubclassOf<ASkillObjectBase>& SkillClass = SkillObjectsMap.FindChecked(SkillObjectType::DashMagma);
+		const TSubclassOf<ASkillObjectBase>& SkillClass = SkillObjectsMap.FindChecked(ESkillObjectType::DashMagma);
 		const float BaseLifetime = 4.5f;
 
 		TArray<float> Angles = {0.f, 15.f, -15.f, 30.f, -30.f};
@@ -151,7 +151,7 @@ void APHBossBiochemical::Pattern4HitCheck(const FBossPatternInfo& PatternInfo, c
 	else
 	{
 		const TSubclassOf<ASkillObjectBase>& SkillClass = SkillObjectsMap.
-			FindChecked(SkillObjectType::DarkRedSwordAura);
+			FindChecked(ESkillObjectType::DarkRedSwordAura);
 		const float BaseSpeed = 2000.f;
 		const float BaseLifetime = 3.f;
 		const FVector BaseSpawnLocation = GetActorLocation();

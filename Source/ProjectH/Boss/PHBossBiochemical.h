@@ -8,7 +8,7 @@
 #include "PHBossBiochemical.generated.h"
 
 UENUM(BlueprintType)
-enum class SkillObjectType : uint8
+enum class ESkillObjectType : uint8
 {
 	GreenSwordAura,
 	DarkGreenSwordAura,
@@ -46,5 +46,5 @@ protected:
 	virtual void PhaseLevelChanged(const uint8& OldPhase, const uint8& NewPhase) override;
 
 	UPROPERTY(EditAnywhere)
-	TMap<SkillObjectType, TSubclassOf<ASkillObjectBase>> SkillObjectsMap;
+	TMap<ESkillObjectType, TSubclassOf<ASkillObjectBase>> SkillObjectsMap;
 };
