@@ -20,6 +20,8 @@ public:
 
 	FORCEINLINE void SetSelectedClass(EClassType InClassType) {SelectedClass = InClassType;}
 
+	UClass* GetSelectedClass() const;
+
 protected:
 	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
 

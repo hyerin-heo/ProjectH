@@ -4,12 +4,33 @@
 #include "Game/PHPlayerState.h"
 
 #include "Blueprint/WidgetBlueprintLibrary.h"
+#include "Character/PHWarriorCharacter.h"
 #include "Net/UnrealNetwork.h"
 #include "UI/PHCharacterSelectHUDWidget.h"
 
 APHPlayerState::APHPlayerState()
 {
 	
+}
+
+UClass* APHPlayerState::GetSelectedClass() const
+{
+	switch (SelectedClass)
+	{
+	case EClassType::Warrior:
+		return APHWarriorCharacter::StaticClass();
+	case EClassType::Healer:
+		// @PHTODO 추후 작업할 것
+		return APHWarriorCharacter::StaticClass();
+	case EClassType::Mage:
+		// @PHTODO 추후 작업할 것
+		return APHWarriorCharacter::StaticClass();
+	case EClassType::Tanker:
+		// @PHTODO 추후 작업할 것
+		return APHWarriorCharacter::StaticClass();
+	default:
+		return nullptr;
+	}
 }
 
 void APHPlayerState::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const
