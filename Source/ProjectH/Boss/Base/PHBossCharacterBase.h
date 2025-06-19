@@ -13,6 +13,7 @@
 
 class ASkillObjectBase;
 DECLARE_DELEGATE(FOnAttackPattern);
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnBossHpChangedDelegate, float/*Current*/);
 USTRUCT(BlueprintType)
 struct FAttackPatternDelegateWrapper
 {
@@ -71,6 +72,7 @@ public:
 
 	void AttackActionEnd(UAnimMontage* AnimMontage, bool bArg);
 	void PatternAttackActionEnd(UAnimMontage* AnimMontage, bool bArg);
+	
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -178,4 +180,7 @@ private:
 
 	UPROPERTY()
 	uint8 bIsPhaseTimerDone :1;
+
+public:
+	FOnBossHpChangedDelegate OnBossHpChangedDelegate;
 };

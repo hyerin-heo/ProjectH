@@ -18,10 +18,21 @@ enum class EAttackType : uint8
 UENUM(BlueprintType)
 enum class EAttackStatType : uint8
 {
-	None = 0,
+	None,
 	Damage,
 	Heal,
 	Armor
+};
+
+UENUM(BlueprintType)
+enum class EClassType : uint8
+{
+	None,
+    Warrior,
+    Mage,
+    Healer,
+    Tanker,
+	End
 };
 
 #pragma region API

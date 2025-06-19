@@ -3,6 +3,7 @@
 
 #include "UI/PHInGameHUDWidget.h"
 
+#include "PHBossHpBarWidget.h"
 #include "PHHpBarWidget.h"
 #include "PHSkillBarWidget.h"
 #include "Interface/Character/PHCharacterHUDInterface.h"
@@ -38,6 +39,17 @@ void UPHInGameHUDWidget::UpdateCooldownTime(EAttackType InAttackType, float Curr
 	SkillBar->UpdateCooldownTime(InAttackType, CurrentCoolTime, MaxCoolTime);
 }
 
+void UPHInGameHUDWidget::InitializeBossHpBar(float NewMaxHp)
+{
+	BossHpBar->InitializeBossHpBar(NewMaxHp);
+}
+
+void UPHInGameHUDWidget::UpdateBossHpBar(float NewCurrentHp)
+{
+	BossHpBar->SetVisibility(ESlateVisibility::Visible); 
+	BossHpBar->UpdateBossHpBar(NewCurrentHp);
+}
+
 void UPHInGameHUDWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
@@ -47,6 +59,11 @@ void UPHInGameHUDWidget::NativeConstruct()
 
 	HpBar = Cast<UPHHpBarWidget>(GetWidgetFromName("HpBar"));
 	ensure(HpBar);
+
+	BossHpBar = Cast<UPHBossHpBarWidget>(GetWidgetFromName("BossHpBar"));
+	ensure(BossHpBar);
+
+	BossHpBar->SetVisibility(ESlateVisibility::Hidden); 
 
 	IPHCharacterHUDInterface* HUDPawn = Cast<IPHCharacterHUDInterface>(GetOwningPlayerPawn());
 

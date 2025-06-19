@@ -23,7 +23,10 @@ public:
 
 	void SetUpSkillIcons(EAttackType InAttackType, UTexture2D* NewTexture);
 	void UpdateCooldownTime(EAttackType InAttackType, float CurrentCoolTime, float MaxCoolTime);
-	
+
+	void InitializeBossHpBar(float NewMaxHp);
+	void UpdateBossHpBar(float NewCurrentHp);
+
 protected:
 	virtual void NativeConstruct() override;
 
@@ -34,4 +37,6 @@ private:
 
 	UPROPERTY()
 	TObjectPtr<class UPHSkillBarWidget> SkillBar;
+	UPROPERTY()
+	TObjectPtr<class UPHBossHpBarWidget> BossHpBar;
 };

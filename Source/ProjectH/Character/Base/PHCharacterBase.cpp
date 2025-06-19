@@ -169,6 +169,7 @@ void APHCharacterBase::BeginPlay()
 	}
 
 	Weapon->OnComponentBeginOverlap.AddDynamic(this, &APHCharacterBase::OnWeaponOverlap);
+	EnableWeaponCollision(false);
 }
 
 //Owner가 빙의 되는 함수.(클라이언트에서는 호출이 안된다.)

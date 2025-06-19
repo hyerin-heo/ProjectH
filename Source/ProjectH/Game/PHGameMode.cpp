@@ -3,6 +3,8 @@
 
 #include "Game/PHGameMode.h"
 
+#include "PHPlayerState.h"
+
 APHGameMode::APHGameMode()
 {
 }
@@ -41,6 +43,16 @@ void APHGameMode::InitGame(const FString& MapName, const FString& Options, FStri
 void APHGameMode::StartPlay()
 {
 	Super::StartPlay();
+}
+
+void APHGameMode::PlayerSelectCharacter(APlayerController* PC, EClassType ClassType)
+{
+	APHPlayerState* PlayerStat = PC->GetPlayerState<APHPlayerState>();
+
+	if (PlayerStat)
+	{
+		PlayerStat->SetSelectedClass(ClassType);
+	}
 }
 
 void APHGameMode::PostInitializeComponents()

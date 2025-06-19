@@ -7,6 +7,7 @@
 #include "TimerManager.h"
 #include "AI/PHAIController.h"
 #include "Animation/AnimInstance.h"
+#include "Blueprint/WidgetBlueprintLibrary.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Engine/DamageEvents.h"
@@ -14,6 +15,7 @@
 #include "Net/UnrealNetwork.h"
 #include "Physics/PHCollision.h"
 #include "Subsystem/SkillObjectPoolSubsystem.h"
+#include "UI/PHInGameHUDWidget.h"
 
 // Sets default values
 APHBossCharacterBase::APHBossCharacterBase()
@@ -266,6 +268,9 @@ float APHBossCharacterBase::TakeDamage(float DamageAmount, struct FDamageEvent c
     const float PrevHp = HP;
     const float ActualDamage = FMath::Clamp<float>(DamageAmount, 0, DamageAmount);
     HP = PrevHp-ActualDamage;
+    
+    OnBossHpChangedDelegate.Broadcast(HP);
+    
     // @PHTODO Update UI
     if (HP <= KINDA_SMALL_NUMBER)
     {
@@ -307,11 +312,14 @@ void APHBossCharacterBase::OnRep_MaxHP()
 
 void APHBossCharacterBase::OnRep_HP()
 {
+    OnBossHpChangedDelegate.Broadcast(HP);
+    
     // @PHTODO 체력 변경됐을 때, UI업데이트 필요.
     if (HP <= KINDA_SMALL_NUMBER)
     {
         PlayDeadAnimation();
     }
+    
 }
 
 bool APHBossCharacterBase::IsCoolTime()
@@ -357,6 +365,20 @@ void APHBossCharacterBase::BeginPlay()
         Armor = DataAsset->Armor;
 
         GetCharacterMovement()->MaxWalkSpeed = Speed;
+    }
+
+    UPHInGameHUDWidget* FoundWidget = nullptr;
+
+    TArray<UUserWidget*> Widgets;
+    UWidgetBlueprintLibrary::GetAllWidgetsOfClass(GetWorld(), Widgets, UPHInGameHUDWidget::StaticClass(), false);
+
+    if (Widgets.Num() > 0)
+    {
+        FoundWidget = Cast<UPHInGameHUDWidget>(Widgets[0]);
+        if (FoundWidget)
+        {
+            UE_LOG(LogTemp, Log, TEXT("현재 화면에 HUD 위젯이 존재합니다."));
+        }
     }
 }
 

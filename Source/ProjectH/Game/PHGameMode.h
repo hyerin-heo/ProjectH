@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Common/GlobalEnum.h"
 #include "GameFramework/GameMode.h"
 #include "Subsystem/SkillObjectPoolSubsystem.h"
 #include "PHGameMode.generated.h"
@@ -32,6 +33,10 @@ public:
 
 	UPROPERTY(VisibleAnywhere, Category = Subsystems)
 	TSubclassOf<USkillObjectPoolSubsystem> SkillObjectPoolSubsystem;
+
+public:
+	//캐릭터 선택 함수.
+	void PlayerSelectCharacter(APlayerController* PC, EClassType ClassType);
 	
 protected:
 	virtual void PostInitializeComponents() override;

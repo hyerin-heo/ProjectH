@@ -29,6 +29,7 @@ void UPHSkillBarWidget::UpdateCooldownTime(EAttackType InAttackType, float Curre
 	if (SkillIconMap.Contains(InAttackType))
 	{
 		SkillIconMap[InAttackType]->SetCoolTimeProgress(CurrentCoolTime, MaxCoolTime);
+		return;
 	}
 
 	UE_LOG(LogTemp, Log, TEXT("There is no skill icon UI object."));
