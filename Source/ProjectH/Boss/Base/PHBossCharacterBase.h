@@ -162,6 +162,9 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Custom)
 	float Armor;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Custom)
+	FVector StartLocation;
+
 	virtual void PhaseLevelChanged(const uint8& OldPhase, const uint8& NewPhase);
 	
 public:	

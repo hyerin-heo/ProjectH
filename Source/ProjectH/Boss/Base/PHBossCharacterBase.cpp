@@ -377,6 +377,7 @@ void APHBossCharacterBase::BeginPlay()
         AttackRadius = DataAsset->AttackRadius;
         AttackSpeed = DataAsset->AttackSpeed;
         Armor = DataAsset->Armor;
+        StartLocation = DataAsset->StartLocation;
 
         GetCharacterMovement()->MaxWalkSpeed = Speed;
     }

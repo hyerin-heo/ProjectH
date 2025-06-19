@@ -79,6 +79,8 @@ public:
 	float AttackSpeed = 0.f;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Common)
 	float Armor = 0.f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Common)
+	FVector StartLocation = FVector::ZeroVector;
 	// // All of pattern's cool time is same
 	// // Used when not set pattern info's cool time.
 	// UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Pattern)
