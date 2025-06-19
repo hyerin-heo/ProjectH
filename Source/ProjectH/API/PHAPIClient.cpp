@@ -30,10 +30,12 @@ void UPHAPIClient::MakeRequest (const FString& URL,
 		}
 		else
 		{
-			FString ErrorMessage = FString::Printf(TEXT("%s request requires a non-empty PayloadJson."), *ToString(Type));
-			OnFailure(ErrorMessage);
-			UE_LOG(LogTemp, Error, TEXT("%s"), *ErrorMessage);
-			return;
+			// content가 없는 경우도 있음.
+			// FString ErrorMessage = FString::Printf(TEXT("%s request requires a non-empty PayloadJson."), *ToString(Type));
+			// OnFailure(ErrorMessage);
+			// UE_LOG(LogTemp, Error, TEXT("%s"), *ErrorMessage);
+			// return;
+			Request->SetHeader(TEXT("Content-Length"), TEXT("0"));
 		}
 	}
 
@@ -53,6 +55,11 @@ void UPHAPIClient::MakeRequest (const FString& URL,
 
 			if (EHttpResponseCodes::IsOk(ResponsePtr->GetResponseCode()))
 			{
+				if (ResponsePtr->GetResponseCode() == EHttpResponseCodes::NoContent)
+				{
+					OnSuccess(ResponsePtr, TStructType()); // 성공 콜백 호출
+					return;
+				}
 				FString ResponseContent = ResponsePtr->GetContentAsString();
 				UE_LOG(LogTemp, Log, TEXT("Response received: %s"), *ResponseContent);
 

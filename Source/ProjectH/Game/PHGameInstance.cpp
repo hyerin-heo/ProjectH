@@ -6,6 +6,7 @@
 #include "ProjectH.h"
 #include "SocketSubsystem.h"
 #include "API/PHAPIClient.h"
+#include "Common/Common.h"
 #include "Common/GlobalEnum.h"
 #include "Interfaces/IHttpResponse.h"
 #include "Kismet/GameplayStatics.h"
@@ -15,15 +16,20 @@ void UPHGameInstance::Init()
 	Super::Init();
 	// FWorldDelegates::OnWorldChanged.AddUObject(this, &UPHGameInstance::OnWorldChanged);
 	bIsAttemptingConnection = false;
+	bIsListenServer = false;
 }
 
 void UPHGameInstance::Shutdown()
 {
 	Super::Shutdown();
 	// FWorldDelegates::OnWorldChanged.RemoveAll(this);
+	if (bIsListenServer)
+	{
+		DeleteCurrentRoom(nullptr, true);
+	}
 }
 
-void UPHGameInstance::StartGame()
+void UPHGameInstance::JoinGame()
 {
 	if (!APIClient)
 	{
@@ -46,7 +52,7 @@ void UPHGameInstance::StartGame()
 	// 일단 현재 IP를 서버로 저장.
 	CurrentConnectingAddress = MyIP;
 
-	APIClient->MakeRequest<FRoomData>(ToString(ERestApiUrl::QuickMatch),
+	APIClient->MakeRequest<FRoomData>(API_URL_QUICK_MATCH,
 	                                  ERestAPIType::POST,
 	                                  [&](const FHttpResponsePtr& ResponsePtr, const FRoomData& ReceivedRoomData)
 	                                  {
@@ -70,6 +76,32 @@ void UPHGameInstance::StartGame()
 	                                  },
 	                                  JsonString
 	);
+}
+
+void UPHGameInstance::StartGame()
+{
+	if (!APIClient)
+	{
+		APIClient = NewObject<UPHAPIClient>(this);
+	}
+	APIClient->MakeRequest<FRoomData>(FString::Printf(API_URL_START_GAME, *RoomId),
+									  ERestAPIType::POST,
+									  [&](const FHttpResponsePtr& ResponsePtr, const FRoomData& ReceivedRoomData){},
+									  [&](const FString& ErrorMessage){}
+	);
+	
+	// @PHTODO level streaming and success callback
+	
+}
+
+void UPHGameInstance::FinishGame()
+{
+	if (bIsListenServer)
+	{
+		DeleteCurrentRoom();	
+	}
+	bIsListenServer = false;
+	// @PHTODO go to title/score. and disconnect server.
 }
 
 void UPHGameInstance::TryConnectToServer(const FString& ServerAddress)
@@ -99,6 +131,7 @@ void UPHGameInstance::TryConnectToServer(const FString& ServerAddress)
 void UPHGameInstance::HostServer()
 {
 	// 리슨서버로 레벨 오픈
+	bIsListenServer = true;
 	UGameplayStatics::OpenLevel(GetWorld(), FName("InGame"), true, "listen");
 }
 
@@ -111,7 +144,8 @@ void UPHGameInstance::OnWorldChanged(UWorld* OldWorld, UWorld* NewWorld)
 		GetWorld()->GetTimerManager().ClearTimer(ConnectionAttemptTimerHandle);
 		bIsAttemptingConnection = false;
 		OnConnectionAttemptFinished.Broadcast(true);
-		UE_LOG(LogTemp, Log, TEXT("Successfully connected to a new world."));
+
+		UE_LOG(LogTemp, Log, TEXT("Successfully connected to a new world. WorldName : %s"), *NewWorld->GetName());
 		// @PHTODO
 		// Hide Connecting/Loading UI
 	}
@@ -126,8 +160,42 @@ void UPHGameInstance::HandleConnectionTimeout()
 		OnConnectionAttemptFinished.Broadcast(false);
 		UE_LOG(LogTemp, Warning, TEXT("Connection to %s timed out."), *CurrentConnectingAddress);
 
-		// @PHTODO
 		// restAPI call.
 		// 서버연결시도하려 했던 방 삭제 및 새로 연결.
+		DeleteCurrentRoom([&] { JoinGame(); });
 	}
+}
+
+void UPHGameInstance::DeleteCurrentRoom(const TFunction<void()>& Callback, bool IsShutdown)
+{
+	if (!APIClient)
+	{
+		APIClient = NewObject<UPHAPIClient>(this);
+	}
+	APIClient->MakeRequest<FRoomData>(FString::Printf(API_URL_DELETE_ROOM, *RoomId),
+	                                  ERestAPIType::DELETE,
+	                                  [&](const FHttpResponsePtr& ResponsePtr, const FRoomData& ReceivedRoomData)
+	                                  {
+		                                  if (!IsShutdown)
+		                                  {
+										  UE_LOG(LogTemp, Display, TEXT("Delete Success! response Code : %d"),
+												 ResponsePtr->GetResponseCode());
+										  if (Callback)
+										  {
+											  Callback();
+										  }   
+		                                  }
+	                                  },
+	                                  [&](const FString& ErrorMessage)
+	                                  {
+		                                  if (!IsShutdown)
+		                                  {
+										  UE_LOG(LogPHGameFlow, Error, TEXT("Delete Failed: %s"), *ErrorMessage);
+										  if (Callback)
+										  {
+											  Callback();
+										  }   
+		                                  }
+	                                  }
+	);
 }

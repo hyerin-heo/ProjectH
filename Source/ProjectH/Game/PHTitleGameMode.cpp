@@ -4,18 +4,12 @@
 #include "Game/PHTitleGameMode.h"
 
 #include "PHGameInstance.h"
-#include "ProjectH.h"
-#include "SocketSubsystem.h"
-#include "API/PHAPIClient.h"
-#include "Blueprint/UserWidget.h"
-#include "Common/GlobalEnum.h"
-#include "Interfaces/IHttpResponse.h"
 
 APHTitleGameMode::APHTitleGameMode()
 {
 }
 
-void APHTitleGameMode::StartGame()
+void APHTitleGameMode::JoinGame()
 {
 	
 	UGameInstance* GameInstance = GetWorld()->GetGameInstance();
@@ -24,7 +18,7 @@ void APHTitleGameMode::StartGame()
 
 	if (MyGI)
 	{
-		MyGI->StartGame();
+		MyGI->JoinGame();
 	}
 }
 

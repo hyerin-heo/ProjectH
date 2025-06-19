@@ -15,9 +15,9 @@ void UPHTitleWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
 	// 버튼이 유효한지 확인하고 클릭 이벤트에 함수 바인딩
-	if (StartGameButton)
+	if (StartBtn)
 	{
-		StartGameButton->OnClicked.AddDynamic(this, &UPHTitleWidget::OnStartGameButtonClicked);
+		StartBtn->OnClicked.AddDynamic(this, &UPHTitleWidget::OnStartGameButtonClicked);
 	}
 
 	if (AGameModeBase* GameModeBase = UGameplayStatics::GetGameMode(this))
@@ -32,6 +32,6 @@ void UPHTitleWidget::OnStartGameButtonClicked()
 
 	if (GameModeRef)
 	{
-		GameModeRef->StartGame();
+		GameModeRef->JoinGame();
 	}
 }

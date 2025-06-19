@@ -55,10 +55,6 @@ void ASkillObjectBase::BeginPlay()
 	MovementComponent->Deactivate();
 	LifeSpanDeltaTime = 0.f;
 	LifeSpan = 0.f;
-	if (GetWorld()->GetNetMode() == NM_Client)
-	{
-		PH_LOG(LogPHBoss, Error, TEXT("Client@!"));
-	}
 }
 
 void ASkillObjectBase::OnHit(UPrimitiveComponent* OverlappedComp, AActor* Other,

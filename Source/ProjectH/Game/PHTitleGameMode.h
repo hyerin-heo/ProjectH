@@ -17,7 +17,7 @@ class PROJECTH_API APHTitleGameMode : public AGameModeBase
 public:
 	APHTitleGameMode();
 	
-	void StartGame();
+	void JoinGame();
 
 protected:
 	virtual void BeginPlay() override;

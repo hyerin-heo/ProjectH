@@ -22,7 +22,14 @@ public:
 
 	virtual void Shutdown() override;
 
+	// Title to InGame character select
+	void JoinGame();
+
+	// InGame character select to boss raid
 	void StartGame();
+
+	// InGame to Title
+	void FinishGame();
 	
 	UFUNCTION(BlueprintCallable, Category = "Network")
 	void TryConnectToServer(const FString& ServerAddress);
@@ -38,16 +45,22 @@ protected:
 	virtual void OnWorldChanged(UWorld* OldWorld, UWorld* NewWorld) override;
 
 private:
-	FTimerHandle ConnectionAttemptTimerHandle;
-	FString CurrentConnectingAddress;
-
-	UPHAPIClient* APIClient;
 
 	// 연결 타임아웃 처리 함수
 	void HandleConnectionTimeout();
 
+	void DeleteCurrentRoom(const TFunction<void()>& Callback = TFunction<void()>(), bool IsShutdown = false);
+	
+	FTimerHandle ConnectionAttemptTimerHandle;
+	FString CurrentConnectingAddress;
+
+	UPROPERTY()
+	UPHAPIClient* APIClient;
+
 	// 현재 연결 시도 중인지 여부
-	bool bIsAttemptingConnection;
+	uint8 bIsAttemptingConnection:1;
+	
+	uint8 bIsListenServer:1;
 
 	
 	FString RoomId;

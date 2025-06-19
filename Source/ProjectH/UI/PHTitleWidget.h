@@ -21,7 +21,7 @@ protected:
 	virtual void NativeConstruct() override;
 
 	UPROPERTY(meta = (BindWidget))
-	UButton* StartGameButton;
+	UButton* StartBtn;
 
 	UFUNCTION()
 	void OnStartGameButtonClicked();
