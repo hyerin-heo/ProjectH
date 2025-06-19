@@ -13,6 +13,16 @@ APHPlayerState::APHPlayerState()
 	
 }
 
+void APHPlayerState::SetSelectedClass(EClassType InClassType)
+{
+	SelectedClass = InClassType;
+	// 서버에서도 직접 UI 업데이트
+	if (IsOwnedBy(GetWorld()->GetFirstPlayerController()))
+	{
+		OnRep_SelectedClass();
+	}
+}
+
 UClass* APHPlayerState::GetSelectedClass() const
 {
 	switch (SelectedClass)
@@ -42,22 +52,23 @@ void APHPlayerState::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>&
 
 void APHPlayerState::OnRep_SelectedClass()
 {
+	UE_LOG(LogTemp, Warning, TEXT("WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW"));
 	TArray<UUserWidget*> Widgets;
 	UWidgetBlueprintLibrary::GetAllWidgetsOfClass(GetWorld(), Widgets, UPHCharacterSelectHUDWidget::StaticClass(), false);
 
 	for (UUserWidget* Widget : Widgets)
 	{
 		UPHCharacterSelectHUDWidget* SelectWidget = Cast<UPHCharacterSelectHUDWidget>(Widget);
+		
 		if (SelectWidget)
 		{
 			if (SelectWidget->GetCharacterSelectHUDClass() == SelectedClass)
 			{
 				SelectWidget->SetSelectedCharacterIconFrameColorChange(SelectedClass);
+				SelectWidget->SetAllBlock();
 			}
-			else
-			{
-				SelectWidget->ShowBanIcon(SelectedClass);	
-			}
+
+			
 			break;
 		}
 	}

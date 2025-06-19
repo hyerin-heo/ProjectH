@@ -22,6 +22,7 @@ public:
 	
 	void ShowBanIcon(EClassType inClass);
 	void SetSelectedCharacterIconFrameColorChange(EClassType InClassType);
+	void SetAllBlock();
 	
 protected:
 	virtual void NativeConstruct() override;
@@ -29,7 +30,9 @@ protected:
 	void ClickedSelectIcon(EClassType inClass);
 	
 	//ButtonEventFunc
+	UFUNCTION()
 	void OnClickedSelectButton();
+	UFUNCTION()
 	void OnClickedStartButton();
 
 private:

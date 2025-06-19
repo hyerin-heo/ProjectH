@@ -18,7 +18,7 @@ class PROJECTH_API APHPlayerState : public APlayerState
 public:
 	APHPlayerState();
 
-	FORCEINLINE void SetSelectedClass(EClassType InClassType) {SelectedClass = InClassType;}
+	void SetSelectedClass(EClassType InClassType);
 
 	UClass* GetSelectedClass() const;
 
@@ -33,5 +33,6 @@ public:
 private:
 	UPROPERTY(ReplicatedUsing=OnRep_SelectedClass)
 	EClassType SelectedClass = EClassType::None;
+	
 	
 };

@@ -3,6 +3,7 @@
 
 #include "Game/PHGameMode.h"
 
+#include "PHGameState.h"
 #include "PHGameInstance.h"
 #include "PHInGameLevelScriptActor.h"
 #include "Controller/PHPlayerController.h"
@@ -56,15 +57,19 @@ void APHGameMode::StartPlay()
 	Super::StartPlay();
 }
 
-void APHGameMode::PlayerSelectCharacter(APlayerController* PC, EClassType ClassType)
+void APHGameMode::PlayerSelectCharacter(APlayerController* InPC, EClassType ClassType)
 {
-	APHPlayerState* PlayerStat = PC->GetPlayerState<APHPlayerState>();
+	APHGameState* MyGameState = GetGameState<APHGameState>();
+	APHPlayerState* PlayerStat = InPC->GetPlayerState<APHPlayerState>();
 
-	if (PlayerStat)
+	if (!MyGameState->IsClassReadySelected(ClassType))
 	{
 		PlayerStat->SetSelectedClass(ClassType);
+		MyGameState->AddSelectedClassArray(ClassType, PlayerStat);
+
+		MyGameState->OnRep_SelectedClassArray();
 		// @PHTODO 여기서 할지 한번에 할지 고민중.
-		TrySpawnPlayerPawn(PC);
+		TrySpawnPlayerPawn(InPC);
 	}
 }
 

@@ -35,6 +35,7 @@ public:
 	
 	FORCEINLINE EClassType GetClassType() const { return ClassType; }
 	FORCEINLINE bool GetIsBan() const { return bIsBan; }
+	FORCEINLINE void SetAllBlock() {bAllBlock = true;}
 	
 	void SetFrameColorChange(FSlateColor NewColor);
 	void SetActiveBanImage();
@@ -59,6 +60,7 @@ protected:
 
 	bool bIsClicked = false;
 	bool bIsBan = false;
+	bool bAllBlock = false;
 
 public:
 	FOnClickDelegate OnClickDelegate;

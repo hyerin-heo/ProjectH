@@ -37,6 +37,9 @@ void UPHCharacterSelectHUDWidget::NativeConstruct()
 	StartButton = Cast<UButton>(GetWidgetFromName(TEXT("StartButton")));
 	ensure(StartButton);
 
+	SelectButton->OnClicked.AddDynamic(this, &UPHCharacterSelectHUDWidget::OnClickedSelectButton);
+	StartButton->OnClicked.AddDynamic(this, &UPHCharacterSelectHUDWidget::OnClickedStartButton);
+
 	if (APlayerController* PC = GetOwningPlayer())
 	{
 		if (!PC->HasAuthority())
@@ -80,6 +83,14 @@ void UPHCharacterSelectHUDWidget::SetSelectedCharacterIconFrameColorChange(EClas
 	}
 }
 
+void UPHCharacterSelectHUDWidget::SetAllBlock()
+{
+	for (auto& Icon : SelectIconWidgetMap)
+	{
+		Icon.Value->SetAllBlock();
+	}
+}
+
 void UPHCharacterSelectHUDWidget::OnClickedSelectButton()
 {
 	//@PHTODO: 해당 캐릭터 골른걸 서버로 보내야한다.
@@ -94,6 +105,8 @@ void UPHCharacterSelectHUDWidget::OnClickedSelectButton()
 		}
 	}
 
+	SelectButton->SetVisibility(ESlateVisibility::Hidden);
+	SetAllBlock();
 	SetSelectedCharacterIconFrameColorChange(CurrentSelectClass);
 }
 

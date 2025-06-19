@@ -34,24 +34,27 @@ void UPHCharacterSelectIconWidget::NativeConstruct()
 
 	bIsClicked = false;
 	bIsBan = false;
+	bAllBlock = false;
 }
 
 void UPHCharacterSelectIconWidget::OnHovered()
 {
-	if (bIsClicked) return;
+	if (bIsClicked || bAllBlock) return;
 	
 	SetFrameColorChange(FSlateColor(FLinearColor::Green));
 }
 
 void UPHCharacterSelectIconWidget::OnUnhovered()
 {
-	if (bIsClicked) return;
+	if (bIsClicked || bAllBlock) return;
 	
 	SetFrameColorChange(FSlateColor(FLinearColor::White));
 }
 
 void UPHCharacterSelectIconWidget::OnClicked()
 {
+	if (bAllBlock) return;
+	
 	bIsClicked = true;
 	OnClickDelegate.Execute(ClassType);
 	SetFrameColorChange(FSlateColor(FLinearColor::Yellow));
@@ -65,29 +68,34 @@ void UPHCharacterSelectIconWidget::InitializeCharacterIcon(EClassType InClassTyp
 	{
 	case EClassType::Warrior:
 		{
-			Texture = TSoftObjectPtr<UTexture2D>(FSoftObjectPath(TEXT("/Game/ProjectH/Texture/Worior.Worior")));
+			Texture = TSoftObjectPtr<UTexture2D>(FSoftObjectPath(TEXT("/Game/ProjectH/Texture/T_Worior.T_Worior")));
 			break;
 		}
 	case EClassType::Mage:
 		{
-			Texture = TSoftObjectPtr<UTexture2D>(FSoftObjectPath(TEXT("/Game/ProjectH/Texture/Mage.Mage")));
+			Texture = TSoftObjectPtr<UTexture2D>(FSoftObjectPath(TEXT("/Game/ProjectH/Texture/T_Mage.T_Mage")));
 			break;
 		}
 	case EClassType::Healer:
 		{
-			Texture = TSoftObjectPtr<UTexture2D>(FSoftObjectPath(TEXT("/Game/ProjectH/Texture/Healer.Healer")));
+			Texture = TSoftObjectPtr<UTexture2D>(FSoftObjectPath(TEXT("/Game/ProjectH/Texture/T_Healer.T_Healer")));
 			break;
 		}
 	case EClassType::Tanker:
 		{
-			Texture = TSoftObjectPtr<UTexture2D>(FSoftObjectPath(TEXT("/Game/ProjectH/Texture/Tanker.Tanker")));
+			Texture = TSoftObjectPtr<UTexture2D>(FSoftObjectPath(TEXT("/Game/ProjectH/Texture/T_Tanker.T_Tanker")));
 			break;
 		}
 	}
-
-	if (CharacterImage && Texture)
+	
+	if (Texture.IsValid() || Texture.ToSoftObjectPath().IsValid())
 	{
-		CharacterImage->SetBrushFromSoftTexture(Texture);
+		UTexture2D* LoadedTexture = Texture.LoadSynchronous();
+		
+		if (CharacterImage && LoadedTexture)
+		{
+			CharacterImage->SetBrushFromTexture(LoadedTexture);
+		}
 	}
 
 	ClassType = InClassType;

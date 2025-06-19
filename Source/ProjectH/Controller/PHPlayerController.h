@@ -34,6 +34,12 @@ protected:
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = HUD)
 	TObjectPtr<class UPHInGameHUDWidget> PHInGameHUDWidget;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = HUD)
+	TSubclassOf<class UPHCharacterSelectHUDWidget> PHCharacterSelectHUDWidgetClass;
+	
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = HUD)
+	TObjectPtr<class UPHCharacterSelectHUDWidget> PHCharacterSelectHUDWidget;
 	
 	
 };

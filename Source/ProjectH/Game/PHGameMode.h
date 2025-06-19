@@ -46,7 +46,7 @@ public:
 
 public:
 	//캐릭터 선택 함수.
-	void PlayerSelectCharacter(APlayerController* PC, EClassType ClassType);
+	void PlayerSelectCharacter(APlayerController* InPC, EClassType ClassType);
 	
 protected:
 
