@@ -16,6 +16,8 @@ class PROJECTH_API APHAIController : public AAIController
 public:
 	APHAIController();
 
+	void RunAI();
+	
 	void StopAI();
 
 protected:

@@ -20,6 +20,20 @@ APHAIController::APHAIController()
 	}
 }
 
+void APHAIController::RunAI()
+{
+	// Run at server
+	if (HasAuthority())
+	{
+		UBlackboardComponent* BlackboardPtr = Blackboard.Get();
+		if (UseBlackboard(BBData, BlackboardPtr))
+		{
+			bool RunResult = RunBehaviorTree(BTAsset);
+			ensure(RunResult);
+		}	
+	}
+}
+
 void APHAIController::StopAI()
 {
 	// @PHTODO 죽었을 때 처리해야하는 로직
@@ -33,14 +47,4 @@ void APHAIController::StopAI()
 void APHAIController::OnPossess(APawn* InPawn)
 {
 	Super::OnPossess(InPawn);
-	// Run at server
-	if (HasAuthority())
-	{
-		UBlackboardComponent* BlackboardPtr = Blackboard.Get();
-		if (UseBlackboard(BBData, BlackboardPtr))
-		{
-			bool RunResult = RunBehaviorTree(BTAsset);
-			ensure(RunResult);
-		}	
-	}
 }

@@ -89,9 +89,6 @@ void UPHGameInstance::StartGame()
 									  [&](const FHttpResponsePtr& ResponsePtr, const FRoomData& ReceivedRoomData){},
 									  [&](const FString& ErrorMessage){}
 	);
-	
-	// @PHTODO level streaming and success callback
-	
 }
 
 void UPHGameInstance::FinishGame()
@@ -101,7 +98,6 @@ void UPHGameInstance::FinishGame()
 		DeleteCurrentRoom();	
 	}
 	bIsListenServer = false;
-	// @PHTODO go to title/score. and disconnect server.
 }
 
 void UPHGameInstance::TryConnectToServer(const FString& ServerAddress)

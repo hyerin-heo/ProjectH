@@ -285,11 +285,7 @@ void APHBossCharacterBase::PlayDeadAnimation()
     UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
     AnimInstance->StopAllMontages(0.0f);
     AnimInstance->Montage_Play(DeadMontage, 1.0f);
-    APHAIController* ABAIController = Cast<APHAIController>(GetController());
-    if (ABAIController)
-    {
-        ABAIController->StopAI();
-    }
+    StopAI();
     SetCanBeDamaged(false);
     GetCharacterMovement()->DisableMovement();
     GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
@@ -303,6 +299,24 @@ void APHBossCharacterBase::PlayDeadAnimation()
             // Destroy();
         }
     ), 5.0f, false);
+}
+
+void APHBossCharacterBase::RunAI()
+{
+    APHAIController* ABAIController = Cast<APHAIController>(GetController());
+    if (ABAIController)
+    {
+        ABAIController->RunAI();
+    }
+}
+
+void APHBossCharacterBase::StopAI()
+{
+    APHAIController* ABAIController = Cast<APHAIController>(GetController());
+    if (ABAIController)
+    {
+        ABAIController->StopAI();
+    }
 }
 
 void APHBossCharacterBase::OnRep_MaxHP()
