@@ -11,6 +11,7 @@
 #include "Components/CapsuleComponent.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Engine/DamageEvents.h"
+#include "Game/PHGameMode.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Net/UnrealNetwork.h"
 #include "Physics/PHCollision.h"
@@ -271,10 +272,8 @@ float APHBossCharacterBase::TakeDamage(float DamageAmount, struct FDamageEvent c
     
     OnBossHpChangedDelegate.Broadcast(HP);
     
-    // @PHTODO Update UI
     if (HP <= KINDA_SMALL_NUMBER)
     {
-        // @PHTODO Dead
         PlayDeadAnimation();
     }
     return DamageAmount;
@@ -297,6 +296,11 @@ void APHBossCharacterBase::PlayDeadAnimation()
             // @PHTODO 죽었을 떄 Destroy 할지 아니면 다음 레벨로 넘길지 체크
             PH_LOG(LogPHBoss, Log, TEXT("Boss dead!!"));
             // Destroy();
+            APHGameMode* GameMode = Cast<APHGameMode>(GetWorld()->GetAuthGameMode());
+            if (GameMode)
+            {
+                GameMode->BossDied();
+            }
         }
     ), 5.0f, false);
 }

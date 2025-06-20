@@ -38,7 +38,19 @@ APlayerController* APHGameMode::Login(UPlayer* NewPlayer, ENetRole InRemoteRole,
 void APHGameMode::PostLogin(APlayerController* NewPlayer)
 {
 	Super::PostLogin(NewPlayer);
-	PlayerControllers.AddUnique(NewPlayer);
+	ConnectedPlayerControllers.AddUnique(NewPlayer);
+}
+
+void APHGameMode::Logout(AController* Exiting)
+{
+	Super::Logout(Exiting);
+	if (Exiting)
+	{
+		APlayerController* Controller = Cast<APlayerController>(Exiting);
+		ConnectedPlayerControllers.Remove(Controller);
+		DeadPlayerControllers.Remove(Controller);
+		UE_LOG(LogTemp, Log, TEXT("Player %s logged out. Remaining players: %d"), *Exiting->GetName(), ConnectedPlayerControllers.Num());
+	}
 }
 
 void APHGameMode::InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage)
@@ -160,6 +172,7 @@ void APHGameMode::StartGame()
 	// @PHTODO 서버가 게임 시작을 클릭 했을 때. 혹은 다음 레벨로 넘어갈 때.
 	// Show Loading UI
 	// 처음 입장시에만 rest call
+	DeadPlayerControllers.Reset();
 	UPHGameInstance* Instance = Cast<UPHGameInstance>(GetWorld()->GetGameInstance());
 	if (CurrentStageIndex < 0)
 	{
@@ -188,7 +201,7 @@ void APHGameMode::StartGame()
 			return;
 		}
 	}
-	for (APlayerController* EachPlayer : PlayerControllers)
+	for (APlayerController* EachPlayer : ConnectedPlayerControllers)
 	{
 		TrySpawnPlayerPawn(EachPlayer);
 	}
@@ -251,9 +264,41 @@ void APHGameMode::SpawnBossCharacter()
 	}
 }
 
+void APHGameMode::CharacterDied(APlayerController* DeadCharacterController)
+{
+	if (DeadCharacterController)
+	{
+		DeadPlayerControllers.AddUnique(DeadCharacterController);
+		if (DeadPlayerControllers.Num() >= ConnectedPlayerControllers.Num())
+		{
+			for (APlayerController* EachPlayer : ConnectedPlayerControllers)
+			{
+				APHPlayerController* PHPlayer = Cast<APHPlayerController>(EachPlayer);
+				PHPlayer->ClientRPCGameEnd(false);
+
+				// Boss AI Stop
+
+				if (ActiveBossCharacter)
+				{
+					ActiveBossCharacter->StopAI();	
+				}
+			}
+		}
+	}
+}
+
+void APHGameMode::BossDied()
+{
+	for (APlayerController* EachPlayer : ConnectedPlayerControllers)
+	{
+		APHPlayerController* PHPlayer = Cast<APHPlayerController>(EachPlayer);
+		PHPlayer->ClientRPCGameEnd(true);
+	}
+}
+
 void APHGameMode::SetPlayerMovementState(EMovementMode Mode)
 {
-	for (APlayerController* EachPlayer : PlayerControllers)
+	for (APlayerController* EachPlayer : ConnectedPlayerControllers)
 	{
 		ACharacter* Character = EachPlayer->GetCharacter();
 		if (Character)

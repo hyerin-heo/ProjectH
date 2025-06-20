@@ -114,6 +114,12 @@ void APHPlayerController::ServerRPC_SelectCharacter_Implementation(EClassType Cl
 	}
 }
 
+void APHPlayerController::ClientRPCGameEnd_Implementation(bool IsClear)
+{
+	PHGameEndWidget->IsClear(IsClear);
+	SetInGameEndHudActive(true);
+}
+
 void APHPlayerController::SetHiddenCharacterSelectHUD()
 {
 	if (PHCharacterSelectHUDWidget)
@@ -138,11 +144,11 @@ void APHPlayerController::SetInGameEndHudActive(bool InGameEndHudActive)
 {
 	if (InGameEndHudActive)
 	{
-		PHInGameHUDWidget->SetVisibility(ESlateVisibility::Visible);
+		PHGameEndWidget->SetVisibility(ESlateVisibility::Visible);
 	}
 	else
 	{
-		PHInGameHUDWidget->SetVisibility(ESlateVisibility::Collapsed);
+		PHGameEndWidget->SetVisibility(ESlateVisibility::Collapsed);
 	}
 }
 

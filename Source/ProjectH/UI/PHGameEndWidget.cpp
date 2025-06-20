@@ -12,6 +12,11 @@ UPHGameEndWidget::UPHGameEndWidget(const class FObjectInitializer& ObjectInitial
 {
 }
 
+void UPHGameEndWidget::IsClear(bool IsClear)
+{
+	SettingGameText(IsClear);
+}
+
 void UPHGameEndWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
@@ -37,10 +42,12 @@ void UPHGameEndWidget::SettingGameText(bool IsClear)
 {
 	if (IsClear)
 	{
+		GameText->SetText(FText::FromString("VICTORY!"));
 		GameText->SetColorAndOpacity(FSlateColor(FLinearColor::Green));
 	}
 	else
 	{
+		GameText->SetText(FText::FromString("DEFEAT!"));
 		GameText->SetColorAndOpacity(FSlateColor(FLinearColor::Red));
 	}
 }

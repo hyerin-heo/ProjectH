@@ -21,6 +21,9 @@ public:
 public:
 	UFUNCTION(Server, Reliable)
 	void ServerRPC_SelectCharacter(EClassType ClassType);
+	
+	UFUNCTION(Client, Reliable)
+	void ClientRPCGameEnd(bool IsClear);
 
 	void SetInGameHudActive(bool InGameHudActive);
 	void SetInGameEndHudActive(bool InGameEndHudActive);

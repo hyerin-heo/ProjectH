@@ -29,6 +29,8 @@ public:
 
 	virtual void PostLogin(APlayerController* NewPlayer) override;
 
+	virtual void Logout(AController* Exiting) override;
+
 	virtual void InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage) override;
 
 	virtual void StartPlay() override;
@@ -44,6 +46,9 @@ public:
 	// CurrentStageIndex 가 지정되고 나서 호출
 	void SpawnBossCharacter();
 
+	void CharacterDied(APlayerController* DeadCharacterController);
+	void BossDied();
+
 	UPROPERTY(VisibleAnywhere, Category = Subsystems)
 	TSubclassOf<USkillObjectPoolSubsystem> SkillObjectPoolSubsystem;
 
@@ -58,7 +63,10 @@ protected:
 	virtual void PostInitializeComponents() override;
 
 	UPROPERTY()
-	TArray<APlayerController*> PlayerControllers;
+	TArray<APlayerController*> ConnectedPlayerControllers;
+	
+	UPROPERTY()
+	TArray<APlayerController*> DeadPlayerControllers;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = Boss)
 	TArray<TSubclassOf<APHBossCharacterBase>> BossCharacterClass;

@@ -119,6 +119,9 @@ public:
 	virtual void ServerRPCSkill3();
 	UFUNCTION(Server, Unreliable)
 	virtual void ServerRPCSkill4();
+	
+	UFUNCTION(Server, Reliable, WithValidation)
+	void ServerRPCNotifyDeath();
 
 	//clientRPC
 	UFUNCTION(Client, Unreliable)

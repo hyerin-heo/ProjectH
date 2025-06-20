@@ -19,6 +19,7 @@
 #include "NavigationSystem.h"
 #include "Character/Component/PHWidgetComponent.h"
 #include "Engine/DamageEvents.h"
+#include "Game/PHGameMode.h"
 #include "UI/PHHpBarWidget.h"
 #include "UI/PHInGameHUDWidget.h"
 
@@ -603,6 +604,24 @@ void APHCharacterBase::ServerRPCSetActionTargetRotation_Implementation(FRotator 
 	}
 }
 
+void APHCharacterBase::ServerRPCNotifyDeath_Implementation()
+{
+	if (APHGameMode* GameMode = Cast<APHGameMode>(GetWorld()->GetAuthGameMode()))
+	{
+		// GameMode에 이 캐릭터가 죽었음을 알린다.
+		GameMode->CharacterDied(Cast<APlayerController>(GetController()));
+	}
+}
+
+bool APHCharacterBase::ServerRPCNotifyDeath_Validate()
+{
+	if (StatDataComponent->GetCurrentHp() < KINDA_SMALL_NUMBER)
+	{
+		return true;
+	}
+	return false;
+}
+
 void APHCharacterBase::OnRep_ActionTargetRotation()
 {
 	// 서버에서 NormalAttackTargetRotation를 변경하면, 호출되는 OnRep 함수.
@@ -803,6 +822,7 @@ void APHCharacterBase::SetDead()
 	PlayDeadAnimation();
 	SetActorEnableCollision(false);
 	HpBar->SetHiddenInGame(true);
+	ServerRPCNotifyDeath();
 }
 
 void APHCharacterBase::SendClientRPCPlayAnimation(FName SectionName, float AnimSpeed)

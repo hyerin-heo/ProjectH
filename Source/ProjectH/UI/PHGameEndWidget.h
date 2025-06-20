@@ -17,9 +17,12 @@ class PROJECTH_API UPHGameEndWidget : public UUserWidget
 public:
 	UPHGameEndWidget(const class FObjectInitializer& ObjectInitializer);
 
+	void IsClear(bool IsClear);
+
 protected:
 	virtual void NativeConstruct() override;
 
+	UFUNCTION()
 	void OnClickedQuitButton();
 	void SettingGameText(bool IsClear);
 
