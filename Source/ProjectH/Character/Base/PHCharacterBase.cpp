@@ -313,6 +313,8 @@ void APHCharacterBase::OnWeaponOverlap(UPrimitiveComponent* OverlappedComp, AAct
 		return;
 	}
 
+	UE_LOG(LogTemp, Warning, TEXT("Weapon overlapped with: %s"), *GetNameSafe(OtherActor));
+
 	if (OtherActor && OtherActor != this)
 	{
 		UE_LOG(LogTemp, Log, TEXT("무기 충돌: %s"), *OtherActor->GetName());
@@ -324,14 +326,7 @@ void APHCharacterBase::OnWeaponOverlap(UPrimitiveComponent* OverlappedComp, AAct
 
 void APHCharacterBase::EnableWeaponCollision(bool bActive)
 {
-	if (bActive)
-	{
-		Weapon->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
-	}
-	else
-	{
-		Weapon->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-	}
+	Weapon->SetCollisionEnabled(bActive ? ECollisionEnabled::QueryOnly : ECollisionEnabled::NoCollision);
 }
 
 void APHCharacterBase::MouseClickMove()
@@ -825,6 +820,13 @@ void APHCharacterBase::SetDead()
 	SetActorEnableCollision(false);
 	HpBar->SetHiddenInGame(true);
 	ServerRPCNotifyDeath();
+
+	APHPlayerController* PlayerController = CastChecked<APHPlayerController>(GetController());
+	if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(
+		PlayerController->GetLocalPlayer()))
+	{
+		Subsystem->RemoveMappingContext(InputMappingContext);
+	}
 }
 
 void APHCharacterBase::SendClientRPCPlayAnimation(FName SectionName, float AnimSpeed)

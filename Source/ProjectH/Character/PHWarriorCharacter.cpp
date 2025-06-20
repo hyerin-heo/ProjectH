@@ -291,7 +291,7 @@ void APHWarriorCharacter::ServerRPCSkill4_Implementation()
 	Super::ServerRPCSkill4_Implementation();
 
 	StatDataComponent->IsCooldownReduction(true);
-	StatDataComponent->SetCooldownReductionPercentage(2.0f);
+	StatDataComponent->SetCooldownReductionPercentage(3.0f);
 	Skill4Effect->Activate(true);
 	Multicast_SetActiveSkill4Effect(true);
 	

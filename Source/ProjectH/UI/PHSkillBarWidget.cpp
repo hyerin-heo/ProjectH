@@ -15,6 +15,8 @@ UPHSkillBarWidget::UPHSkillBarWidget(const FObjectInitializer& InObjectInitializ
 
 void UPHSkillBarWidget::SetUpSkillIcons(EAttackType InAttackType, UTexture2D* NewTexture)
 {
+	if (InAttackType == EAttackType::DefaultAttack) return;
+	
 	if (SkillIconMap.Contains(InAttackType))
 	{
 		SkillIconMap[InAttackType]->InitializeSkillIcon(InAttackType, NewTexture);
@@ -26,6 +28,8 @@ void UPHSkillBarWidget::SetUpSkillIcons(EAttackType InAttackType, UTexture2D* Ne
 
 void UPHSkillBarWidget::UpdateCooldownTime(EAttackType InAttackType, float CurrentCoolTime, float MaxCoolTime)
 {
+	if (InAttackType == EAttackType::DefaultAttack) return;
+	
 	if (SkillIconMap.Contains(InAttackType))
 	{
 		SkillIconMap[InAttackType]->SetCoolTimeProgress(CurrentCoolTime, MaxCoolTime);

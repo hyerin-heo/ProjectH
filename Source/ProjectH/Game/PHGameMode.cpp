@@ -201,12 +201,15 @@ void APHGameMode::StartGame()
 			return;
 		}
 	}
+
+	SpawnBossCharacter();
+	
 	for (APlayerController* EachPlayer : ConnectedPlayerControllers)
 	{
 		TrySpawnPlayerPawn(EachPlayer);
 	}
 	
-	SpawnBossCharacter();
+	//SpawnBossCharacter();
 	// SetPlayerMovementState(MOVE_None);
 	//
 	// // Hide Loading UI

@@ -6,8 +6,8 @@
 #include "Character/Base/PHCharacterBase.h"
 #include "PHWarriorCharacter.generated.h"
 
-#define MAX_TURNINGTIME 7.0f;
-#define MAX_BERSERKTIME 4.0f;
+#define MAX_TURNINGTIME 6.0f;
+#define MAX_BERSERKTIME 10.0f;
 /**
  * 
  */

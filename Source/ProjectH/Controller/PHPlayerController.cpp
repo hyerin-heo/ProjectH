@@ -3,6 +3,8 @@
 
 #include "Controller/PHPlayerController.h"
 
+#include "EngineUtils.h"
+#include "Boss/Base/PHBossCharacterBase.h"
 #include "Character/Base/PHCharacterBase.h"
 #include "Game/PHGameMode.h"
 #include "UI/PHCharacterSelectHUDWidget.h"
@@ -99,45 +101,47 @@ void APHPlayerController::InitWidget()
 {
 	if (!IsLocalController()) return;
 
-	PHInGameHUDWidget = CreateWidget<UPHInGameHUDWidget>(this, PHInGameHUDWidgetClass);
-	PHGameEndWidget = CreateWidget<UPHGameEndWidget>(this, PHGameEndWidgetClass);
+	// PHInGameHUDWidget = CreateWidget<UPHInGameHUDWidget>(this, PHInGameHUDWidgetClass);
+	// PHGameEndWidget = CreateWidget<UPHGameEndWidget>(this, PHGameEndWidgetClass);
 	PHCharacterSelectHUDWidget = CreateWidget<UPHCharacterSelectHUDWidget>(this, PHCharacterSelectHUDWidgetClass);
-	
-	// if (PHInGameHUDWidget)
-	// {
-	// 	PHInGameHUDWidget->AddToViewport();
-	// 	
-	// 	// for (TActorIterator<APHBossCharacterBase> It(GetWorld()); It; ++It)
-	// 	// {
-	// 	// 	PHInGameHUDWidget->InitializeBossHpBar(It->GetMaxHP());
-	// 	// 	It->OnBossHpChangedDelegate.AddUObject(PHInGameHUDWidget, &UPHInGameHUDWidget::UpdateBossHpBar);
-	// 	// 	break;  // 첫 번째 보스만 바인딩
-	// 	// }
-	// }
-
-	
+	//
+	//
 	if (PHCharacterSelectHUDWidget)
 	{
 		PHCharacterSelectHUDWidget->AddToViewport();
 	}
-	if (PHInGameHUDWidget)
-	{
-		PHInGameHUDWidget->AddToViewport();
-	}
-	if (PHGameEndWidget)
-	{
-		PHGameEndWidget->AddToViewport();
-	}
+	// if (PHInGameHUDWidget)
+	// {
+	// 	PHInGameHUDWidget->AddToViewport();
+	// }
+	// if (PHGameEndWidget)
+	// {
+	// 	PHGameEndWidget->AddToViewport();
+	// }
 
-	PHInGameHUDWidget->SetVisibility(ESlateVisibility::Collapsed);
-	PHGameEndWidget->SetVisibility(ESlateVisibility::Collapsed);
+	// PHInGameHUDWidget->SetVisibility(ESlateVisibility::Collapsed);
+	// PHGameEndWidget->SetVisibility(ESlateVisibility::Collapsed);
 }
 
 void APHPlayerController::SetInGameHudActive(bool InGameHudActive)
 {
 	if (InGameHudActive)
 	{
+		PHInGameHUDWidget = CreateWidget<UPHInGameHUDWidget>(this, PHInGameHUDWidgetClass);
+		if (PHInGameHUDWidget)
+		{
+			PHInGameHUDWidget->AddToViewport();
+		}
+		
 		PHInGameHUDWidget->SetVisibility(ESlateVisibility::Visible);
+		
+		
+		for (TActorIterator<APHBossCharacterBase> It(GetWorld()); It; ++It)
+		{
+			PHInGameHUDWidget->InitializeBossHpBar(It->GetMaxHP());
+			It->OnBossHpChangedDelegate.AddUObject(PHInGameHUDWidget, &UPHInGameHUDWidget::UpdateBossHpBar);
+			break;  // 첫 번째 보스만 바인딩
+		}
 	}
 	else
 	{
@@ -149,6 +153,13 @@ void APHPlayerController::SetInGameEndHudActive(bool InGameEndHudActive)
 {
 	if (InGameEndHudActive)
 	{
+		PHGameEndWidget = CreateWidget<UPHGameEndWidget>(this, PHGameEndWidgetClass);
+
+		if (PHGameEndWidget)
+		{
+			PHGameEndWidget->AddToViewport();
+		}
+		
 		PHGameEndWidget->SetVisibility(ESlateVisibility::Visible);
 	}
 	else
