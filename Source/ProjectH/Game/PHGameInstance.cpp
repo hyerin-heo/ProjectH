@@ -17,6 +17,7 @@ void UPHGameInstance::Init()
 	// FWorldDelegates::OnWorldChanged.AddUObject(this, &UPHGameInstance::OnWorldChanged);
 	bIsAttemptingConnection = false;
 	bIsListenServer = false;
+	bUseServer = false;
 }
 
 void UPHGameInstance::Shutdown()
@@ -31,6 +32,22 @@ void UPHGameInstance::Shutdown()
 
 void UPHGameInstance::JoinGame()
 {
+	if (!bUseServer)
+	{
+		if (UWorld* World = GetWorld())
+		{
+			ENetMode NetMode = World->GetNetMode();
+
+			if (NetMode == NM_DedicatedServer || NetMode == NM_ListenServer)
+			{
+				HostServer();
+			}else
+			{
+				TryConnectToServer(TEXT("127.0.0.1"));
+			}
+		}
+		return;
+	}
 	if (!APIClient)
 	{
 		APIClient = NewObject<UPHAPIClient>(this);
@@ -80,6 +97,10 @@ void UPHGameInstance::JoinGame()
 
 void UPHGameInstance::StartGame()
 {
+	if (!bUseServer)
+	{
+		return;
+	}
 	if (!APIClient)
 	{
 		APIClient = NewObject<UPHAPIClient>(this);
@@ -93,6 +114,10 @@ void UPHGameInstance::StartGame()
 
 void UPHGameInstance::FinishGame()
 {
+	if (!bUseServer)
+	{
+		return;
+	}
 	if (bIsListenServer)
 	{
 		DeleteCurrentRoom();	
@@ -165,6 +190,10 @@ void UPHGameInstance::HandleConnectionTimeout()
 
 void UPHGameInstance::DeleteCurrentRoom()
 {
+	if (!bUseServer)
+	{
+		return;
+	}
 	if (!APIClient)
 	{
 		APIClient = NewObject<UPHAPIClient>(this);

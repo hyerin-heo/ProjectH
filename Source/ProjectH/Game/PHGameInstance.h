@@ -37,6 +37,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Network")
 	void HostServer();
 
+	UPROPERTY(EditAnywhere, Category = APIServer)
+	uint8 bUseServer:1;
+
 	UPROPERTY()
 	FOnConnectionAttemptFinished OnConnectionAttemptFinished;
 
