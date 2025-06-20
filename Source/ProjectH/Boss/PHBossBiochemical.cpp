@@ -132,7 +132,7 @@ void APHBossBiochemical::Pattern4HitCheck(const FBossPatternInfo& PatternInfo, c
 		const TSubclassOf<ASkillObjectBase>& SkillClass = SkillObjectsMap.FindChecked(ESkillObjectType::DashMagma);
 		const float BaseLifetime = 4.5f;
 
-		TArray<float> Angles = {0.f, 15.f, -15.f, 30.f, -30.f};
+		TArray<float> Angles = {0.f, 25.f, -25.f, 50.f, -50.f};
 
 		for (float Angle : Angles)
 		{
@@ -156,7 +156,7 @@ void APHBossBiochemical::Pattern4HitCheck(const FBossPatternInfo& PatternInfo, c
 		const float BaseLifetime = 3.f;
 		const FVector BaseSpawnLocation = GetActorLocation();
 
-		TArray<float> Angles = {5.f, -5.f, 15.f, -15.f, 25.f, -25.f, 35.f, -35.f};
+		TArray<float> Angles = {5.f, -5.f, 15.f, -15.f, 25.f, -25.f, 35.f, -35.f, 45.f, -45.f};
 
 		for (float Angle : Angles)
 		{
