@@ -12,6 +12,8 @@
  * 
  */
 
+class APHCharacterBase;
+
 USTRUCT()
 struct FSelectedClassInfo
 {

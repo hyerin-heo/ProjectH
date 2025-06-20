@@ -23,26 +23,6 @@ void APHPlayerState::SetSelectedClass(EClassType InClassType)
 	}
 }
 
-UClass* APHPlayerState::GetSelectedClass() const
-{
-	switch (SelectedClass)
-	{
-	case EClassType::Warrior:
-		return APHWarriorCharacter::StaticClass();
-	case EClassType::Healer:
-		// @PHTODO 추후 작업할 것
-		return APHWarriorCharacter::StaticClass();
-	case EClassType::Mage:
-		// @PHTODO 추후 작업할 것
-		return APHWarriorCharacter::StaticClass();
-	case EClassType::Tanker:
-		// @PHTODO 추후 작업할 것
-		return APHWarriorCharacter::StaticClass();
-	default:
-		return nullptr;
-	}
-}
-
 void APHPlayerState::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);

@@ -30,7 +30,7 @@ APHBossCharacterBase::APHBossCharacterBase()
 
 void APHBossCharacterBase::PhaseLevelChanged(const uint8& OldPhase, const uint8& NewPhase)
 {
-    PH_LOG(LogPHBoss, Log, TEXT("Change Phase Level : %s"), *FString::FromInt(CurrentPhaseLevel.GetValue()));
+    // PH_LOG(LogPHBoss, Log, TEXT("Change Phase Level : %s"), *FString::FromInt(CurrentPhaseLevel.GetValue()));
 }
 
 float APHBossCharacterBase::GetDetectionRadius()
@@ -378,6 +378,7 @@ void APHBossCharacterBase::BeginPlay()
         AttackSpeed = DataAsset->AttackSpeed;
         Armor = DataAsset->Armor;
         StartLocation = DataAsset->StartLocation;
+        SetActorLocation(StartLocation);
 
         GetCharacterMovement()->MaxWalkSpeed = Speed;
     }

@@ -25,7 +25,7 @@ void UPHGameInstance::Shutdown()
 	// FWorldDelegates::OnWorldChanged.RemoveAll(this);
 	if (bIsListenServer)
 	{
-		DeleteCurrentRoom(nullptr, true);
+		DeleteCurrentRoom();
 	}
 }
 
@@ -158,11 +158,12 @@ void UPHGameInstance::HandleConnectionTimeout()
 
 		// restAPI call.
 		// 서버연결시도하려 했던 방 삭제 및 새로 연결.
-		DeleteCurrentRoom([&] { JoinGame(); });
+		DeleteCurrentRoom();
+		StartGame();
 	}
 }
 
-void UPHGameInstance::DeleteCurrentRoom(const TFunction<void()>& Callback, bool IsShutdown)
+void UPHGameInstance::DeleteCurrentRoom()
 {
 	if (!APIClient)
 	{
@@ -172,26 +173,12 @@ void UPHGameInstance::DeleteCurrentRoom(const TFunction<void()>& Callback, bool 
 	                                  ERestAPIType::DELETE,
 	                                  [&](const FHttpResponsePtr& ResponsePtr, const FRoomData& ReceivedRoomData)
 	                                  {
-		                                  if (!IsShutdown)
-		                                  {
 										  UE_LOG(LogTemp, Display, TEXT("Delete Success! response Code : %d"),
 												 ResponsePtr->GetResponseCode());
-										  if (Callback)
-										  {
-											  Callback();
-										  }   
-		                                  }
 	                                  },
 	                                  [&](const FString& ErrorMessage)
 	                                  {
-		                                  if (!IsShutdown)
-		                                  {
 										  UE_LOG(LogPHGameFlow, Error, TEXT("Delete Failed: %s"), *ErrorMessage);
-										  if (Callback)
-										  {
-											  Callback();
-										  }   
-		                                  }
 	                                  }
 	);
 }

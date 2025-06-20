@@ -15,10 +15,10 @@ void APHTItlePlayerController::BeginPlay()
 			TitleWidget->AddToViewport();
 
 			// UI 전용 입력 모드로 설정
-			FInputModeUIOnly InputModeData;
-			InputModeData.SetWidgetToFocus(TitleWidget->TakeWidget());
-			InputModeData.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
-			SetInputMode(InputModeData);
+			// FInputModeUIOnly InputModeData;
+			// InputModeData.SetWidgetToFocus(TitleWidget->TakeWidget());
+			// InputModeData.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
+			// SetInputMode(InputModeData);
 			bShowMouseCursor = true;
 		}
 	}

@@ -9,9 +9,12 @@
 #include "Controller/PHPlayerController.h"
 #include "PHPlayerState.h"
 #include "Boss/Base/PHBossCharacterBase.h"
+#include "Character/Base/PHCharacterBase.h"
 #include "GameFramework/Character.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/PawnMovementComponent.h"
+#include "GameFramework/PlayerStart.h"
+#include "Kismet/GameplayStatics.h"
 
 APHGameMode::APHGameMode()
 {
@@ -57,6 +60,11 @@ void APHGameMode::StartPlay()
 	Super::StartPlay();
 }
 
+void APHGameMode::Tick(float DeltaSeconds)
+{
+	Super::Tick(DeltaSeconds);
+}
+
 void APHGameMode::PlayerSelectCharacter(APlayerController* InPC, EClassType ClassType)
 {
 	APHGameState* MyGameState = GetGameState<APHGameState>();
@@ -68,8 +76,6 @@ void APHGameMode::PlayerSelectCharacter(APlayerController* InPC, EClassType Clas
 		MyGameState->AddSelectedClassArray(ClassType, PlayerStat);
 
 		MyGameState->OnRep_SelectedClassArray();
-		// @PHTODO 여기서 할지 한번에 할지 고민중.
-		TrySpawnPlayerPawn(InPC);
 	}
 }
 
@@ -106,9 +112,18 @@ void APHGameMode::TrySpawnPlayerPawn(APlayerController* PlayerControllerToSpawn)
     {
         return;
     }
+	
+	TArray<AActor*> AllPlayerStarts;
+	UGameplayStatics::GetAllActorsOfClass(World, APlayerStart::StaticClass(), AllPlayerStarts);
+	APlayerStart* PlayerStart = nullptr;
+	if (AllPlayerStarts.Num() > 0)
+	{
+		int32 RandomIndex = FMath::RandRange(0, AllPlayerStarts.Num() - 1);
+		PlayerStart = Cast<APlayerStart>(AllPlayerStarts[RandomIndex]);
+	}
+	UE_LOG(LogTemp, Warning, TEXT("PlayerStart is null? : %s"), PlayerStart ? TEXT("true"):TEXT("false"));
 
-    AActor* PlayerStart = FindPlayerStart(PlayerControllerToSpawn);
-    FVector SpawnLocation = (PlayerStart) ? PlayerStart->GetActorLocation() : FVector(0.f, 0.f, 100.f);
+    FVector SpawnLocation = (PlayerStart) ? PlayerStart->GetActorLocation() : FVector(-2390.000000,-130.000000,621.969011);
     FRotator SpawnRotation = (PlayerStart) ? PlayerStart->GetActorRotation() : FRotator::ZeroRotator;
 
     FActorSpawnParameters SpawnInfo;
@@ -121,12 +136,13 @@ void APHGameMode::TrySpawnPlayerPawn(APlayerController* PlayerControllerToSpawn)
 		UE_LOG(LogTemp, Warning, TEXT("PlayerState is not APHPlayerState."));
 		return;
 	}
-	if (!PlayerState->GetSelectedClass())
+	if (PlayerState->GetSelectedClass() == EClassType::None)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("PlayerState->GetSelectedClass is nullptr."));
+		UE_LOG(LogTemp, Warning, TEXT("PlayerState->GetSelectedClass is None."));
 		return;
 	}
-    APawn* NewPawn = World->SpawnActor<APawn>(PlayerState->GetSelectedClass(), SpawnLocation, SpawnRotation, SpawnInfo);
+	auto CharacterClass = CharacterClassMap.FindChecked(PlayerState->GetSelectedClass());
+    APawn* NewPawn = World->SpawnActor<APawn>(CharacterClass, SpawnLocation, SpawnRotation, SpawnInfo);
     if (NewPawn)
     {
         // 서버에서 하면 클라에서도 복제됨.
@@ -172,24 +188,26 @@ void APHGameMode::StartGame()
 			return;
 		}
 	}
-	FTimerHandle LoadingUITimerHandle;
-	GetWorldTimerManager().SetTimer(LoadingUITimerHandle, [&]()
+	for (APlayerController* EachPlayer : PlayerControllers)
 	{
-		// Hide Loading UI
-		// Show CountDown UI
-		// CountDown끝났을 시 콜백 호출.
-		// SetPlayerMovementState(MOVE_Walking);
-		// 보스도 움직이게 해야함.
-		// SpawnBossCharacter();
-		// if (ActiveBossCharacter)
-		// {
-		// 	ActiveBossCharacter->RunAI();
-		// }
-	}, 2.0f, false);
-	SetPlayerMovementState(MOVE_None);
+		TrySpawnPlayerPawn(EachPlayer);
+	}
+	
+	SpawnBossCharacter();
+	// SetPlayerMovementState(MOVE_None);
+	//
+	// // Hide Loading UI
+	// // Show CountDown UI
+	// // CountDown끝났을 시 콜백 호출.
+	// SetPlayerMovementState(MOVE_Walking);
+	// 보스도 움직이게 해야함.
+	if (ActiveBossCharacter)
+	{
+		ActiveBossCharacter->RunAI();
+	}
 }
 
-void APHGameMode::SpawnBossCharacter(FVector SpawnLocation, FRotator SpawnRotation)
+void APHGameMode::SpawnBossCharacter()
 {
 	// 서버에서만 스폰 가능
 	if (!HasAuthority())
@@ -220,7 +238,7 @@ void APHGameMode::SpawnBossCharacter(FVector SpawnLocation, FRotator SpawnRotati
 	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
 
 	// 보스 스폰
-	ActiveBossCharacter = World->SpawnActor<APHBossCharacterBase>(BossCharacterClass[CurrentStageIndex], SpawnLocation, SpawnRotation, SpawnParams);
+	ActiveBossCharacter = World->SpawnActor<APHBossCharacterBase>(BossCharacterClass[CurrentStageIndex], FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
 
 	if (ActiveBossCharacter)
 	{
@@ -231,8 +249,6 @@ void APHGameMode::SpawnBossCharacter(FVector SpawnLocation, FRotator SpawnRotati
 	{
 		UE_LOG(LogTemp, Error, TEXT("GameMode: Failed to spawn Boss Character."));
 	}
-
-	return;
 }
 
 void APHGameMode::SetPlayerMovementState(EMovementMode Mode)

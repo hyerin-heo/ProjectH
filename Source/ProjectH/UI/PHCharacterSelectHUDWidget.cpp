@@ -112,8 +112,6 @@ void UPHCharacterSelectHUDWidget::OnClickedSelectButton()
 
 void UPHCharacterSelectHUDWidget::OnClickedStartButton()
 {
-	//@PHTODO: 시작 시켜야 한다.
-
 	if (APlayerController* PC = GetOwningPlayer())
 	{
 		APHPlayerController* PlayerController = Cast<APHPlayerController>(PC);

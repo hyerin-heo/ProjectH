@@ -49,7 +49,7 @@ private:
 	// 연결 타임아웃 처리 함수
 	void HandleConnectionTimeout();
 
-	void DeleteCurrentRoom(const TFunction<void()>& Callback = TFunction<void()>(), bool IsShutdown = false);
+	void DeleteCurrentRoom();
 	
 	FTimerHandle ConnectionAttemptTimerHandle;
 	FString CurrentConnectingAddress;

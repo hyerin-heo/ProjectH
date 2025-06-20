@@ -20,7 +20,7 @@ public:
 
 	void SetSelectedClass(EClassType InClassType);
 
-	UClass* GetSelectedClass() const;
+	EClassType GetSelectedClass() const {return SelectedClass;}
 
 protected:
 	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;

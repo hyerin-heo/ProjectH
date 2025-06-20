@@ -8,6 +8,7 @@
 #include "Subsystem/SkillObjectPoolSubsystem.h"
 #include "PHGameMode.generated.h"
 
+class APHCharacterBase;
 class APHBossCharacterBase;
 /**
  * 
@@ -32,6 +33,8 @@ public:
 
 	virtual void StartPlay() override;
 
+	virtual void Tick(float DeltaSeconds) override;
+
 	UFUNCTION()
 	void TrySpawnPlayerPawn(APlayerController* PlayerControllerToSpawn);
 
@@ -39,7 +42,7 @@ public:
 	void StartGame();
 
 	// CurrentStageIndex 가 지정되고 나서 호출
-	void SpawnBossCharacter(FVector SpawnLocation, FRotator SpawnRotation);
+	void SpawnBossCharacter();
 
 	UPROPERTY(VisibleAnywhere, Category = Subsystems)
 	TSubclassOf<USkillObjectPoolSubsystem> SkillObjectPoolSubsystem;
@@ -59,6 +62,9 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = Boss)
 	TArray<TSubclassOf<APHBossCharacterBase>> BossCharacterClass;
+
+	UPROPERTY(EditAnywhere)
+	TMap<EClassType, TSubclassOf<APHCharacterBase>> CharacterClassMap;
 
 	// 현재 활성화된 보스 캐릭터 참조
 	UPROPERTY()
