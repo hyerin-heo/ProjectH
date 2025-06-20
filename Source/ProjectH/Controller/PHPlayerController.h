@@ -32,6 +32,8 @@ protected:
 
 	virtual void OnPossess(APawn* InPawn) override;
 
+	virtual void OnUnPossess() override;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = HUD)
 	TSubclassOf<class UPHInGameHUDWidget> PHInGameHUDWidgetClass;
 	

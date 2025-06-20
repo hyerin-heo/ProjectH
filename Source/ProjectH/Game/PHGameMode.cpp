@@ -81,6 +81,7 @@ void APHGameMode::PlayerSelectCharacter(APlayerController* InPC, EClassType Clas
 
 void APHGameMode::TrySpawnPlayerPawn(APlayerController* PlayerControllerToSpawn)
 {
+	
     if (!HasAuthority())
     {
         UE_LOG(LogTemp, Error, TEXT("TrySpawnPlayerPawn called on client, should be server only!"));
@@ -121,7 +122,6 @@ void APHGameMode::TrySpawnPlayerPawn(APlayerController* PlayerControllerToSpawn)
 		int32 RandomIndex = FMath::RandRange(0, AllPlayerStarts.Num() - 1);
 		PlayerStart = Cast<APlayerStart>(AllPlayerStarts[RandomIndex]);
 	}
-	UE_LOG(LogTemp, Warning, TEXT("PlayerStart is null? : %s"), PlayerStart ? TEXT("true"):TEXT("false"));
 
     FVector SpawnLocation = (PlayerStart) ? PlayerStart->GetActorLocation() : FVector(-2390.000000,-130.000000,621.969011);
     FRotator SpawnRotation = (PlayerStart) ? PlayerStart->GetActorRotation() : FRotator::ZeroRotator;

@@ -42,6 +42,10 @@ public:
 	//프로퍼티 리플리케이션
 	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
 
+	void OnPossessed();
+
+	virtual void OnRep_Controller() override;
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -203,5 +207,7 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Equipment, Meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<class UStaticMeshComponent> Weapon;
+
+	uint8 bHasInitializedInput:1; 
 
 };

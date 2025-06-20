@@ -142,41 +142,19 @@ void APHCharacterBase::PostInitializeComponents()
 	Super::PostInitializeComponents();
 	
 	StatDataComponent->OnHpZero.AddUObject(this, &APHCharacterBase::SetDead);
+	bHasInitializedInput = false;
 }
 
 // Called when the game starts or when spawned
 void APHCharacterBase::BeginPlay()
 {
 	Super::BeginPlay();
-	if (!IsLocallyControlled() || !InputMappingContext)
-	{
-		return;
-	}
-
-
-	APlayerController* PlayerController = CastChecked<APlayerController>(GetController());
-
-	if (PlayerController)
-	{
-		EnableInput(PlayerController);
-	}
-
-	if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(
-		PlayerController->GetLocalPlayer()))
-	{
-		Subsystem->ClearAllMappings();
-		Subsystem->AddMappingContext(InputMappingContext, 0);
-	}
-
-	Weapon->OnComponentBeginOverlap.AddDynamic(this, &APHCharacterBase::OnWeaponOverlap);
-	EnableWeaponCollision(false);
 }
 
 //Owner가 빙의 되는 함수.(클라이언트에서는 호출이 안된다.)
 void APHCharacterBase::PossessedBy(AController* NewController)
 {
 	Super::PossessedBy(NewController);
-
 	if (HasAuthority())
 	{
 		if (PlayerMeshes.Num() == 0)
@@ -287,8 +265,45 @@ void APHCharacterBase::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty
 	//DOREPLIFETIME(APHCharacterBase, NormalAttackTargetRotation);
 }
 
+void APHCharacterBase::OnPossessed()
+{
+	if (!IsLocallyControlled() || !InputMappingContext)
+	{
+		return;
+	}
+
+
+	APlayerController* PlayerController = CastChecked<APlayerController>(GetController());
+
+	if (PlayerController)
+	{
+		EnableInput(PlayerController);
+	}
+
+	if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(
+		PlayerController->GetLocalPlayer()))
+	{
+		Subsystem->ClearAllMappings();
+		Subsystem->AddMappingContext(InputMappingContext, 0);
+	}
+
+	Weapon->OnComponentBeginOverlap.AddDynamic(this, &APHCharacterBase::OnWeaponOverlap);
+	EnableWeaponCollision(false);
+
+	bHasInitializedInput = true;
+}
+
+void APHCharacterBase::OnRep_Controller()
+{
+	Super::OnRep_Controller();
+	if (IsLocallyControlled() && !bHasInitializedInput)
+	{
+		OnPossessed();	
+	}
+}
+
 void APHCharacterBase::OnWeaponOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
-	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+                                       UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	if (!HasAuthority())
 	{
@@ -326,6 +341,15 @@ void APHCharacterBase::MouseClickMove()
 		//@PHTODO : 나중에 스킬를 눌르고 스킬 범위를 취소할때 오른쪽 눌르면 이동이 아니고 취소되게 해야한다.
 	
 		return;
+	}
+
+	if (Controller == nullptr)
+	{
+		PH_LOG(LogNavigation, Warning, TEXT("Controller is null"));
+	}
+	if (GetWorld()->GetNavigationSystem() == nullptr)
+	{
+		PH_LOG(LogNavigation, Warning, TEXT("Navigation System is null"));
 	}
 
 	APlayerController* const PC = Cast<APlayerController>(GetController());

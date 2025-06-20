@@ -3,8 +3,7 @@
 
 #include "Controller/PHPlayerController.h"
 
-#include "EngineUtils.h"
-#include "Boss/Base/PHBossCharacterBase.h"
+#include "Character/Base/PHCharacterBase.h"
 #include "Game/PHGameMode.h"
 #include "UI/PHCharacterSelectHUDWidget.h"
 #include "UI/PHInGameHUDWidget.h"
@@ -44,6 +43,16 @@ void APHPlayerController::PostNetInit()
 void APHPlayerController::OnPossess(APawn* InPawn)
 {
 	Super::OnPossess(InPawn);
+	APHCharacterBase* CharacterBase = Cast<APHCharacterBase>(InPawn);
+	if (CharacterBase)
+	{
+		CharacterBase->OnPossessed();
+	}
+}
+
+void APHPlayerController::OnUnPossess()
+{
+	Super::OnUnPossess();
 }
 
 void APHPlayerController::BeginPlay()
