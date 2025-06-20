@@ -52,6 +52,7 @@ void APHPlayerController::OnPossess(APawn* InPawn)
 	APHCharacterBase* CharacterBase = Cast<APHCharacterBase>(InPawn);
 	if (CharacterBase)
 	{
+		
 		CharacterBase->OnPossessed();
 	}
 }
@@ -64,11 +65,38 @@ void APHPlayerController::OnUnPossess()
 void APHPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
-
+	InitWidget();
 	//마우스 클릭 이동이라 필요 없음.
 	//FInputModeGameOnly GameOnlyInputMode;
 	//SetInputMode(GameOnlyInputMode);
+}
 
+void APHPlayerController::ServerRPC_SelectCharacter_Implementation(EClassType ClassType)
+{
+	APHGameMode* GM = GetWorld()->GetAuthGameMode<APHGameMode>();
+	if (GM)
+	{
+		GM->PlayerSelectCharacter(this, ClassType);
+	}
+}
+
+void APHPlayerController::ClientRPCGameEnd_Implementation(bool IsClear)
+{
+	PHGameEndWidget->IsClear(IsClear);
+	SetInGameHudActive(false);
+	SetInGameEndHudActive(true);
+}
+
+void APHPlayerController::SetHiddenCharacterSelectHUD()
+{
+	if (PHCharacterSelectHUDWidget)
+	{
+		PHCharacterSelectHUDWidget->SetVisibility(ESlateVisibility::Collapsed);
+	}
+}
+
+void APHPlayerController::InitWidget()
+{
 	if (!IsLocalController()) return;
 
 	PHInGameHUDWidget = CreateWidget<UPHInGameHUDWidget>(this, PHInGameHUDWidgetClass);
@@ -103,29 +131,6 @@ void APHPlayerController::BeginPlay()
 
 	PHInGameHUDWidget->SetVisibility(ESlateVisibility::Collapsed);
 	PHGameEndWidget->SetVisibility(ESlateVisibility::Collapsed);
-}
-
-void APHPlayerController::ServerRPC_SelectCharacter_Implementation(EClassType ClassType)
-{
-	APHGameMode* GM = GetWorld()->GetAuthGameMode<APHGameMode>();
-	if (GM)
-	{
-		GM->PlayerSelectCharacter(this, ClassType);
-	}
-}
-
-void APHPlayerController::ClientRPCGameEnd_Implementation(bool IsClear)
-{
-	PHGameEndWidget->IsClear(IsClear);
-	SetInGameEndHudActive(true);
-}
-
-void APHPlayerController::SetHiddenCharacterSelectHUD()
-{
-	if (PHCharacterSelectHUDWidget)
-	{
-		PHCharacterSelectHUDWidget->SetVisibility(ESlateVisibility::Collapsed);
-	}
 }
 
 void APHPlayerController::SetInGameHudActive(bool InGameHudActive)

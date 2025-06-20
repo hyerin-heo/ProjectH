@@ -18,6 +18,7 @@
 #include "Net/UnrealNetwork.h"
 #include "NavigationSystem.h"
 #include "Character/Component/PHWidgetComponent.h"
+#include "Controller/PHPlayerController.h"
 #include "Engine/DamageEvents.h"
 #include "Game/PHGameMode.h"
 #include "UI/PHHpBarWidget.h"
@@ -274,11 +275,12 @@ void APHCharacterBase::OnPossessed()
 	}
 
 
-	APlayerController* PlayerController = CastChecked<APlayerController>(GetController());
+	APHPlayerController* PlayerController = CastChecked<APHPlayerController>(GetController());
 
 	if (PlayerController)
 	{
 		EnableInput(PlayerController);
+		PlayerController->SetInGameHudActive(true);
 	}
 
 	if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(

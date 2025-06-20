@@ -28,6 +28,8 @@ public:
 	void SetInGameHudActive(bool InGameHudActive);
 	void SetInGameEndHudActive(bool InGameEndHudActive);
 	void SetHiddenCharacterSelectHUD();
+
+	void InitWidget();
 	
 	void HostGameStart();
 
