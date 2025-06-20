@@ -22,6 +22,9 @@ public:
 	UFUNCTION(Server, Reliable)
 	void ServerRPC_SelectCharacter(EClassType ClassType);
 
+	void SetHiddenCharacterSelectHUD();
+	void HostGameStart();
+
 protected:
 	virtual void PostInitializeComponents() override;
 	virtual void PostNetInit() override;

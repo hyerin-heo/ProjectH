@@ -30,15 +30,6 @@ APHPlayerController::APHPlayerController()
 	NetUpdateFrequency=3.0f;
 }
 
-void APHPlayerController::ServerRPC_SelectCharacter_Implementation(EClassType ClassType)
-{
-	APHGameMode* GM = GetWorld()->GetAuthGameMode<APHGameMode>();
-	if (GM)
-	{
-		GM->PlayerSelectCharacter(this, ClassType);
-	}
-}
-
 void APHPlayerController::PostInitializeComponents()
 {
 	Super::PostInitializeComponents();
@@ -47,6 +38,12 @@ void APHPlayerController::PostInitializeComponents()
 void APHPlayerController::PostNetInit()
 {
 	Super::PostNetInit();
+}
+
+
+void APHPlayerController::OnPossess(APawn* InPawn)
+{
+	Super::OnPossess(InPawn);
 }
 
 void APHPlayerController::BeginPlay()
@@ -59,7 +56,7 @@ void APHPlayerController::BeginPlay()
 
 	if (!IsLocalController()) return;
 
-	// PHInGameHUDWidget = CreateWidget<UPHInGameHUDWidget>(this, PHInGameHUDWidgetClass);
+	PHInGameHUDWidget = CreateWidget<UPHInGameHUDWidget>(this, PHInGameHUDWidgetClass);
 	//
 	// if (PHInGameHUDWidget)
 	// {
@@ -81,7 +78,31 @@ void APHPlayerController::BeginPlay()
 	}
 }
 
-void APHPlayerController::OnPossess(APawn* InPawn)
+void APHPlayerController::ServerRPC_SelectCharacter_Implementation(EClassType ClassType)
 {
-	Super::OnPossess(InPawn);
+	APHGameMode* GM = GetWorld()->GetAuthGameMode<APHGameMode>();
+	if (GM)
+	{
+		GM->PlayerSelectCharacter(this, ClassType);
+	}
+}
+
+void APHPlayerController::SetHiddenCharacterSelectHUD()
+{
+	if (PHCharacterSelectHUDWidget)
+	{
+		PHCharacterSelectHUDWidget->SetVisibility(ESlateVisibility::Collapsed);
+	}
+}
+
+void APHPlayerController::HostGameStart()
+{
+	if (HasAuthority())
+	{
+		APHGameMode* GM = GetWorld()->GetAuthGameMode<APHGameMode>();
+		if (GM)
+		{
+			GM->StartGame();
+		}
+	}
 }

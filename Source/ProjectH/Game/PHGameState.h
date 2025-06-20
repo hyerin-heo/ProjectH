@@ -46,13 +46,21 @@ public:
 	void AddSelectedClassArray(EClassType Class, APHPlayerState* PlayerState);
 	bool IsClassReadySelected(EClassType Class) const;
 
+	FORCEINLINE void GameStart(){bGameStart = true;}
+
 	UFUNCTION()
 	void OnRep_SelectedClassArray();
+
+	UFUNCTION()
+	void OnRep_bGameStart();
 
 
 private:
 	UPROPERTY(ReplicatedUsing = OnRep_SelectedClassArray)
 	TArray<FSelectedClassInfo> SelectedClassArray;
+
+	UPROPERTY(ReplicatedUsing = OnRep_bGameStart)
+	uint8 bGameStart:1 = false;
 	
 	
 };

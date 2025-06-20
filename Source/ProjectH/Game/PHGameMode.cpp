@@ -73,7 +73,6 @@ void APHGameMode::PlayerSelectCharacter(APlayerController* InPC, EClassType Clas
 	}
 }
 
-
 void APHGameMode::TrySpawnPlayerPawn(APlayerController* PlayerControllerToSpawn)
 {
     if (!HasAuthority())
@@ -148,6 +147,13 @@ void APHGameMode::StartGame()
 	UPHGameInstance* Instance = Cast<UPHGameInstance>(GetWorld()->GetGameInstance());
 	if (CurrentStageIndex < 0)
 	{
+		if (APHGameState* GS = GetGameState<APHGameState>())
+		{
+			GS->GameStart();
+
+			GS->OnRep_bGameStart();
+		}
+		
 		Instance->StartGame();
 	}
 	APHInGameLevelScriptActor* LevelScriptActor = Cast<APHInGameLevelScriptActor>(GetWorld()->GetLevelScriptActor());
