@@ -17,7 +17,7 @@ void UPHGameInstance::Init()
 	// FWorldDelegates::OnWorldChanged.AddUObject(this, &UPHGameInstance::OnWorldChanged);
 	bIsAttemptingConnection = false;
 	bIsListenServer = false;
-	bUseServer = false;
+	bUseServer = true;
 }
 
 void UPHGameInstance::Shutdown()
