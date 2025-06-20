@@ -28,15 +28,15 @@ public:
 
 private:
 	//스킬 이미지.
-	UPROPERTY(meta = (BindWidget))
+	UPROPERTY()
 	TObjectPtr<class UImage> SkillImage;
 
 	//쿨타임프로그래스바
-	UPROPERTY(meta = (BindWidget))
+	UPROPERTY()
 	TObjectPtr<class UProgressBar> CoolTimeProgressBar;
 
 	//단축키 표시.
-	UPROPERTY(meta = (BindWidget))
+	UPROPERTY()
 	TObjectPtr<class UTextBlock> InputKeyText;
 
 	UPROPERTY()

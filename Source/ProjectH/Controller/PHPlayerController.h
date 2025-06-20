@@ -22,7 +22,10 @@ public:
 	UFUNCTION(Server, Reliable)
 	void ServerRPC_SelectCharacter(EClassType ClassType);
 
+	void SetInGameHudActive(bool InGameHudActive);
+	void SetInGameEndHudActive(bool InGameEndHudActive);
 	void SetHiddenCharacterSelectHUD();
+	
 	void HostGameStart();
 
 protected:
@@ -45,6 +48,12 @@ protected:
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = HUD)
 	TObjectPtr<class UPHCharacterSelectHUDWidget> PHCharacterSelectHUDWidget;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = HUD)
+	TSubclassOf<class UPHGameEndWidget> PHGameEndWidgetClass;
+	
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = HUD)
+	TObjectPtr<class UPHGameEndWidget> PHGameEndWidget;
 	
 	
 };

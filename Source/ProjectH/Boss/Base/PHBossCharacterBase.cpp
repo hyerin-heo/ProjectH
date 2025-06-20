@@ -382,20 +382,6 @@ void APHBossCharacterBase::BeginPlay()
 
         GetCharacterMovement()->MaxWalkSpeed = Speed;
     }
-
-    UPHInGameHUDWidget* FoundWidget = nullptr;
-
-    TArray<UUserWidget*> Widgets;
-    UWidgetBlueprintLibrary::GetAllWidgetsOfClass(GetWorld(), Widgets, UPHInGameHUDWidget::StaticClass(), false);
-
-    if (Widgets.Num() > 0)
-    {
-        FoundWidget = Cast<UPHInGameHUDWidget>(Widgets[0]);
-        if (FoundWidget)
-        {
-            UE_LOG(LogTemp, Log, TEXT("현재 화면에 HUD 위젯이 존재합니다."));
-        }
-    }
 }
 
 void APHBossCharacterBase::SetAIAttackDelegate(const FAIAttackFinished& InOnAttackFinished)
