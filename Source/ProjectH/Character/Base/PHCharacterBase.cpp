@@ -22,6 +22,7 @@
 #include "Engine/DamageEvents.h"
 #include "Game/PHGameMode.h"
 #include "Interface/Boss/PHBossAIInterface.h"
+#include "Physics/PHCollision.h"
 #include "UI/PHHpBarWidget.h"
 #include "UI/PHInGameHUDWidget.h"
 
