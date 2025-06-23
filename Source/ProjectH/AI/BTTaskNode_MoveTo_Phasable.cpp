@@ -49,8 +49,8 @@ void UBTTaskNode_MoveTo_Phasable::TickTask(UBehaviorTreeComponent& OwnerComp, ui
 
     // Can move during target in attack range
     float DistanceToTarget = ControllingPawn->GetDistanceTo(Target);
-    float AttackRangeWithRadius = AIPawn->GetAttackRange() * 0.2;
-    if (DistanceToTarget <= AttackRangeWithRadius)
+    float AttackRangeRadius = AIPawn->GetAttackRange() * 0.5f;
+    if (DistanceToTarget <= AttackRangeRadius)
     {
         AICon->StopMovement();
         FinishLatentTask(OwnerComp, EBTNodeResult::Aborted);
