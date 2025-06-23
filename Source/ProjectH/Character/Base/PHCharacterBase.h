@@ -211,6 +211,8 @@ protected:
 	uint8 bUIActioning : 1;
 	UPROPERTY(Replicated)
 	uint8 bActioning : 1;
+	UPROPERTY(Replicated)
+	uint8 bInvincibility : 1;
 
 	UPROPERTY(ReplicatedUsing= OnRep_MeshIndex)
 	int32 MeshIndex;
