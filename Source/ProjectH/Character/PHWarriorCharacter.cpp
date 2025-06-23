@@ -39,7 +39,6 @@ APHWarriorCharacter::APHWarriorCharacter(const FObjectInitializer& ObjectInitial
 	Skill4Effect->SetAutoActivate(false);
 	
 	// Weapon Component
-	Weapon = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Weapon"));
 	Weapon->SetupAttachment(GetMesh(), TEXT("hand_lSocket"));
 	Weapon->SetIsReplicated(true);
 	bReplicates = true;
@@ -234,6 +233,19 @@ void APHWarriorCharacter::Multicast_SetActiveSkill4Effect_Implementation(bool bE
 	}
 }
 
+void APHWarriorCharacter::OnPossessed()
+{
+	Super::OnPossessed();
+	
+	if (!IsLocallyControlled() || !InputMappingContext)
+	{
+		return;
+	}
+
+	Weapon->OnComponentBeginOverlap.AddDynamic(this, &APHWarriorCharacter::OnWeaponOverlap);
+	EnableWeaponCollision(false);
+}
+
 void APHWarriorCharacter::ServerRPCSkill1_Implementation()
 {
 	StatDataComponent->StartSkillCooldown(EAttackType::Skill1);
@@ -311,8 +323,6 @@ void APHWarriorCharacter::StartDash()
 		DashInterval,
 		true  // 반복
 	);
-
-	
 }
 
 void APHWarriorCharacter::HandleDashStep()

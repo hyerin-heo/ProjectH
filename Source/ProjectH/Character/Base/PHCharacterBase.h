@@ -42,7 +42,7 @@ public:
 	//프로퍼티 리플리케이션
 	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
 
-	void OnPossessed();
+	virtual void OnPossessed();
 
 	virtual void OnRep_Controller() override;
 
@@ -73,7 +73,7 @@ protected:
 
 	//Collision Section.
 	UFUNCTION()
-	void OnWeaponOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+	virtual void OnWeaponOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 	
 	virtual void SetDead();
 

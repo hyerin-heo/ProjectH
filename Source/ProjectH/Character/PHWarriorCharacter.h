@@ -32,6 +32,8 @@ private:
 	UFUNCTION(NetMulticast, UnReliable)
 	void Multicast_SetActiveSkill4Effect(bool bEffectActive);
 
+	virtual void OnPossessed() override;
+
 	
 protected:
 	//Server

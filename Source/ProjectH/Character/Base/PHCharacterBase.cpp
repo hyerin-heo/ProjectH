@@ -130,6 +130,8 @@ APHCharacterBase::APHCharacterBase(const FObjectInitializer& ObjectInitializer)
 		HpBar->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	}
 
+	Weapon = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Weapon"));
+
 	bReplicates = true;
 	MeshIndex = -1;
 	//SetReplicatingMovement(true);
@@ -290,9 +292,6 @@ void APHCharacterBase::OnPossessed()
 		Subsystem->AddMappingContext(InputMappingContext, 0);
 	}
 
-	Weapon->OnComponentBeginOverlap.AddDynamic(this, &APHCharacterBase::OnWeaponOverlap);
-	EnableWeaponCollision(false);
-
 	bHasInitializedInput = true;
 }
 
@@ -308,7 +307,8 @@ void APHCharacterBase::OnRep_Controller()
 void APHCharacterBase::OnWeaponOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
                                        UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	if (!HasAuthority())
+	if (!(GetWorld()->GetNetMode() == NM_DedicatedServer || GetWorld()->GetNetMode() == NM_ListenServer
+		|| GetWorld()->GetNetMode() == NM_Standalone))
 	{
 		return;
 	}
@@ -326,7 +326,11 @@ void APHCharacterBase::OnWeaponOverlap(UPrimitiveComponent* OverlappedComp, AAct
 
 void APHCharacterBase::EnableWeaponCollision(bool bActive)
 {
-	Weapon->SetCollisionEnabled(bActive ? ECollisionEnabled::QueryOnly : ECollisionEnabled::NoCollision);
+	if (!HasAuthority())
+	{
+		Weapon->SetCollisionEnabled(bActive ? ECollisionEnabled::QueryOnly : ECollisionEnabled::NoCollision);
+		
+	}
 }
 
 void APHCharacterBase::MouseClickMove()
