@@ -13,15 +13,7 @@ void UPHAN_CharacterAttackCheckStart::Notify(USkeletalMeshComponent* MeshComp, U
 	if (MeshComp)
 	{
 		APHCharacterBase* WarriorPawn = Cast<APHCharacterBase>(MeshComp->GetOwner());
-
-		if (WarriorPawn->HasAuthority())
-		{
-			UE_LOG(LogTemp, Warning, TEXT("Notify called on SERVER for: %s"), *WarriorPawn->GetName());
-		}
-		else
-		{
-			UE_LOG(LogTemp, Warning, TEXT("Notify called on CLIENT for: %s"), *WarriorPawn->GetName());
-		}
+		
 		
 		if (WarriorPawn)
 		{

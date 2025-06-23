@@ -21,6 +21,7 @@
 #include "Controller/PHPlayerController.h"
 #include "Engine/DamageEvents.h"
 #include "Game/PHGameMode.h"
+#include "Interface/Boss/PHBossAIInterface.h"
 #include "UI/PHHpBarWidget.h"
 #include "UI/PHInGameHUDWidget.h"
 
@@ -307,29 +308,50 @@ void APHCharacterBase::OnRep_Controller()
 void APHCharacterBase::OnWeaponOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
                                        UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
+	
 	if (!(GetWorld()->GetNetMode() == NM_DedicatedServer || GetWorld()->GetNetMode() == NM_ListenServer
 		|| GetWorld()->GetNetMode() == NM_Standalone))
 	{
 		return;
 	}
-
-	UE_LOG(LogTemp, Warning, TEXT("Weapon overlapped with: %s"), *GetNameSafe(OtherActor));
-
-	if (OtherActor && OtherActor != this)
+	
+	if (OtherActor && OtherActor == this)
 	{
-		UE_LOG(LogTemp, Log, TEXT("무기 충돌: %s"), *OtherActor->GetName());
-		// 데미지 처리
-		FDamageEvent DamageEvent;
-		OtherActor->TakeDamage(AttackDamage, DamageEvent, GetController(), this);
+		return;
 	}
+	
+	UE_LOG(LogTemp, Warning, TEXT("Damage %f"), AttackDamage);
+	
+	if (OtherActor)
+	{
+		IPHBossAIInterface* BossActor = Cast<IPHBossAIInterface>(OtherActor);
+
+		if (BossActor)
+		{
+			UE_LOG(LogTemp, Log, TEXT("무기 충돌: %s"), *OtherActor->GetName());
+			// 데미지 처리
+			FDamageEvent DamageEvent;
+			OtherActor->TakeDamage(AttackDamage, DamageEvent, GetController(), this);
+		}
+	}
+
+	// if (OtherActor && OtherActor != this)
+	// {
+	// 	UE_LOG(LogTemp, Log, TEXT("무기 충돌: %s"), *OtherActor->GetName());
+	// 	// 데미지 처리
+	// 	FDamageEvent DamageEvent;
+	// 	OtherActor->TakeDamage(AttackDamage, DamageEvent, GetController(), this);
+	// }
 }
 
 void APHCharacterBase::EnableWeaponCollision(bool bActive)
 {
-	if (!HasAuthority())
+	
+	if (GetWorld()->GetNetMode() == NM_DedicatedServer || GetWorld()->GetNetMode() == NM_ListenServer
+	|| GetWorld()->GetNetMode() == NM_Standalone)
 	{
-		Weapon->SetCollisionEnabled(bActive ? ECollisionEnabled::QueryOnly : ECollisionEnabled::NoCollision);
-		
+		PH_LOG(LogPHCharacter, Warning, TEXT("Notify called on SERVER for: %s"), bActive?TEXT("true"):TEXT("false"));
+		Weapon->SetCollisionEnabled(bActive ? ECollisionEnabled::QueryAndPhysics : ECollisionEnabled::NoCollision);
 	}
 }
 
@@ -656,6 +678,7 @@ void APHCharacterBase::OnRep_MeshIndex()
 void APHCharacterBase::ServerRPCNormalAttack_Implementation()
 {
 	StatDataComponent->StartSkillCooldown(EAttackType::DefaultAttack);
+	AttackDamage = StatDataComponent->GetDamage(EAttackType::DefaultAttack);
 	GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_None);
 
 	PlayAnimMontage(ActionMontage, 1.0f, "NormalAttack");
@@ -674,6 +697,7 @@ void APHCharacterBase::ServerRPCSkill1_Implementation()
 {
 	//그냥 스킬 애니메이션만 플레이하면 된다면 해당 함수 사용 따로 작업을 해야한다면 오버라이딩 사용.
 	StatDataComponent->StartSkillCooldown(EAttackType::Skill1);
+	AttackDamage = StatDataComponent->GetDamage(EAttackType::Skill1);
 	GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_None);
 	
 	PlayAnimMontage(ActionMontage, 1.0f, "Skill1");
@@ -691,6 +715,7 @@ void APHCharacterBase::ServerRPCSkill2_Implementation()
 {
 	//그냥 스킬 애니메이션만 플레이하면 된다면 해당 함수 사용 따로 작업을 해야한다면 오버라이딩 사용.
 	StatDataComponent->StartSkillCooldown(EAttackType::Skill2);
+	AttackDamage = StatDataComponent->GetDamage(EAttackType::Skill2);
 	GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_None);
 	
 	PlayAnimMontage(ActionMontage, 1.0f, "Skill2");
@@ -707,6 +732,7 @@ void APHCharacterBase::ServerRPCSkill2_Implementation()
 void APHCharacterBase::ServerRPCSkill3_Implementation()
 {
 	StatDataComponent->StartSkillCooldown(EAttackType::Skill3);
+	AttackDamage = StatDataComponent->GetDamage(EAttackType::Skill3);
 	GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_None);
 
 	PlayAnimMontage(ActionMontage, 1.0f, "Skill3");
@@ -724,6 +750,7 @@ void APHCharacterBase::ServerRPCSkill3_Implementation()
 void APHCharacterBase::ServerRPCSkill4_Implementation()
 {
 	StatDataComponent->StartSkillCooldown(EAttackType::Skill4);
+	AttackDamage = StatDataComponent->GetDamage(EAttackType::Skill4);
 	GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_None);
 
 	PlayAnimMontage(ActionMontage, 1.0f, "Skill4");

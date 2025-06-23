@@ -44,6 +44,20 @@ APHWarriorCharacter::APHWarriorCharacter(const FObjectInitializer& ObjectInitial
 	bReplicates = true;
 }
 
+void APHWarriorCharacter::OnPossessed()
+{
+	Super::OnPossessed();
+	
+	if (GetWorld()->GetNetMode() == NM_DedicatedServer || GetWorld()->GetNetMode() == NM_ListenServer
+		|| GetWorld()->GetNetMode() == NM_Standalone)
+	{
+		// 서버에서만 Overlap검사 한다.
+		Weapon->OnComponentBeginOverlap.AddDynamic(this, &APHWarriorCharacter::OnWeaponOverlap);
+	}
+
+	Weapon->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+}
+
 void APHWarriorCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
@@ -230,19 +244,6 @@ void APHWarriorCharacter::Multicast_SetActiveSkill4Effect_Implementation(bool bE
 		{
 			Skill4Effect->Deactivate();
 		}
-	}
-}
-
-void APHWarriorCharacter::OnPossessed()
-{
-	Super::OnPossessed();
-	
-	if (GetWorld()->GetNetMode() == NM_DedicatedServer || GetWorld()->GetNetMode() == NM_ListenServer
-		|| GetWorld()->GetNetMode() == NM_Standalone)
-	{
-		// 서버에서만 Overlap검사 한다.
-		Weapon->OnComponentBeginOverlap.AddDynamic(this, &APHWarriorCharacter::OnWeaponOverlap);
-		EnableWeaponCollision(false);
 	}
 }
 
