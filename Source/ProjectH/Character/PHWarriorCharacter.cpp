@@ -237,13 +237,13 @@ void APHWarriorCharacter::OnPossessed()
 {
 	Super::OnPossessed();
 	
-	if (!IsLocallyControlled() || !InputMappingContext)
+	if (GetWorld()->GetNetMode() == NM_DedicatedServer || GetWorld()->GetNetMode() == NM_ListenServer
+		|| GetWorld()->GetNetMode() == NM_Standalone)
 	{
-		return;
+		// 서버에서만 Overlap검사 한다.
+		Weapon->OnComponentBeginOverlap.AddDynamic(this, &APHWarriorCharacter::OnWeaponOverlap);
+		EnableWeaponCollision(false);
 	}
-
-	Weapon->OnComponentBeginOverlap.AddDynamic(this, &APHWarriorCharacter::OnWeaponOverlap);
-	EnableWeaponCollision(false);
 }
 
 void APHWarriorCharacter::ServerRPCSkill1_Implementation()
