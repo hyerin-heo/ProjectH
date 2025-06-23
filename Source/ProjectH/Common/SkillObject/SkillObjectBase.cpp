@@ -1,9 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "Common/SkillObjectBase.h"
-
-#include "ProjectH.h"
+#include "Common/SkillObject/SkillObjectBase.h"
 #include "Engine/DamageEvents.h"
 #include "Net/UnrealNetwork.h"
 #include "Physics/PHCollision.h"

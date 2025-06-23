@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "Boss/SkillObject/PHNiagaraSkillObject.h"
+#include "Common/SkillObject/PHNiagaraSkillObject.h"
 
 #include "NiagaraComponent.h"
 

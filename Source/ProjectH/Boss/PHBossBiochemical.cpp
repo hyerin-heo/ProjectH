@@ -3,7 +3,7 @@
 
 #include "PHBossBiochemical.h"
 
-#include "SkillObject/PHNiagaraSkillObject.h"
+#include "Common/SkillObject/PHNiagaraSkillObject.h"
 
 APHBossBiochemical::APHBossBiochemical()
 {

@@ -15,6 +15,25 @@ enum class EAttackType : uint8
 	End
 };
 
+inline FString ToString(EAttackType e)
+{
+	switch (e)
+	{
+	case EAttackType::DefaultAttack:
+		return TEXT("NormalAttack");
+	case EAttackType::Skill1:
+		return TEXT("Skill1");
+	case EAttackType::Skill2:
+		return TEXT("Skill2");
+	case EAttackType::Skill3:
+		return TEXT("Skill3");
+	case EAttackType::Skill4:
+		return TEXT("Skill4");
+	default:
+		return TEXT("UNKNOWN");
+	}
+}
+
 UENUM(BlueprintType)
 enum class EAttackStatType : uint8
 {

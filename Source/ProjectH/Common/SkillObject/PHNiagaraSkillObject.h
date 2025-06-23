@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Common/SkillObjectBase.h"
+#include "Common/SkillObject/SkillObjectBase.h"
 #include "PHNiagaraSkillObject.generated.h"
 
 class UNiagaraComponent;

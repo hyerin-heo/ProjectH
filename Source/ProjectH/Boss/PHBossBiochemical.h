@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Boss/Base/PHBossCharacterBase.h"
-#include "Common/SkillObjectBase.h"
+#include "Common/SkillObject/SkillObjectBase.h"
 #include "PHBossBiochemical.generated.h"
 
 UENUM(BlueprintType)
