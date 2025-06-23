@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "Animation/AnimNotify_WarriorSkill3Spawn.h"
+#include "Animation/Character/Warrior/AnimNotify_WarriorSkill3Spawn.h"
 
 #include "Character/PHWarriorCharacter.h"
 
@@ -16,7 +16,14 @@ void UAnimNotify_WarriorSkill3Spawn::Notify(USkeletalMeshComponent* MeshComp, UA
 
 		if (WarriorPawn)
 		{
-			WarriorPawn->SpawnSkill3Object();
+			// 💡 서버에서만 스폰하도록 제한
+			if (WarriorPawn->HasAuthority())
+			{
+				UE_LOG(LogTemp, Warning, TEXT("Notify 실행: HasAuthority=%d, IsLocallyControlled=%d, Name=%s"),
+					WarriorPawn->HasAuthority(), WarriorPawn->IsLocallyControlled(), *WarriorPawn->GetName());
+				
+				WarriorPawn->SpawnSkill3Object();
+			}
 		}
 	}
 }

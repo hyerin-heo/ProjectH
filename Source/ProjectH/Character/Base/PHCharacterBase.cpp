@@ -136,7 +136,7 @@ APHCharacterBase::APHCharacterBase(const FObjectInitializer& ObjectInitializer)
 	Weapon->SetCollisionProfileName(CPROFILE_TRIGGER);
 
 	bReplicates = true;
-	MeshIndex = -1;
+	//MeshIndex = -1;
 	//SetReplicatingMovement(true);
 	//SetReplicateMovement(true);
 	bUIActioning = false;
@@ -162,19 +162,6 @@ void APHCharacterBase::BeginPlay()
 void APHCharacterBase::PossessedBy(AController* NewController)
 {
 	Super::PossessedBy(NewController);
-	if (HasAuthority())
-	{
-		if (PlayerMeshes.Num() == 0)
-		{
-			UE_LOG(LogPHCharacter, Warning, TEXT("PlayerMeshes is Empty"));
-			return;
-		}
-
-		MeshIndex = FMath::RandRange(0, PlayerMeshes.Num() - 1);
-
-		//서버의 경우 로컬 플레이어를 PossessedBy를 통해서 진행.
-		UpdateMeshFromPlayerState();
-	}
 }
 
 void APHCharacterBase::OnRep_Owner()
@@ -267,7 +254,7 @@ void APHCharacterBase::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty
 
 	DOREPLIFETIME(APHCharacterBase, bUIActioning);
 	DOREPLIFETIME(APHCharacterBase, ActionTargetRotation);
-	DOREPLIFETIME(APHCharacterBase, MeshIndex);
+	//DOREPLIFETIME(APHCharacterBase, MeshIndex);
 	DOREPLIFETIME(APHCharacterBase, bActioning);
 	DOREPLIFETIME(APHCharacterBase, bInvincibility);
 	//DOREPLIFETIME(APHCharacterBase, NormalAttackTargetRotation);
@@ -668,16 +655,6 @@ void APHCharacterBase::OnRep_ActionTargetRotation()
 	}
 }
 
-void APHCharacterBase::OnRep_MeshIndex()
-{
-	// 클라이언트에서만 호출되는 콜백. 
-	// MeshIndex가 유효한(0 이상) 값으로 복제되었을 때 로드 시작
-	if (MeshIndex >= 0 && PlayerMeshes.IsValidIndex(MeshIndex))
-	{
-		UpdateMeshFromPlayerState();
-	}
-}
-
 ASkillObjectBase* APHCharacterBase::SpawnSkillObject(const TSubclassOf<ASkillObjectBase>& SkillObjectClass,
 	const FVector& SpawnLocation, const FRotator& SpawnRotation)
 {
@@ -810,46 +787,6 @@ void APHCharacterBase::ClientRPCPlayAnimation_Implementation(APHCharacterBase* C
 	{
 		CharacterPlayer->PlayAnimMontage(ActionMontage, AnimSpeed, ActionName);
 	}
-}
-
-void APHCharacterBase::MeshLoadCompleted()
-{
-	if (MeshHandle.IsValid())
-	{
-		USkeletalMesh* NewMesh = Cast<USkeletalMesh>(MeshHandle->GetLoadedAsset());
-		if (NewMesh)
-		{
-			GetMesh()->SetSkeletalMesh(NewMesh);
-			GetMesh()->SetHiddenInGame(false);
-		}
-	}
-
-	MeshHandle->ReleaseHandle();
-	MeshHandle.Reset();
-}
-
-void APHCharacterBase::UpdateMeshFromPlayerState()
-{
-	// @PHTODO: 나중에 플레이어가 고른 캐릭터로 매쉬 로드 해야함.
-	//PlayerID를 활용해서 인덱스 값 설정.()
-	//int32 MeshIndex = FMath::Clamp(GetPlayerState()->GetPlayerId() % PlayerMeshes.Num(), 0, PlayerMeshes.Num() - 1);
-
-	if (!PlayerMeshes.IsValidIndex(MeshIndex))
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Invalid MeshIndex: %d"), MeshIndex);
-		return;
-	}
-
-	// 만약 이미 로드 요청이 남아 있다면 해제(중복 방지)
-	if (MeshHandle.IsValid())
-	{
-		MeshHandle->ReleaseHandle();
-		MeshHandle.Reset();
-	}
-
-	// TSoftObjectPtr 에서 Load 요청
-	MeshHandle = UAssetManager::Get().GetStreamableManager().RequestAsyncLoad(
-		PlayerMeshes[MeshIndex],FStreamableDelegate::CreateUObject(this, &APHCharacterBase::MeshLoadCompleted));
 }
 
 void APHCharacterBase::RotateToCursor()

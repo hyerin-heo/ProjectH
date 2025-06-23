@@ -162,7 +162,8 @@ void APHWarriorCharacter::Skill2()
 		return;
 	}
 	
-	Super::Skill2();
+	bActioning = true;
+	AttackDamage = StatDataComponent->GetDamage(EAttackType::Skill2);
 
 	if (!HasAuthority())
 	{
@@ -389,6 +390,11 @@ void APHWarriorCharacter::EndBerserkSkill()
 
 void APHWarriorCharacter::SpawnSkill3Object()
 {
+	if (!HasAuthority())
+		return;
+
+	//PH_LOG(LogPHCharacter, Log, TEXT("서버인지 클라인지 :  %d"), GetLocalRole());
+	
 	float Damage = 0.0f;
 	
 	if (StatDataComponent->GetBaseStat().AttackStatMap.Contains(EAttackType::Skill3))

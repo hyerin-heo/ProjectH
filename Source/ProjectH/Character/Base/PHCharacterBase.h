@@ -60,10 +60,6 @@ protected:
 	virtual void SetupHUDWidget(class UPHInGameHUDWidget* InHUDWidget) override;
 	
 	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override; 
-
-	
-	void MeshLoadCompleted();
-	void UpdateMeshFromPlayerState();
 	
 	//State Section.
 	void SetActionEnd();
@@ -135,8 +131,6 @@ public:
 	//On_RepFunction
 	UFUNCTION()
 	void OnRep_ActionTargetRotation();
-	UFUNCTION()
-	void OnRep_MeshIndex();
 	
 protected:
 	
@@ -214,9 +208,6 @@ protected:
 	UPROPERTY(Replicated)
 	uint8 bInvincibility : 1;
 
-	UPROPERTY(ReplicatedUsing= OnRep_MeshIndex)
-	int32 MeshIndex;
-
 	UPROPERTY(ReplicatedUsing=OnRep_ActionTargetRotation)
 	FRotator ActionTargetRotation;
 
@@ -224,7 +215,7 @@ protected:
 	//비동기식으로 로딩 하기위해 FStreamableHandle사용. 
 	TSharedPtr<FStreamableHandle> MeshHandle;
 	UPROPERTY(config)
-	TArray<FSoftObjectPath> PlayerMeshes;
+	TArray<FSoftObjectPath> PlayerMeshes;// 나중에 사용할수 있는지 체크. 없으면 삭제.
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Equipment, Meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<class UStaticMeshComponent> Weapon;
