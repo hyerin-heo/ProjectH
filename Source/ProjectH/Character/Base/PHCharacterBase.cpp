@@ -675,6 +675,41 @@ void APHCharacterBase::OnRep_MeshIndex()
 	}
 }
 
+ASkillObjectBase* APHCharacterBase::SpawnSkillObject(const TSubclassOf<ASkillObjectBase>& SkillObjectClass,
+	const FVector& SpawnLocation, const FRotator& SpawnRotation)
+{
+	USkillObjectPoolSubsystem* PoolSubsystem = USkillObjectPoolSubsystem::Get(this);
+	if (!PoolSubsystem)
+	{
+		return nullptr;
+	}
+
+	ASkillObjectBase* NewSkillObject = Cast<ASkillObjectBase>(
+		PoolSubsystem->SpawnSkillObject(
+			SkillObjectClass,
+			SpawnLocation,
+			SpawnRotation,
+			this, // InInstigator
+			this  // InOwner
+		)
+	);
+	return NewSkillObject;
+}
+
+void APHCharacterBase::LaunchSkillObjectForward(ASkillObjectBase* SkillObject, float InitialSpeed, float Lifetime,
+	float Damage, bool bReturnToPoolOnHit)
+{
+	if (SkillObject)
+	{
+#if WITH_EDITOR
+		SkillObject->SetFolderPath(TEXT("SpawnedSkills/CharacterAttack"));
+#endif
+		SkillObject->Init(InitialSpeed, Lifetime, bReturnToPoolOnHit);
+		// 발사 방향은 스폰될 때 액터의 Forward Vector를 사용(SpawnRotation에 의해 결정됨)
+		SkillObject->Launch(SkillObject->GetActorForwardVector(), Damage);
+	}
+}
+
 void APHCharacterBase::ServerRPCNormalAttack_Implementation()
 {
 	StatDataComponent->StartSkillCooldown(EAttackType::DefaultAttack);

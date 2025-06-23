@@ -10,6 +10,7 @@
 #include "Interface/Character/PHCharacterWidgetInterface.h"
 #include "PHCharacterBase.generated.h"
 
+class ASkillObjectBase;
 DECLARE_DELEGATE_TwoParams(FOnMontageEnd, UAnimMontage*, bool);
 
 UENUM()
@@ -138,6 +139,21 @@ public:
 	void OnRep_MeshIndex();
 	
 protected:
+	
+	ASkillObjectBase* SpawnSkillObject(
+		const TSubclassOf<ASkillObjectBase>& SkillObjectClass,
+		const FVector& SpawnLocation,
+		const FRotator& SpawnRotation
+	);
+
+	static void LaunchSkillObjectForward(
+		ASkillObjectBase* SkillObject,
+		float InitialSpeed,
+		float Lifetime,
+		float Damage,
+		bool bReturnToPoolOnHit
+	);
+	
 	// Camera Section
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, Meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<class USpringArmComponent> CameraBoom;
