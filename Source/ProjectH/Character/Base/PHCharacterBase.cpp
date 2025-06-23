@@ -268,6 +268,7 @@ void APHCharacterBase::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty
 	DOREPLIFETIME(APHCharacterBase, ActionTargetRotation);
 	DOREPLIFETIME(APHCharacterBase, MeshIndex);
 	DOREPLIFETIME(APHCharacterBase, bActioning);
+	DOREPLIFETIME(APHCharacterBase, bInvincibility);
 	//DOREPLIFETIME(APHCharacterBase, NormalAttackTargetRotation);
 }
 
@@ -560,10 +561,10 @@ void APHCharacterBase::Skill2()
 {
 	bActioning = true;
 	AttackDamage = StatDataComponent->GetDamage(EAttackType::Skill2);
-	//RotateToCursor();
+	RotateToCursor();
 	// Movement Setting
 	//@PHTODO: 해당 셋팅은 스킬마다 다르게 셋팅 되어야 한다.
-	//GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_None);
+	GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_None);
 }
 
 void APHCharacterBase::Skill3UI()
