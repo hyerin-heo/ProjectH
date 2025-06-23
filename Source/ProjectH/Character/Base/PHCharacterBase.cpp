@@ -132,6 +132,7 @@ APHCharacterBase::APHCharacterBase(const FObjectInitializer& ObjectInitializer)
 	}
 
 	Weapon = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Weapon"));
+	Weapon->SetCollisionProfileName(CPROFILE_TRIGGER);
 
 	bReplicates = true;
 	MeshIndex = -1;
