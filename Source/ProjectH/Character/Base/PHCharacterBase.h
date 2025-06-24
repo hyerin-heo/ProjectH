@@ -10,6 +10,7 @@
 #include "Interface/Character/PHCharacterWidgetInterface.h"
 #include "PHCharacterBase.generated.h"
 
+class APHProjectileSkillObject;
 class ASkillObjectBase;
 DECLARE_DELEGATE_TwoParams(FOnMontageEnd, UAnimMontage*, bool);
 
@@ -77,6 +78,7 @@ protected:
 public:
 	void MouseClickMove();
 	void RotateToCursor();
+	FVector GetCursorWorldPosition();
 	void SetNewLocation(FVector NewLocation);
 
 	// Attack/Skill Action
@@ -143,7 +145,7 @@ protected:
 	);
 
 	static void LaunchSkillObjectForward(
-		ASkillObjectBase* SkillObject,
+		APHProjectileSkillObject* SkillObject,
 		float InitialSpeed,
 		float Lifetime,
 		float Damage,

@@ -4,19 +4,18 @@
 
 #include "CoreMinimal.h"
 #include "PHProjectileSkillObject.h"
-#include "PHNiagaraSkillObject.generated.h"
+#include "PHMeshSkillObject.generated.h"
 
-class UNiagaraComponent;
-class UNiagaraSystem;
 /**
  * 
  */
 UCLASS()
-class PROJECTH_API APHNiagaraSkillObject : public APHProjectileSkillObject
+class PROJECTH_API APHMeshSkillObject : public APHProjectileSkillObject
 {
 	GENERATED_BODY()
+	
 public:
-	APHNiagaraSkillObject();
+	APHMeshSkillObject();
 
 	virtual void PostInitializeComponents() override;
 
@@ -31,6 +30,6 @@ public:
 	virtual void Client_ResetProjectile_Implementation() override;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Effects)
-	TObjectPtr<UNiagaraComponent> NiagaraComponent;
+	TObjectPtr<UStaticMeshComponent> MeshComponent;
 	
 };

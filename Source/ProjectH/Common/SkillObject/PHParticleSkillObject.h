@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Common/SkillObject/SkillObjectBase.h"
+#include "PHProjectileSkillObject.h"
 #include "PHParticleSkillObject.generated.h"
 
 class UParticleSystemComponent;
@@ -12,7 +12,7 @@ class UParticleSystem;
  * 
  */
 UCLASS()
-class PROJECTH_API APHParticleSkillObject : public ASkillObjectBase
+class PROJECTH_API APHParticleSkillObject : public APHProjectileSkillObject
 {
 	GENERATED_BODY()
 public:

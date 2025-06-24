@@ -9,6 +9,7 @@
 #include "Animation/AnimInstance.h"
 #include "Blueprint/WidgetBlueprintLibrary.h"
 #include "Common/Common.h"
+#include "Common/SkillObject/PHProjectileSkillObject.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Engine/DamageEvents.h"
@@ -430,7 +431,7 @@ ASkillObjectBase* APHBossCharacterBase::SpawnSkillObject(
     return NewSkillObject;
 }
 
-void APHBossCharacterBase::LaunchSkillObjectForward(ASkillObjectBase* SkillObject, float InitialSpeed, float Lifetime,
+void APHBossCharacterBase::LaunchSkillObjectForward(APHProjectileSkillObject* SkillObject, float InitialSpeed, float Lifetime,
     float Damage, bool bReturnToPoolOnHit)
 {
     if (SkillObject)
@@ -444,7 +445,7 @@ void APHBossCharacterBase::LaunchSkillObjectForward(ASkillObjectBase* SkillObjec
     }
 }
 
-void APHBossCharacterBase::LaunchSkillObject(ASkillObjectBase* SkillObject, float Lifetime, float Damage)
+void APHBossCharacterBase::LaunchSkillObject(APHProjectileSkillObject* SkillObject, float Lifetime, float Damage)
 {
     if (SkillObject)
     {

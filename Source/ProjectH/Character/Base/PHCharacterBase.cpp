@@ -20,6 +20,7 @@
 #include "NiagaraComponent.h"
 #include "Character/Component/PHWidgetComponent.h"
 #include "Common/Common.h"
+#include "Common/SkillObject/PHProjectileSkillObject.h"
 #include "Controller/PHPlayerController.h"
 #include "Engine/DamageEvents.h"
 #include "Game/PHGameMode.h"
@@ -688,7 +689,7 @@ ASkillObjectBase* APHCharacterBase::SpawnSkillObject(const TSubclassOf<ASkillObj
 	return NewSkillObject;
 }
 
-void APHCharacterBase::LaunchSkillObjectForward(ASkillObjectBase* SkillObject, float InitialSpeed, float Lifetime,
+void APHCharacterBase::LaunchSkillObjectForward(APHProjectileSkillObject* SkillObject, float InitialSpeed, float Lifetime,
 	float Damage, bool bReturnToPoolOnHit)
 {
 	if (SkillObject)
@@ -843,6 +844,47 @@ void APHCharacterBase::RotateToCursor()
 			}
 		}
 	}
+}
+
+FVector APHCharacterBase::GetCursorWorldPosition()
+{
+	APlayerController* PC = Cast<APlayerController>(GetController());
+	if (!PC)
+	{
+		return FVector::ZeroVector;
+	}
+
+	// 1) 화면 좌표 → 월드 공간 광선(Origin + Direction) 변환
+	FVector RayOrigin, RayDir;
+	if (PC->DeprojectMousePositionToWorld(RayOrigin, RayDir))
+	{
+		FVector TraceEnd = RayOrigin + (RayDir * 10000.0f);
+
+		FHitResult HitResult;
+		FCollisionQueryParams Params;
+		Params.AddIgnoredActor(this);
+
+		bool bHit = GetWorld()->LineTraceSingleByChannel(
+			HitResult,
+			RayOrigin,
+			TraceEnd,
+			ECC_WorldStatic,       // 움직이지 않는 월드 지형이나 오브젝트와 충돌
+			Params
+		);
+
+		DrawDebugLine(GetWorld(), RayOrigin, TraceEnd, FColor::Red, false, 2.0f, 0, 1.0f);
+		if (bHit)
+		{
+		    DrawDebugSphere(GetWorld(), HitResult.Location, 20.0f, 12, FColor::Green, false, 2.0f);
+		}
+
+		if (bHit)
+		{
+			// 충돌이 발생했다면, 히트 지점 반환
+			return HitResult.Location;
+		}
+	}
+	return FVector::ZeroVector;
 }
 
 

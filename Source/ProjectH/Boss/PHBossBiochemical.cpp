@@ -56,11 +56,11 @@ void APHBossBiochemical::Pattern1HitCheck(const FBossPatternInfo& PatternInfo, c
 	for (int32 i = 0; i < NumProjectiles; ++i)
 	{
 		FRotator SpawnRotation = GetActorRotation() + FRotator(0, AngleStep * i, 0);
-		ASkillObjectBase* SkillObject = SpawnSkillObject(
+		APHProjectileSkillObject* SkillObject = Cast<APHProjectileSkillObject>(SpawnSkillObject(
 			SkillClass,
 			BaseSpawnLocation,
 			SpawnRotation
-		);
+		));
 
 		LaunchSkillObjectForward(SkillObject, BaseSpeed, BaseLifetime, PatternInfo.AttackDamage, true);
 	}
@@ -82,11 +82,11 @@ void APHBossBiochemical::Pattern2HitCheck(const FBossPatternInfo& PatternInfo, c
 	for (float Angle : Angles)
 	{
 		FRotator SpawnRotation = GetActorRotation() + FRotator(0, Angle, 0);
-		ASkillObjectBase* SkillObject = SpawnSkillObject(
+		APHProjectileSkillObject* SkillObject = Cast<APHProjectileSkillObject>(SpawnSkillObject(
 			SkillClass,
 			BaseSpawnLocation,
 			SpawnRotation
-		);
+		));
 		LaunchSkillObjectForward(SkillObject, BaseSpeed, BaseLifetime, PatternInfo.AttackDamage, false);
 	}
 }
@@ -111,11 +111,11 @@ void APHBossBiochemical::Pattern3HitCheck(const FBossPatternInfo& PatternInfo, c
 		FVector SpawnLocation = GetActorLocation() + (CurrentRotation.Vector() * PatternInfo.AttackRange) - FVector(
 			0.f, 0.f, GetCapsuleComponent()->GetScaledCapsuleHalfHeight());
 
-		ASkillObjectBase* SkillObject = SpawnSkillObject(
+		APHProjectileSkillObject* SkillObject = Cast<APHProjectileSkillObject>(SpawnSkillObject(
 			SkillClass,
 			SpawnLocation,
 			CurrentRotation
-		);
+		));
 		LaunchSkillObject(SkillObject, BaseLifetime, PatternInfo.AttackDamage);
 	}
 }
@@ -140,11 +140,11 @@ void APHBossBiochemical::Pattern4HitCheck(const FBossPatternInfo& PatternInfo, c
 			FVector SpawnLocation = GetActorLocation() + (CurrentRotation.Vector() * PatternInfo.AttackRange) - FVector(
 				0.f, 0.f, GetCapsuleComponent()->GetScaledCapsuleHalfHeight());
 
-			ASkillObjectBase* SkillObject = SpawnSkillObject(
+			APHProjectileSkillObject* SkillObject = Cast<APHProjectileSkillObject>(SpawnSkillObject(
 				SkillClass,
 				SpawnLocation,
 				CurrentRotation
-			);
+			));
 			LaunchSkillObject(SkillObject, BaseLifetime, PatternInfo.AttackDamage);
 		}
 	}
@@ -161,11 +161,11 @@ void APHBossBiochemical::Pattern4HitCheck(const FBossPatternInfo& PatternInfo, c
 		for (float Angle : Angles)
 		{
 			FRotator SpawnRotation = GetActorRotation() + FRotator(0.f, Angle, 0.f);
-			ASkillObjectBase* SkillObject = SpawnSkillObject(
+			APHProjectileSkillObject* SkillObject = Cast<APHProjectileSkillObject>(SpawnSkillObject(
 				SkillClass,
 				BaseSpawnLocation,
 				SpawnRotation
-			);
+			));
 			LaunchSkillObjectForward(SkillObject, BaseSpeed, BaseLifetime, PatternInfo.AttackDamage, false);
 		}
 	}

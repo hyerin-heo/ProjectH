@@ -11,6 +11,7 @@
 #include "PHBossCharacterBase.generated.h"
 
 
+class APHProjectileSkillObject;
 class ASkillObjectBase;
 DECLARE_DELEGATE(FOnAttackPattern);
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnBossHpChangedDelegate, float/*Current*/);
@@ -93,7 +94,7 @@ protected:
 	);
 
 	static void LaunchSkillObjectForward(
-		ASkillObjectBase* SkillObject,
+		APHProjectileSkillObject* SkillObject,
 		float InitialSpeed,
 		float Lifetime,
 		float Damage,
@@ -101,7 +102,7 @@ protected:
 	);
 
 	static void LaunchSkillObject(
-		ASkillObjectBase* SkillObject,
+		APHProjectileSkillObject* SkillObject,
 		float Lifetime,
 		float Damage
 	);

@@ -6,6 +6,7 @@
 #include "EngineUtils.h"
 #include "ProjectH.h"
 #include "Common/GlobalEnum.h"
+#include "Common/SkillObject/PHProjectileSkillObject.h"
 #include "Net/UnrealNetwork.h"
 #include "Component/PHCharacterStatComponent.h"
 
@@ -142,12 +143,12 @@ void APHHealerCharacter::SpawnNormalAttackObject()
 	const float BaseLifetime = 3.f;
 
 	FRotator SpawnRotation = GetActorRotation();
-	ASkillObjectBase* SkillObject = SpawnSkillObject(
+	APHProjectileSkillObject* SkillObject = Cast<APHProjectileSkillObject>(SpawnSkillObject(
 		NormalAttackObject,
 		BaseSpawnLocation,
 		SpawnRotation
 		
-	);
+	));
 
 	LaunchSkillObjectForward(SkillObject, BaseSpeed, BaseLifetime, StatDataComponent->GetDamage(EAttackType::DefaultAttack), true);
 }

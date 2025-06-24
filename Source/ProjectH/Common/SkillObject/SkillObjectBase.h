@@ -9,6 +9,19 @@
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "SkillObjectBase.generated.h"
 
+class UHitEffectInterface;
+
+UENUM(BlueprintType)
+enum class ESkillObjectHitType : uint8
+{
+	// 기본 충돌: 한 번의 데미지를 주고 물리 임펄스 적용.
+	NormalHit,
+	// 틱 데미지 처리: 일정 시간 동안 주기적으로 데미지 적용.
+	TickDamage,
+	// 월드 고정 오브젝트(World Static) 충돌 시 재활용. 데미지는 기본처리.
+	ResetOnWorldStaticHit
+};
+
 USTRUCT(BlueprintType)
 struct FSkillObjectPoolData
 {
@@ -34,7 +47,7 @@ class PROJECTH_API ASkillObjectBase : public AActor
 {
 	GENERATED_BODY()
 	
-public:	
+public:
 	// Sets default values for this actor's properties
 	ASkillObjectBase();
 
@@ -44,33 +57,17 @@ protected:
 
 	UFUNCTION()
 	virtual void OnHit(UPrimitiveComponent* OverlappedComp, AActor* Other, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+	
+	UFUNCTION()
+	void OnOverlapEnd(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 						 
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-	void PostInitializeComponents() override;
+	virtual void PostInitializeComponents() override;
 
-	/**
-	 * Must call after Init
-	 * @param Direction 월드 내에서 이동할 거리와 방향(cm/s).
-	 * @param InDamage 적용할 데미지
-	 */
-	virtual void Launch(const FVector& Direction, float InDamage);
-	
-	/**
-	 * Must use Static Projectile
-	 * @param InDamage 적용할 데미지
-	 * @param InLifeTime 생명 주기
-	 */
-	virtual void Launch(float InDamage, float InLifeTime);
-
-	// projectile with Speed or LifeTime.
-	void Init(float InSpeed, float InLifeTime, bool ReturnToPoolOnHit);
-	// projectile go to EndLocation with Speed or LifeTime.
-	void Init(const FVector& InEndLocation, float InSpeed, float InLifeTime, bool ReturnToPoolOnHit);
-
-	void ResetProjectile();
+	virtual void ResetProjectile();
 
 	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
 
@@ -84,20 +81,34 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = SkillObject)
 	UCapsuleComponent* CollisionComponent;
 
-	UPROPERTY(VisibleAnywhere, Replicated, BlueprintReadOnly, Category = SkillObject)
-	UProjectileMovementComponent* MovementComponent;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = SkillObject)
+	ESkillObjectHitType CurrentHitType;
 
 protected:
-	// only spawn.
-	void Init(float InLifeTime);
+
+	virtual void HitOnWorld(FVector HitLocation);
+	virtual void HitOnOpponent(FVector HitLocation);
 	
 	UPROPERTY()
 	uint8 bReturnToPoolOnHit:1;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Damage)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = SkillObject)
 	float Damage;
 
 	float LifeSpan;
 	
 	float LifeSpanDeltaTime;
+
+	// 틱 데미지 간격 (초)
+	UPROPERTY(EditDefaultsOnly, Category = "SkillObject|Tick", meta = (EditCondition = "CurrentHitType == ESkillObjectHitType::TickDamage"))
+	float TickDamageInterval;
+
+	UPROPERTY(EditDefaultsOnly, Category = "SkillObject|Tick", meta = (EditCondition = "CurrentHitType == ESkillObjectHitType::TickDamage"))
+	float TickDamageDuration; 
+
+private:
+	UPROPERTY()
+	TMap<AActor*, FTimerHandle> ActiveTickDamageTargets;
+
+	void DealTickDamage(AActor* TargetActor, float TickDamageAmount);
 };

@@ -29,6 +29,7 @@ void UBTTaskNode_MoveTo_Phasable::TickTask(UBehaviorTreeComponent& OwnerComp, ui
         FinishLatentTask(OwnerComp, EBTNodeResult::Failed);
         return;
     }
+    AcceptableRadius = AIPawn->GetAttackRange() * 0.5f;
 
     if (IPHBossAIInterface* Boss = Cast<IPHBossAIInterface>(AIPawn))
     {
@@ -44,17 +45,8 @@ void UBTTaskNode_MoveTo_Phasable::TickTask(UBehaviorTreeComponent& OwnerComp, ui
     APawn* Target = Cast<APawn>(OwnerComp.GetBlackboardComponent()->GetValueAsObject(BBKEY_TARGET));
     if (nullptr == Target)
     {
+        FinishLatentTask(OwnerComp, EBTNodeResult::Failed);
         return;
-    }
-
-    // Can move during target in attack range
-    float DistanceToTarget = ControllingPawn->GetDistanceTo(Target);
-    float AttackRangeRadius = AIPawn->GetAttackRange() * 0.5f;
-    if (DistanceToTarget <= AttackRangeRadius)
-    {
-        AICon->StopMovement();
-        FinishLatentTask(OwnerComp, EBTNodeResult::Aborted);
-        return; 
     }
 
     // Keep Moving

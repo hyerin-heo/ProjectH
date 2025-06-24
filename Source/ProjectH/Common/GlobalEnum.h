@@ -77,3 +77,11 @@ inline FString ToString(ERestAPIType e)
 
 
 #pragma endregion
+
+UENUM(BlueprintType)
+enum class ESkillPreviewType :uint8
+{
+	None,
+	Circle,
+	Square
+};

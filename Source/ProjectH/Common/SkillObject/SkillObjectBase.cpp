@@ -5,6 +5,7 @@
 
 #include "Common/Common.h"
 #include "Engine/DamageEvents.h"
+#include "Interface/HitEffectInterface.h"
 #include "Net/UnrealNetwork.h"
 #include "Physics/PHCollision.h"
 
@@ -24,6 +25,7 @@ ASkillObjectBase::ASkillObjectBase()
 	CollisionComponent->InitCapsuleSize(5.f, 10.f);
 	CollisionComponent->BodyInstance.SetCollisionProfileName(CPROFILE_TRIGGER);
 	CollisionComponent->OnComponentBeginOverlap.AddDynamic(this, &ASkillObjectBase::OnHit);
+	CollisionComponent->OnComponentEndOverlap.AddDynamic(this, &ASkillObjectBase::OnOverlapEnd);
 
 	// Unwalkable
 	CollisionComponent->SetWalkableSlopeOverride(FWalkableSlopeOverride(WalkableSlope_Unwalkable, 0.f));
@@ -34,25 +36,15 @@ ASkillObjectBase::ASkillObjectBase()
 	// Default
 	Damage = 10.f;
 
-	// Init ProjectileMovementComponent
-	MovementComponent = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("ProjectileComponent"));
-	MovementComponent->UpdatedComponent = CollisionComponent;
-	MovementComponent->InitialSpeed = 3000.f;
-	MovementComponent->MaxSpeed = 3000.f;
-	MovementComponent->bRotationFollowsVelocity = true;
-	MovementComponent->bShouldBounce = false;
-	MovementComponent->ProjectileGravityScale = 0.f;
-	MovementComponent->SetIsReplicated(true); 
-
 	InitialLifeSpan = 0.0f;
+
+	CurrentHitType = ESkillObjectHitType::NormalHit;
 }
 
 // Called when the game starts or when spawned
 void ASkillObjectBase::BeginPlay()
 {
 	Super::BeginPlay();
-	MovementComponent->StopMovementImmediately();
-	MovementComponent->Deactivate();
 	LifeSpanDeltaTime = 0.f;
 	LifeSpan = 0.f;
 }
@@ -71,22 +63,83 @@ void ASkillObjectBase::OnHit(UPrimitiveComponent* OverlappedComp, AActor* Other,
 			//같은편이 쏜거임.
 			return;
 		}
+		
 		if ((Other != nullptr) && (Other != this) && Other != this->Owner && (OtherComp != nullptr) && OtherComp->IsSimulatingPhysics())
 		{
 			OtherComp->AddImpulseAtLocation(GetVelocity() * 100.0f, GetActorLocation());
 		}
 
-		// Damage
-		if (Other && Other != this && Other != this->Owner)
-		{
-			// UGameplayStatics::ApplyDamage(OtherActor, Damage, GetInstigatorController(), this, UDamageType::StaticClass());
-			FDamageEvent DamageEvent;
-			Other->TakeDamage(Damage, DamageEvent, GetInstigatorController(), this);
-
-			// For recycle
-			if (bReturnToPoolOnHit)
+		switch (CurrentHitType) {
+		case ESkillObjectHitType::ResetOnWorldStaticHit:
 			{
-				ResetProjectile();
+				if (OtherComp && OtherComp->GetCollisionObjectType() == ECC_WorldStatic)
+				{
+					if (bReturnToPoolOnHit)
+					{
+						ResetProjectile();
+					}
+					HitOnWorld(SweepResult.ImpactPoint);
+					return;
+				}
+			}
+		case ESkillObjectHitType::NormalHit:
+			{
+				// Damage
+				if (Other && Other != this && Other != this->Owner)
+				{
+					// UGameplayStatics::ApplyDamage(OtherActor, Damage, GetInstigatorController(), this, UDamageType::StaticClass());
+					FDamageEvent DamageEvent;
+					Other->TakeDamage(Damage, DamageEvent, GetInstigatorController(), this);
+					HitOnOpponent(SweepResult.ImpactPoint);
+				}
+				
+				if (bReturnToPoolOnHit)
+				{
+					ResetProjectile();
+				}
+			}
+			break;
+		case ESkillObjectHitType::TickDamage:
+			{
+				// 틱 데미지 로직 (시나리오 2에서 구현한 것과 동일)
+				if (!ActiveTickDamageTargets.Contains(Other))
+				{
+					FTimerHandle TimerHandle;
+					GetWorldTimerManager().SetTimer(TimerHandle, [&]()
+					{
+						DealTickDamage(Other, Damage);
+					}, TickDamageInterval, true);
+					ActiveTickDamageTargets.Add(Other, TimerHandle);
+				}
+				FDamageEvent InitialDamageEvent;
+				Other->TakeDamage(Damage, InitialDamageEvent, GetInstigatorController(), this);
+				HitOnOpponent(SweepResult.ImpactPoint);
+			}
+			break;
+		}
+	}
+}
+
+void ASkillObjectBase::OnOverlapEnd(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
+{
+	if (GetLocalRole() == ROLE_Authority)
+	{
+		if (!OtherActor)
+		{
+			return;
+		}
+		if ((OtherActor->ActorHasTag(TAG_ALLY) && this->Owner->ActorHasTag(TAG_ALLY)) || (OtherActor->ActorHasTag(TAG_ENEMY) && this->Owner->ActorHasTag(TAG_ENEMY)))
+		{
+			//같은편이 쏜거임.
+			return;
+		}
+		if (CurrentHitType == ESkillObjectHitType::TickDamage)
+		{
+			if (ActiveTickDamageTargets.Contains(OtherActor))
+			{
+				GetWorldTimerManager().ClearTimer(ActiveTickDamageTargets[OtherActor]);
+				ActiveTickDamageTargets.Remove(OtherActor);
 			}
 		}
 	}
@@ -116,75 +169,6 @@ void ASkillObjectBase::PostInitializeComponents()
 	}
 }
 
-void ASkillObjectBase::Launch(const FVector& Direction, float InDamage)
-{
-	SetActorTickEnabled(true);
-	SetActorEnableCollision(true);
-	Damage = InDamage;
-	MovementComponent->Velocity = Direction * MovementComponent->InitialSpeed;
-	MovementComponent->Activate();
-	// 클라이언트에 액터 활성화 및 초기 이동 상태를 직접 알려주는 RPC 호출
-	Client_ActivateSkillObject(GetActorLocation(), GetActorRotation(), MovementComponent->Velocity, InDamage, LifeSpan, bReturnToPoolOnHit);
-}
-
-void ASkillObjectBase::Launch(float InDamage, float InLifeTime)
-{
-	Init(InLifeTime);
-	SetActorTickEnabled(true);
-	SetActorEnableCollision(true);
-	Damage = InDamage;
-	// 클라이언트에 액터 활성화 및 초기 이동 상태를 직접 알려주는 RPC 호출
-	Client_ActivateSkillObject(GetActorLocation(), GetActorRotation(), MovementComponent->Velocity, InDamage, LifeSpan, bReturnToPoolOnHit);
-}
-
-void ASkillObjectBase::Init(float InSpeed, float InLifeTime, bool ReturnToPoolOnHit)
-{
-	MovementComponent->InitialSpeed = InSpeed;
-	MovementComponent->MaxSpeed = InSpeed * 2.0f;
-	
-	LifeSpan = InLifeTime;
-	LifeSpanDeltaTime = 0.f;
-	bReturnToPoolOnHit = ReturnToPoolOnHit;
-}
-
-void ASkillObjectBase::Init(const FVector& InEndLocation, float InSpeed, float InLifeTime, bool ReturnToPoolOnHit)
-{
-	FVector StartLocation = GetActorLocation();
-	float Distance = FVector::Dist(StartLocation, InEndLocation);
-	float Speed = InSpeed;
-	LifeSpan = InLifeTime;
-	if (Speed > KINDA_SMALL_NUMBER)
-	{
-		LifeSpan = Distance / Speed;
-	}
-	else if (LifeSpan > KINDA_SMALL_NUMBER)
-	{
-		Speed = Distance / LifeSpan;
-	}
-	else
-	{
-		LifeSpan = 3.0f;
-		Speed = Distance / LifeSpan;
-	}
-	MovementComponent->InitialSpeed = Speed;
-	MovementComponent->MaxSpeed = Speed * 2.0f;
-	bReturnToPoolOnHit = ReturnToPoolOnHit;
-
-	LifeSpanDeltaTime = 0.f;
-}
-
-void ASkillObjectBase::Init(float InLifeTime)
-{
-	MovementComponent->InitialSpeed = 0.0f;
-	MovementComponent->MaxSpeed = 0.0f;
-	MovementComponent->StopMovementImmediately();
-	MovementComponent->Deactivate();
-	
-	LifeSpan = InLifeTime;
-	LifeSpanDeltaTime = 0.f;
-	bReturnToPoolOnHit = false;
-}
-
 void ASkillObjectBase::ResetProjectile()
 {
 	// must be called only server.
@@ -194,19 +178,24 @@ void ASkillObjectBase::ResetProjectile()
 	SetActorHiddenInGame(true);
 	SetActorEnableCollision(false);
 	SetActorTickEnabled(false);
-	MovementComponent->StopMovementImmediately();
-	MovementComponent->Deactivate();
 	// reset lifetime -> 소멸 방지
 	// SetLifeSpan(0.0f);
 	LifeSpan = 0.f;
 	LifeSpanDeltaTime = 0.f;
+	if (CurrentHitType == ESkillObjectHitType::TickDamage)
+	{
+		for (auto& Pair : ActiveTickDamageTargets)
+		{
+			GetWorldTimerManager().ClearTimer(Pair.Value);
+		}
+		ActiveTickDamageTargets.Empty();
+	}
 	Client_ResetProjectile();
 }
 
 void ASkillObjectBase::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-	DOREPLIFETIME(ASkillObjectBase, MovementComponent);
 }
 
 
@@ -220,23 +209,9 @@ void ASkillObjectBase::Client_ActivateSkillObject_Implementation(FVector InLocat
 	// 클라이언트에서 메시를 확실히 보이게 하고 이동 상태 설정
 	SetActorLocation(InLocation);
 	SetActorRotation(InRotation);
-	SetActorHiddenInGame(false); // 다시 보이게
-	SetActorEnableCollision(true); // 콜리전 활성화
-	SetActorTickEnabled(true); // 틱 활성화
-
-	// // 메시 컴포넌트의 가시성도 명시적으로 설정 (안전빵)
-	// if (Mesh)
-	// {
-	// 	Mesh->SetVisibility(true);
-	// 	// 렌더링 상태가 확실히 업데이트되도록 강제
-	// 	Mesh->MarkRenderStateDirty(); 
-	// }
-
-	// 이동 컴포넌트 상태 동기화
-	MovementComponent->InitialSpeed = InVelocity.Size();
-	MovementComponent->MaxSpeed = InVelocity.Size() * 2.0f; // MaxSpeed도 InitialSpeed에 맞춰 설정
-	MovementComponent->Velocity = InVelocity; // 복제된 MovementComponent의 Velocity를 직접 설정
-	MovementComponent->Activate(); // 이동 시작
+	SetActorHiddenInGame(false);
+	SetActorEnableCollision(true);
+	SetActorTickEnabled(true);
 
 	LifeSpan = InLifeTime;
 	LifeSpanDeltaTime = 0.f;
@@ -254,13 +229,34 @@ void ASkillObjectBase::Client_ResetProjectile_Implementation()
 	SetActorHiddenInGame(true);
 	SetActorEnableCollision(false);
 	SetActorTickEnabled(false);
-	// if (Mesh)
-	// {
-	// 	Mesh->SetVisibility(false);
-	// 	Mesh->MarkRenderStateDirty();
-	// }
-	MovementComponent->StopMovementImmediately();
-	MovementComponent->Deactivate();
 	LifeSpan = 0.f;
 	LifeSpanDeltaTime = 0.f;
+}
+
+void ASkillObjectBase::HitOnWorld(FVector HitLocation)
+{
+
+}
+
+void ASkillObjectBase::HitOnOpponent(FVector HitLocation)
+{
+
+}
+
+void ASkillObjectBase::DealTickDamage(AActor* TargetActor, float TickDamageAmount)
+{
+	if (IsValid(TargetActor) && ActiveTickDamageTargets.Contains(TargetActor)) // 대상이 유효하고 아직 틱 데미지 중이라면
+	{
+		FDamageEvent DamageEvent;
+		TargetActor->TakeDamage(TickDamageAmount, DamageEvent, GetInstigatorController(), this);
+		PH_LOG(LogTemp, Log, TEXT("%s took %f tick damage from %s"), *TargetActor->GetName(), TickDamageAmount, *GetName());
+	}
+	else // 대상이 유효하지 않거나 틱 데미지가 중지되었다면 타이머 해제
+	{
+		if (ActiveTickDamageTargets.Contains(TargetActor))
+		{
+			GetWorldTimerManager().ClearTimer(ActiveTickDamageTargets[TargetActor]);
+			ActiveTickDamageTargets.Remove(TargetActor);
+		}
+	}
 }
