@@ -6,6 +6,7 @@
 #include "Character/Base/PHCharacterBase.h"
 #include "PHMageCharacter.generated.h"
 
+class ASkillObjectBase;
 enum class EAttackType : uint8;
 /**
  * 
@@ -20,7 +21,7 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-	void SkillEffect(EAttackType InAttackType, uint8 InStep);
+	void SetSkill(EAttackType InAttackType, uint8 InStep);
 
 protected:
 	//Server
@@ -39,5 +40,10 @@ protected:
 	virtual void Skill4() override;
 	
 private:
+
+	void SetTeleport();
+	
+	UPROPERTY(EditAnywhere, Category = Skill, meta = (AllowPrivateAccess = "true"))
+	TMap<EAttackType, TSubclassOf<ASkillObjectBase>> SkillObjectsMap;
 
 };

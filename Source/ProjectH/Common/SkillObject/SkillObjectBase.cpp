@@ -2,6 +2,8 @@
 
 
 #include "Common/SkillObject/SkillObjectBase.h"
+
+#include "Common/Common.h"
 #include "Engine/DamageEvents.h"
 #include "Net/UnrealNetwork.h"
 #include "Physics/PHCollision.h"
@@ -60,6 +62,15 @@ void ASkillObjectBase::OnHit(UPrimitiveComponent* OverlappedComp, AActor* Other,
 {
 	if (GetLocalRole() == ROLE_Authority)
 	{
+		if (!Other)
+		{
+			return;
+		}
+		if ((Other->ActorHasTag(TAG_ALLY) && this->Owner->ActorHasTag(TAG_ALLY)) || (Other->ActorHasTag(TAG_ENEMY) && this->Owner->ActorHasTag(TAG_ENEMY)))
+		{
+			//같은편이 쏜거임.
+			return;
+		}
 		if ((Other != nullptr) && (Other != this) && Other != this->Owner && (OtherComp != nullptr) && OtherComp->IsSimulatingPhysics())
 		{
 			OtherComp->AddImpulseAtLocation(GetVelocity() * 100.0f, GetActorLocation());

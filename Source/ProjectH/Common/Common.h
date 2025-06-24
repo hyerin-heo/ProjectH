@@ -11,7 +11,14 @@
 #define API_URL_START_GAME      TEXT("rooms/%s/start-game")
 #define API_URL_DELETE_ROOM    TEXT("rooms/%s")
 
-#pragma endregion 
+#pragma endregion
+
+#pragma region Tag
+
+#define TAG_ALLY     TEXT("Ally")
+#define TAG_ENEMY     TEXT("Enemy")
+
+#pragma endregion
 
 
 #define DEFINE_CUSTOM_VARIABLE_STRUCT(T, Name) \

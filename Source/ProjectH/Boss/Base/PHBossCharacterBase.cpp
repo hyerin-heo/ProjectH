@@ -8,6 +8,7 @@
 #include "AI/PHAIController.h"
 #include "Animation/AnimInstance.h"
 #include "Blueprint/WidgetBlueprintLibrary.h"
+#include "Common/Common.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Engine/DamageEvents.h"
@@ -23,6 +24,8 @@ APHBossCharacterBase::APHBossCharacterBase()
 {
     AIControllerClass = APHAIController::StaticClass();
     AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
+
+    Tags.Add(TAG_ENEMY);
 
     // init
     CurrentPatternIndex = MAX_int32;

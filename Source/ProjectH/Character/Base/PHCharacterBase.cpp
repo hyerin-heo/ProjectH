@@ -18,6 +18,7 @@
 #include "Net/UnrealNetwork.h"
 #include "NavigationSystem.h"
 #include "Character/Component/PHWidgetComponent.h"
+#include "Common/Common.h"
 #include "Controller/PHPlayerController.h"
 #include "Engine/DamageEvents.h"
 #include "Game/PHGameMode.h"
@@ -142,6 +143,8 @@ APHCharacterBase::APHCharacterBase(const FObjectInitializer& ObjectInitializer)
 	bUIActioning = false;
 	bActioning = false;
 	CurrentActionType = EPlayerActionType::None;
+
+	Tags.Add(TAG_ALLY);
 }
 
 void APHCharacterBase::PostInitializeComponents()

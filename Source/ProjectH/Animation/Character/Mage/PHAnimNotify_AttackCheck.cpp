@@ -8,12 +8,17 @@
 void UPHAnimNotify_AttackCheck::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, const FAnimNotifyEventReference& EventReference)
 {
 	Super::Notify(MeshComp, Animation, EventReference);
-	if (MeshComp)
+	if (MeshComp && MeshComp->GetOwner())
 	{
 		APHMageCharacter* AttackPawn = Cast<APHMageCharacter>(MeshComp->GetOwner());
 		if (AttackPawn)
 		{
-			AttackPawn->SkillEffect(AttackType, Step);
+			// 서버에서만 실행하도록
+			if (AttackPawn->HasAuthority())
+			{
+				// 내부에서 복제한다.
+				AttackPawn->SetSkill(AttackType, Step);	
+			}
 		}
 	}
 }
