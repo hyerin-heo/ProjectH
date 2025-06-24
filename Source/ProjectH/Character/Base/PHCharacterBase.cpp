@@ -17,6 +17,7 @@
 #include "Engine/AssetManager.h"
 #include "Net/UnrealNetwork.h"
 #include "NavigationSystem.h"
+#include "NiagaraComponent.h"
 #include "Character/Component/PHWidgetComponent.h"
 #include "Common/Common.h"
 #include "Controller/PHPlayerController.h"
@@ -135,6 +136,14 @@ APHCharacterBase::APHCharacterBase(const FObjectInitializer& ObjectInitializer)
 
 	Weapon = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Weapon"));
 	Weapon->SetCollisionProfileName(CPROFILE_TRIGGER);
+
+	HealEffect = CreateDefaultSubobject<UNiagaraComponent>(TEXT("HealEffect"));
+	HealEffect->SetupAttachment(RootComponent);
+	HealEffect->SetAutoActivate(false);
+
+	AllHealEffect = CreateDefaultSubobject<UNiagaraComponent>(TEXT("AllHealEffect"));
+	AllHealEffect->SetupAttachment(RootComponent);
+	AllHealEffect->SetAutoActivate(false);
 
 	bReplicates = true;
 	//MeshIndex = -1;
@@ -789,6 +798,21 @@ void APHCharacterBase::ClientRPCPlayAnimation_Implementation(APHCharacterBase* C
 	if (CharacterPlayer)
 	{
 		CharacterPlayer->PlayAnimMontage(ActionMontage, AnimSpeed, ActionName);
+	}
+}
+
+void APHCharacterBase::ClientRPC_PlayerHeal_Implementation(APHCharacterBase*CharacterPlayer, float Heal)
+{
+	if (CharacterPlayer)
+	{
+		CharacterPlayer->StatDataComponent->HealHp(Heal);
+	}
+
+	if (CharacterPlayer->HealEffect)
+	{
+		// 이전에 재생되었더라도 다시 재생되도록 보장
+		CharacterPlayer->HealEffect->Deactivate();
+		CharacterPlayer->HealEffect->Activate(true);
 	}
 }
 

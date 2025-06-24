@@ -123,6 +123,8 @@ public:
 	//clientRPC
 	UFUNCTION(Client, Unreliable)
 	void ClientRPCPlayAnimation(APHCharacterBase* CharacterPlayer, FName ActionName, float AnimSpeed =1.0f);
+	UFUNCTION(Client, Unreliable)
+	void ClientRPC_PlayerHeal(APHCharacterBase*CharacterPlayer, float Heal);
 
 	//MulticastRPC
 	UFUNCTION(NetMulticast, Unreliable)
@@ -220,6 +222,12 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Equipment, Meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<class UStaticMeshComponent> Weapon;
 
-	uint8 bHasInitializedInput:1; 
+	uint8 bHasInitializedInput:1;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Effect, Meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<class UNiagaraComponent> HealEffect;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Effect, Meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<class UNiagaraComponent> AllHealEffect;
 
 };

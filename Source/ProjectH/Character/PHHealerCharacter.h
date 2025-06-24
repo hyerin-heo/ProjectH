@@ -25,6 +25,9 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
+	UFUNCTION(Server, Unreliable)
+	void ServerRPCHealTarget(APHCharacterBase* InHealTargetCharacter);
+	
 	void SpawnNormalAttackObject();
 
 private:
@@ -34,6 +37,8 @@ protected:
 	//Attack.
 	virtual void NormalAttackUI() override;
 	virtual void NormalAttack() override;
+	virtual void Skill1UI() override;
+	virtual void Skill1() override;
 
 private:
 	UPROPERTY(Replicated, meta = (AllowPrivateAccess = "true"))
@@ -41,5 +46,7 @@ private:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Object", meta = (AllowPrivateAccess = "true"))
 	TSubclassOf<class ASkillObjectBase> NormalAttackObject;
+
+	APHCharacterBase* HealTargetCharacter = nullptr;
 	
 };
