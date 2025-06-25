@@ -22,17 +22,18 @@ public:
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
-
+	
 	void EnableSkill1Effect(bool bActive);
 	void EnableSkill2Effect(bool bActive);
 	void SpawnSkill3Object();
 
 
-private:
+protected:
 	UFUNCTION(NetMulticast, UnReliable)
 	void Multicast_SetActiveSkill4Effect(bool bEffectActive);
 
 	virtual void OnPossessed() override;
+	virtual void BeginPlay() override;
 
 	
 protected:
@@ -54,6 +55,8 @@ protected:
 	virtual void Skill2() override;
 	virtual void Skill3() override;
 	virtual void Skill4() override;
+
+	virtual void SetDead() override;
 	
 private:
 	void StartDash();
@@ -73,10 +76,13 @@ private:
 	float DashInterval = 0.01f;
 
 	//TornadoSkillState;
+	UPROPERTY()
 	bool bTornadoSkill = false;
+	UPROPERTY()
 	float TornadoTurningTime = MAX_TURNINGTIME;
 
 	//BerserkSkillState;
+	UPROPERTY()
 	float BerserkSkillRemaining = MAX_BERSERKTIME;
 	
 	UPROPERTY(EditDefaultsOnly, Category = "Skill")

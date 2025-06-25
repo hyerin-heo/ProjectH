@@ -47,6 +47,7 @@ public:
 	void SpawnBossCharacter();
 
 	void CharacterDied(APlayerController* DeadCharacterController);
+	void CharacterReVive(APlayerController* ReViveCharacterController);
 	void BossDied();
 
 	UPROPERTY(VisibleAnywhere, Category = Subsystems)

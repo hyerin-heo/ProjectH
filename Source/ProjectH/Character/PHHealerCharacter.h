@@ -7,7 +7,7 @@
 #include "PHHealerCharacter.generated.h"
 
 
-#define MAX_INVINCIBILITYTIME = 6.0f;
+#define MAX_INVINCIBILITYTIME 4.0f;
 /**
  * 
  */
@@ -27,26 +27,55 @@ public:
 
 	UFUNCTION(Server, Unreliable)
 	void ServerRPCHealTarget(APHCharacterBase* InHealTargetCharacter);
+	UFUNCTION(Server, Unreliable)
+	void ServerRPCAllHealTarget();
+	UFUNCTION(Server, Unreliable)
+	void ServerRPCReviveTarget(APHCharacterBase* InReviveTargetCharacter);
+	
+
+	UFUNCTION(NetMulticast, Unreliable)
+	void Multicast_SetSkill3ObjectActive(bool bActive);
+	
 	
 	void SpawnNormalAttackObject();
 
 private:
 	virtual void OnPossessed() override;
+	virtual void BeginPlay() override;
 
 protected:
+	virtual void ServerRPCSkill3_Implementation() override;
+	
 	//Attack.
 	virtual void NormalAttackUI() override;
 	virtual void NormalAttack() override;
 	virtual void Skill1UI() override;
 	virtual void Skill1() override;
+	virtual void Skill2UI() override;
+	virtual void Skill2() override;
+	virtual void Skill3UI() override;
+	virtual void Skill3() override;
+	virtual void Skill4UI() override;
+	virtual void Skill4() override;
 
 private:
-	UPROPERTY(Replicated, meta = (AllowPrivateAccess = "true"))
-	float InvincibilityRemainingTime;
+	void StartLoopInvincibilitySkill();
+	void EndLoopInvincibilitySkill();
+
+private:
+	UPROPERTY()
+	float InvincibilityRemainingTime = MAX_INVINCIBILITYTIME;
+	UPROPERTY()
+	bool bInvincibilitySkill = false;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Object", meta = (AllowPrivateAccess = "true"))
 	TSubclassOf<class ASkillObjectBase> NormalAttackObject;
 
-	APHCharacterBase* HealTargetCharacter = nullptr;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Skill, Meta = (AllowPrivateAccess = "true"))
+	TSubclassOf<class APHHealerSkill3Object> Skill3ObjectClass;
+
+	TObjectPtr<class APHHealerSkill3Object> Skill3Object;
+	
+	APHCharacterBase* TargetCharacter = nullptr;
 	
 };

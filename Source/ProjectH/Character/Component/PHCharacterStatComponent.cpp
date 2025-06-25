@@ -151,6 +151,8 @@ void UPHCharacterStatComponent::ResetStat()
 		AttackRadius = StatData->AttackRange;
 		SetHp(MaxHp);
 
+		RemainingCooldowns.Empty();
+		
 		for (const auto& KeyValue : StatData->AttackStatMap)
 		{
 			RemainingCooldowns.Add(FSkillCooldownData(KeyValue.Key, 0, KeyValue.Value.CoolTime));

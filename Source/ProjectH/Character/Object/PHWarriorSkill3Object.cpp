@@ -12,7 +12,6 @@
 APHWarriorSkill3Object::APHWarriorSkill3Object()
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
 	bReplicates = true;
 
 	TriggerSphere = CreateDefaultSubobject<USphereComponent>(TEXT("TriggerSphere"));
@@ -66,14 +65,6 @@ void APHWarriorSkill3Object::OnTriggerOverlap(UPrimitiveComponent* OverlappedCom
 			OtherActor->TakeDamage(Damage, DamageEvent, SkillInstigator->GetInstigatorController(), this);
 		}
 	}
-
-	// if (OtherActor && OtherActor != this)
-	// {
-	// 	UE_LOG(LogTemp, Log, TEXT("오브젝트 충돌: %s"), *OtherActor->GetName());
-	// 	// 데미지 처리
-	// 	FDamageEvent DamageEvent;
-	// 	OtherActor->TakeDamage(Damage, DamageEvent, SkillInstigator->GetInstigatorController(), this);
-	// }
 }
 
 // Called when the game starts or when spawned

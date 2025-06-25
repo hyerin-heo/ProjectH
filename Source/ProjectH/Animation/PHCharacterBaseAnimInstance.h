@@ -16,6 +16,9 @@ class PROJECTH_API UPHCharacterBaseAnimInstance : public UAnimInstance
 
 public:
 	UPHCharacterBaseAnimInstance();
+	
+	FORCEINLINE void SetIsDead(bool InbIsDead) {bIsDead = InbIsDead;}
+	FORCEINLINE void SetIsIdle(bool InbIsIdle) {bIsIdle = InbIsIdle;}
 
 protected:
 	virtual void NativeInitializeAnimation() override;
@@ -41,6 +44,9 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Character)
 	uint8 bIsDodge : 1;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Character)
+	uint8 bIsDead : 1;
 
 	
 	

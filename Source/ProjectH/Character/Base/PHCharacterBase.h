@@ -47,6 +47,8 @@ public:
 	virtual void OnPossessed();
 
 	virtual void OnRep_Controller() override;
+	
+	virtual float PlayAnimMontage(class UAnimMontage* AnimMontage, float InPlayRate = 1, FName StartSectionName = NAME_None) override;
 
 protected:
 	// Called when the game starts or when spawned
@@ -76,10 +78,13 @@ protected:
 	virtual void SetDead();
 
 public:
+	uint8 GetIsDead() const {return bIsDead;};
 	void MouseClickMove();
 	void RotateToCursor();
 	FVector GetCursorWorldPosition();
 	void SetNewLocation(FVector NewLocation);
+	void SetInvincibility(uint8 ISInvincibility);
+	void SetRevive();
 
 	// Attack/Skill Action
 	void SetAction();
@@ -121,16 +126,23 @@ public:
 	
 	UFUNCTION(Server, Reliable, WithValidation)
 	void ServerRPCNotifyDeath();
+	UFUNCTION(Server, Reliable)
+	void ServerRPCNotifyRevive();
+	
 
 	//clientRPC
 	UFUNCTION(Client, Unreliable)
 	void ClientRPCPlayAnimation(APHCharacterBase* CharacterPlayer, FName ActionName, float AnimSpeed =1.0f);
-	UFUNCTION(Client, Unreliable)
-	void ClientRPC_PlayerHeal(APHCharacterBase*CharacterPlayer, float Heal);
 
 	//MulticastRPC
-	UFUNCTION(NetMulticast, Unreliable)
+	UFUNCTION(NetMulticast, Reliable)
 	void MulticastRPCSetNewLocation(FVector NewLocation);
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastRPC_PlayerHeal(float Heal);
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastRPC_AllPlayerHeal(float Heal);
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastRPC_Revive();
 
 	//On_RepFunction
 	UFUNCTION()
@@ -209,8 +221,11 @@ protected:
 	uint8 bUIActioning : 1;
 	UPROPERTY(Replicated)
 	uint8 bActioning : 1;
+	//무적체크값
 	UPROPERTY(Replicated)
 	uint8 bInvincibility : 1;
+	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly)
+	uint8 bIsDead : 1;
 
 	UPROPERTY(ReplicatedUsing=OnRep_ActionTargetRotation)
 	FRotator ActionTargetRotation;
@@ -228,8 +243,10 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Effect, Meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<class UNiagaraComponent> HealEffect;
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Effect, Meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<class UNiagaraComponent> AllHealEffect;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Effect, Meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<class UNiagaraComponent> ReviveEffect;
 
 };
+

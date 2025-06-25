@@ -26,6 +26,9 @@ public:
 	virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
 
 protected:
+	virtual void BeginPlay() override;
+
+protected:
 	//Server
 	virtual void ServerRPCSkill1_Implementation() override;
 	virtual void ServerRPCSkill2_Implementation() override;

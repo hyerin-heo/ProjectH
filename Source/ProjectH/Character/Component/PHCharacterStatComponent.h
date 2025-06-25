@@ -62,8 +62,6 @@ protected:
 	UFUNCTION()
 	void OnRep_MaxHp();
 
-	void SetHp(float NewHp);
-
 public:
 	FOnHpZeroDelegate OnHpZero;
 	FOnHpChangedDelegate OnHpChanged;
@@ -81,6 +79,7 @@ public:
 	float ApplyDamage(float InDamage);
 
 	void ResetStat();
+	void SetHp(float NewHp);
 	void StartSkillCooldown(EAttackType InAttackType);
 	float GetSkillCooldown(EAttackType InAttackType);
 	float GetDamage(EAttackType InAttackType);

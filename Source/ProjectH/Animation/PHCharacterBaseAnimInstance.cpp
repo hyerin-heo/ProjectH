@@ -9,6 +9,7 @@
 UPHCharacterBaseAnimInstance::UPHCharacterBaseAnimInstance()
 {
 	MovingThreshold = 3.0f;
+	bIsDead = false;
 }
 
 void UPHCharacterBaseAnimInstance::NativeInitializeAnimation()

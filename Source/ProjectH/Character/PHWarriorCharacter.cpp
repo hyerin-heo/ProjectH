@@ -58,6 +58,16 @@ void APHWarriorCharacter::OnPossessed()
 	Weapon->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 }
 
+void APHWarriorCharacter::BeginPlay()
+{
+	Super::BeginPlay();
+
+	// if (!ActionMontage)
+	// {
+	// 	ActionMontage = LoadObject<UAnimMontage>(nullptr, TEXT("/Game/ProjectH/Animation/Character/AM_TwoHandMontage.AM_TwoHandMontage"));
+	// }
+}
+
 void APHWarriorCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
@@ -111,7 +121,10 @@ void APHWarriorCharacter::NormalAttack()
 		FOnMontageEnded EndDelegate;
 		EndDelegate.BindLambda([this](UAnimMontage* Montage, bool bInterrupted)
 		{
-			SetActionEnd();
+			if (!bInterrupted)
+			{
+				SetActionEnd();
+			}
 		});
 		SetMontageEndDelegate(EndDelegate);	
 	}
@@ -141,7 +154,10 @@ void APHWarriorCharacter::Skill1()
 		FOnMontageEnded EndDelegate;
 		EndDelegate.BindLambda([this](UAnimMontage* Montage, bool bInterrupted)
 		{
-			SetActionEnd();
+			if (!bInterrupted)
+			{
+				SetActionEnd();
+			}
 		});
 		SetMontageEndDelegate(EndDelegate);
 	}
@@ -171,7 +187,10 @@ void APHWarriorCharacter::Skill2()
 		FOnMontageEnded EndDelegate;
 		EndDelegate.BindLambda([this](UAnimMontage* Montage, bool bInterrupted)
 		{
-			StartLoopTornadoSkill();
+			if (!bInterrupted)
+			{
+				StartLoopTornadoSkill();
+			}
 		});
 		SetMontageEndDelegate(EndDelegate);
 	}
@@ -195,7 +214,10 @@ void APHWarriorCharacter::Skill3()
 		FOnMontageEnded EndDelegate;
 		EndDelegate.BindLambda([this](UAnimMontage* Montage, bool bInterrupted)
 		{
-			SetActionEnd();
+			if (!bInterrupted)
+			{
+				SetActionEnd();
+			}
 		});
 		SetMontageEndDelegate(EndDelegate);
 	}
@@ -220,7 +242,11 @@ void APHWarriorCharacter::Skill4()
 		FOnMontageEnded EndDelegate;
 		EndDelegate.BindLambda([this](UAnimMontage* Montage, bool bInterrupted)
 		{
-			SetActionEnd();
+			if (!bInterrupted)
+			{
+				SetActionEnd();
+			}
+
 		});
 		SetMontageEndDelegate(EndDelegate);
 		Skill4Effect->Activate(true);
@@ -251,13 +277,18 @@ void APHWarriorCharacter::Multicast_SetActiveSkill4Effect_Implementation(bool bE
 void APHWarriorCharacter::ServerRPCSkill1_Implementation()
 {
 	StatDataComponent->StartSkillCooldown(EAttackType::Skill1);
+	AttackDamage = StatDataComponent->GetDamage(EAttackType::Skill1);
 	GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_None);
 	
 	PlayAnimMontage(ActionMontage, 1.0f, "Skill1");
 	FOnMontageEnded EndDelegate;
 	EndDelegate.BindLambda([this](UAnimMontage* Montage, bool bInterrupted)
 	{
-		SetActionEnd();
+		if (!bInterrupted)
+		{
+			SetActionEnd();
+		}
+
 	});
 	SetMontageEndDelegate(EndDelegate);	
 
@@ -269,6 +300,7 @@ void APHWarriorCharacter::ServerRPCSkill1_Implementation()
 void APHWarriorCharacter::ServerRPCSkill2_Implementation()
 {
 	StatDataComponent->StartSkillCooldown(EAttackType::Skill2);
+	AttackDamage = StatDataComponent->GetDamage(EAttackType::Skill2);
 	//GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_None);
 
 	PlayAnimMontage(ActionMontage, 1.5f, "Skill2_Start");
@@ -276,7 +308,10 @@ void APHWarriorCharacter::ServerRPCSkill2_Implementation()
 	FOnMontageEnded EndDelegate;
 	EndDelegate.BindLambda([this](UAnimMontage* Montage, bool bInterrupted)
 	{
-		StartLoopTornadoSkill();
+		if (!bInterrupted)
+		{
+			StartLoopTornadoSkill();
+		}
 	});
 	SetMontageEndDelegate(EndDelegate);
 
@@ -293,7 +328,10 @@ void APHWarriorCharacter::ServerRPCSkill3_Implementation()
 	FOnMontageEnded EndDelegate;
 	EndDelegate.BindLambda([this](UAnimMontage* Montage, bool bInterrupted)
 	{
-		SetActionEnd();
+		if (!bInterrupted)
+		{
+			SetActionEnd();
+		}
 	});
 	SetMontageEndDelegate(EndDelegate);
 
@@ -369,7 +407,10 @@ void APHWarriorCharacter::EndLoopTornadoSkill()
 	FOnMontageEnded EndDelegate;
 	EndDelegate.BindLambda([this](UAnimMontage* Montage, bool bInterrupted)
 	{
-		SetActionEnd();
+		if (!bInterrupted)
+		{
+			SetActionEnd();
+		}
 	});
 	
 	SetMontageEndDelegate(EndDelegate);
@@ -473,4 +514,14 @@ void APHWarriorCharacter::EnableSkill2Effect(bool bActive)
 			Skill2Effect->Deactivate();
 		}
 	}
+}
+
+
+void APHWarriorCharacter::SetDead()
+{
+	Super::SetDead();
+
+	Skill1Effect->Deactivate();
+	Skill2Effect->Deactivate();
+	Skill4Effect->Deactivate();
 }

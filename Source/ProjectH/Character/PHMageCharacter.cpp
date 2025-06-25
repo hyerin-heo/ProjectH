@@ -90,6 +90,11 @@ void APHMageCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 	EnhancedInputComponent->BindAction(Skill3Action, ETriggerEvent::Ongoing, this, &APHMageCharacter::Skill3UI);
 }
 
+void APHMageCharacter::BeginPlay()
+{
+	Super::BeginPlay();
+}
+
 void APHMageCharacter::ServerRPCSkill1_Implementation()
 {
 	Super::ServerRPCSkill1_Implementation();

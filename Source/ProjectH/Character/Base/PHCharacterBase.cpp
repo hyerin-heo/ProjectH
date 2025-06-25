@@ -18,6 +18,7 @@
 #include "Net/UnrealNetwork.h"
 #include "NavigationSystem.h"
 #include "NiagaraComponent.h"
+#include "Animation/PHCharacterBaseAnimInstance.h"
 #include "Character/Component/PHWidgetComponent.h"
 #include "Common/Common.h"
 #include "Common/SkillObject/PHProjectileSkillObject.h"
@@ -145,6 +146,10 @@ APHCharacterBase::APHCharacterBase(const FObjectInitializer& ObjectInitializer)
 	AllHealEffect = CreateDefaultSubobject<UNiagaraComponent>(TEXT("AllHealEffect"));
 	AllHealEffect->SetupAttachment(RootComponent);
 	AllHealEffect->SetAutoActivate(false);
+	
+	ReviveEffect = CreateDefaultSubobject<UNiagaraComponent>(TEXT("ReviveEffect"));
+	ReviveEffect->SetupAttachment(RootComponent);
+	ReviveEffect->SetAutoActivate(false);
 
 	bReplicates = true;
 	//MeshIndex = -1;
@@ -152,6 +157,7 @@ APHCharacterBase::APHCharacterBase(const FObjectInitializer& ObjectInitializer)
 	//SetReplicateMovement(true);
 	bUIActioning = false;
 	bActioning = false;
+	bIsDead = false;
 	CurrentActionType = EPlayerActionType::None;
 
 	Tags.Add(TAG_ALLY);
@@ -230,6 +236,8 @@ void APHCharacterBase::SetupHUDWidget(UPHInGameHUDWidget* InHUDWidget)
 float APHCharacterBase::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent,
                                    AController* EventInstigator, AActor* DamageCauser)
 {
+	if (bIsDead || bInvincibility) return DamageAmount;
+	
 	Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
 
 	StatDataComponent->ApplyDamage(DamageAmount);
@@ -270,6 +278,7 @@ void APHCharacterBase::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty
 	//DOREPLIFETIME(APHCharacterBase, MeshIndex);
 	DOREPLIFETIME(APHCharacterBase, bActioning);
 	DOREPLIFETIME(APHCharacterBase, bInvincibility);
+	DOREPLIFETIME(APHCharacterBase, bIsDead);
 	//DOREPLIFETIME(APHCharacterBase, NormalAttackTargetRotation);
 }
 
@@ -306,6 +315,14 @@ void APHCharacterBase::OnRep_Controller()
 	{
 		OnPossessed();	
 	}
+}
+
+float APHCharacterBase::PlayAnimMontage(class UAnimMontage* AnimMontage, float InPlayRate, FName StartSectionName)
+{
+	//죽은 후에도 델리게이트가 실행되어 애니메이션이 실행되어 오버라이드해서 조건 추가
+	if (bIsDead) return 0.0f;
+	
+	return Super::PlayAnimMontage(AnimMontage, InPlayRate, StartSectionName);
 }
 
 void APHCharacterBase::OnWeaponOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
@@ -483,7 +500,10 @@ void APHCharacterBase::SetActionEnd()
 	bActioning = false;
 	bUIActioning = false;
 	PH_LOG(LogPHCharacter, Log, TEXT("SetActionEnd() bActioning : %d"), bActioning);
-	GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_Walking);
+	if (!bIsDead)
+	{
+		GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_Walking);
+	}
 }
 
 void APHCharacterBase::SetMontageEndDelegate(FOnMontageEnded& EndDelegate)
@@ -491,6 +511,7 @@ void APHCharacterBase::SetMontageEndDelegate(FOnMontageEnded& EndDelegate)
 	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
 	// FOnMontageEnded EndDelegate;
 	// EndDelegate.BindUObject(this, &APHCharacterBase::SetActionEnd);
+	
 	if (AnimInstance)
 	{
 		AnimInstance->Montage_SetEndDelegate(EndDelegate, ActionMontage);
@@ -648,6 +669,15 @@ bool APHCharacterBase::ServerRPCNotifyDeath_Validate()
 	return false;
 }
 
+void APHCharacterBase::ServerRPCNotifyRevive_Implementation()
+{
+	if (APHGameMode* GameMode = Cast<APHGameMode>(GetWorld()->GetAuthGameMode()))
+	{
+		// GameMode에 이 캐릭터가 다시 살았다는걸 알린다.
+		GameMode->CharacterReVive(Cast<APlayerController>(GetController()));
+	}
+}
+
 void APHCharacterBase::OnRep_ActionTargetRotation()
 {
 	// 서버에서 NormalAttackTargetRotation를 변경하면, 호출되는 OnRep 함수.
@@ -714,7 +744,10 @@ void APHCharacterBase::ServerRPCNormalAttack_Implementation()
 	FOnMontageEnded EndDelegate;
 	EndDelegate.BindLambda([this](UAnimMontage* Montage, bool bInterrupted)
 	{
-		SetActionEnd();
+		if (!bInterrupted)
+		{
+			SetActionEnd();
+		}
 	});
 	SetMontageEndDelegate(EndDelegate);
 
@@ -732,7 +765,10 @@ void APHCharacterBase::ServerRPCSkill1_Implementation()
 	FOnMontageEnded EndDelegate;
 	EndDelegate.BindLambda([this](UAnimMontage* Montage, bool bInterrupted)
 	{
-		SetActionEnd();
+		if (!bInterrupted)
+		{
+			SetActionEnd();
+		}
 	});
 	SetMontageEndDelegate(EndDelegate);
 
@@ -750,7 +786,10 @@ void APHCharacterBase::ServerRPCSkill2_Implementation()
 	FOnMontageEnded EndDelegate;
 	EndDelegate.BindLambda([this](UAnimMontage* Montage, bool bInterrupted)
 	{
-		SetActionEnd();
+		if (!bInterrupted)
+		{
+			SetActionEnd();
+		}
 	});
 	SetMontageEndDelegate(EndDelegate);
 
@@ -768,7 +807,10 @@ void APHCharacterBase::ServerRPCSkill3_Implementation()
 	FOnMontageEnded EndDelegate;
 	EndDelegate.BindLambda([this](UAnimMontage* Montage, bool bInterrupted)
 	{
-		SetActionEnd();
+		if (!bInterrupted)
+		{
+			SetActionEnd();
+		}
 	});
 	SetMontageEndDelegate(EndDelegate);
 
@@ -786,7 +828,10 @@ void APHCharacterBase::ServerRPCSkill4_Implementation()
 	FOnMontageEnded EndDelegate;
 	EndDelegate.BindLambda([this](UAnimMontage* Montage, bool bInterrupted)
 	{
-		SetActionEnd();
+		if (!bInterrupted)
+		{
+			SetActionEnd();
+		}
 	});
 	SetMontageEndDelegate(EndDelegate);
 
@@ -798,22 +843,8 @@ void APHCharacterBase::ClientRPCPlayAnimation_Implementation(APHCharacterBase* C
 {
 	if (CharacterPlayer)
 	{
-		CharacterPlayer->PlayAnimMontage(ActionMontage, AnimSpeed, ActionName);
-	}
-}
-
-void APHCharacterBase::ClientRPC_PlayerHeal_Implementation(APHCharacterBase*CharacterPlayer, float Heal)
-{
-	if (CharacterPlayer)
-	{
-		CharacterPlayer->StatDataComponent->HealHp(Heal);
-	}
-
-	if (CharacterPlayer->HealEffect)
-	{
-		// 이전에 재생되었더라도 다시 재생되도록 보장
-		CharacterPlayer->HealEffect->Deactivate();
-		CharacterPlayer->HealEffect->Activate(true);
+		PH_LOG(LogPHCharacter, Log, TEXT("AnimationMontage : %s"), *ActionMontage.GetName());
+		CharacterPlayer->PlayAnimMontage(CharacterPlayer->ActionMontage, AnimSpeed, ActionName);
 	}
 }
 
@@ -890,17 +921,75 @@ FVector APHCharacterBase::GetCursorWorldPosition()
 
 void APHCharacterBase::SetDead()
 {
+	bIsDead = true;
+	bActioning = false;
+	bUIActioning = false;
+	
+	if (UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance())
+	{
+		FOnMontageEnded EndDelegate;
+		AnimInstance->Montage_SetEndDelegate(EndDelegate, ActionMontage);
+	}
+	StopAnimMontage(ActionMontage);
+	
+	
 	GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_None);
 	PlayDeadAnimation();
-	SetActorEnableCollision(false);
+	GetCapsuleComponent()->SetCollisionProfileName(TEXT("PHRevive"));
 	HpBar->SetHiddenInGame(true);
+	HealEffect->Deactivate();
+	AllHealEffect->Deactivate();
+	ReviveEffect->Deactivate();
 	ServerRPCNotifyDeath();
 
-	APHPlayerController* PlayerController = CastChecked<APHPlayerController>(GetController());
-	if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(
-		PlayerController->GetLocalPlayer()))
+	APHPlayerController* PlayerController = Cast<APHPlayerController>(GetController());
+
+	if (PlayerController)
 	{
-		Subsystem->RemoveMappingContext(InputMappingContext);
+		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
+		{
+			Subsystem->RemoveMappingContext(InputMappingContext);
+		}	
+	}
+}
+
+void APHCharacterBase::SetRevive()
+{
+	if (!bIsDead)
+	{
+		return;
+	}
+
+	bIsDead = false;
+	bActioning = false;
+	bUIActioning = false;
+
+	if (UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance())
+	{
+		UPHCharacterBaseAnimInstance* PHAnimInstance = Cast<UPHCharacterBaseAnimInstance>(AnimInstance);
+	
+		if (PHAnimInstance)
+		{
+			StopAnimMontage(DeadMontage);
+			PHAnimInstance->SetIsIdle(true);
+		}
+	}
+	
+	GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_Walking);
+	GetCapsuleComponent()->SetCollisionProfileName(TEXT("PHCapsule"));
+	SetActorEnableCollision(true);
+	HpBar->SetHiddenInGame(false);
+	// HP 복구 (최소 HP로 시작하거나 원하는 값으로)
+	StatDataComponent->SetHp(StatDataComponent->GetMaxHp()*1000);
+	ServerRPCNotifyRevive();
+
+	// 입력 복구
+	if (APHPlayerController* PlayerController = Cast<APHPlayerController>(GetController()))
+	{
+		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
+		{
+			Subsystem->AddMappingContext(InputMappingContext, 0);
+		}
 	}
 }
 
@@ -932,4 +1021,47 @@ void APHCharacterBase::PlayDeadAnimation()
 	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
 	AnimInstance->StopAllMontages(0.0f);
 	AnimInstance->Montage_Play(DeadMontage, 1.0f);
+}
+
+void APHCharacterBase::SetInvincibility(uint8 ISInvincibility)
+{
+	bInvincibility = ISInvincibility;
+}
+
+void APHCharacterBase::MulticastRPC_PlayerHeal_Implementation(float Heal)
+{
+	StatDataComponent->HealHp(Heal);
+
+	if (HealEffect)
+	{
+		HealEffect->Deactivate();
+		HealEffect->Activate(true);
+	}
+}
+
+void APHCharacterBase::MulticastRPC_AllPlayerHeal_Implementation(float Heal)
+{
+	StatDataComponent->HealHp(Heal);
+
+	if (AllHealEffect)
+	{
+		AllHealEffect->Deactivate();
+		AllHealEffect->Activate(true);
+	}
+}
+
+void APHCharacterBase::MulticastRPC_Revive_Implementation()
+{
+	if (!bIsDead)
+	{
+		return;
+	}
+
+	SetRevive();
+	
+	if (ReviveEffect)
+	{
+		ReviveEffect->Deactivate();
+		ReviveEffect->Activate(true);
+	}
 }

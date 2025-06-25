@@ -290,6 +290,14 @@ void APHGameMode::CharacterDied(APlayerController* DeadCharacterController)
 	}
 }
 
+void APHGameMode::CharacterReVive(APlayerController* ReViveCharacterController)
+{
+	if (DeadPlayerControllers.Contains(ReViveCharacterController))
+	{
+		DeadPlayerControllers.Remove(ReViveCharacterController);
+	}
+}
+
 void APHGameMode::BossDied()
 {
 	for (APlayerController* EachPlayer : ConnectedPlayerControllers)
