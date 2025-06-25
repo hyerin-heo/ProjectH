@@ -44,6 +44,7 @@ public:
 	//프로퍼티 리플리케이션
 	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
 
+	UFUNCTION(BlueprintCallable)
 	virtual void OnPossessed();
 
 	virtual void OnRep_Controller() override;
@@ -81,7 +82,7 @@ public:
 	uint8 GetIsDead() const {return bIsDead;};
 	void MouseClickMove();
 	void RotateToCursor();
-	FVector GetCursorWorldPosition();
+	FVector GetCursorWorldPosition() const;
 	void SetNewLocation(FVector NewLocation);
 	void SetInvincibility(uint8 ISInvincibility);
 	void SetRevive();

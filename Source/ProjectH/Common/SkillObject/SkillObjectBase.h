@@ -9,7 +9,8 @@
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "SkillObjectBase.generated.h"
 
-class UHitEffectInterface;
+class APHHitEffectActor;
+class IHitEffectInterface;
 
 UENUM(BlueprintType)
 enum class ESkillObjectHitType : uint8
@@ -54,9 +55,12 @@ public:
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+	
+	UFUNCTION()
+	void OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
 
 	UFUNCTION()
-	virtual void OnHit(UPrimitiveComponent* OverlappedComp, AActor* Other, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+	virtual void OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* Other, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 	
 	UFUNCTION()
 	void OnOverlapEnd(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
@@ -86,8 +90,8 @@ public:
 
 protected:
 
-	virtual void HitOnWorld(FVector HitLocation);
-	virtual void HitOnOpponent(FVector HitLocation);
+	virtual void HitOnWorld(const FHitResult& HitResult);
+	virtual void HitOnOpponent(const FHitResult& HitResult);
 	
 	UPROPERTY()
 	uint8 bReturnToPoolOnHit:1;
@@ -98,6 +102,12 @@ protected:
 	float LifeSpan;
 	
 	float LifeSpanDeltaTime;
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "SkillObject|Effects")
+	TSubclassOf<APHHitEffectActor> HitEffectComponentClass;
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "SkillObject|Effects")
+	TSubclassOf<APHHitEffectActor> HitWorldEffectComponentClass;
 
 	// 틱 데미지 간격 (초)
 	UPROPERTY(EditDefaultsOnly, Category = "SkillObject|Tick", meta = (EditCondition = "CurrentHitType == ESkillObjectHitType::TickDamage"))

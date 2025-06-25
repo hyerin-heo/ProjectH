@@ -4,8 +4,10 @@
 
 #include "CoreMinimal.h"
 #include "Character/Base/PHCharacterBase.h"
+#include "NiagaraComponent.h"
 #include "PHMageCharacter.generated.h"
 
+class UBoxComponent;
 class ASkillObjectBase;
 enum class EAttackType : uint8;
 /**
@@ -16,7 +18,16 @@ class PROJECTH_API APHMageCharacter : public APHCharacterBase
 {
 	GENERATED_BODY()
 public:
+
 	APHMageCharacter(const FObjectInitializer& ObjectInitializer);
+	
+	UFUNCTION()
+	void OnOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+
+	UFUNCTION()
+	void OnOverlapEnd(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
+
+	virtual void BeginPlay() override;
 	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
@@ -24,9 +35,7 @@ public:
 	void SetSkill(EAttackType InAttackType, uint8 InStep);
 
 	virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
-
-protected:
-	virtual void BeginPlay() override;
+	void TakeTickDamage(AActor* TargetActor, float TickDamageAmount);
 
 protected:
 	//Server
@@ -49,9 +58,20 @@ private:
 
 	void SetTeleport();
 
+	void StartLoopLaserSkill();
+
 	FVector CursorPosition;
 	
 	UPROPERTY(EditAnywhere, Category = Skill, meta = (AllowPrivateAccess = "true"))
 	TMap<EAttackType, TSubclassOf<ASkillObjectBase>> SkillObjectsMap;
+
+	UPROPERTY(EditAnywhere, Category = Skill, meta = (AllowPrivateAccess = "true"))
+	UNiagaraComponent* Skill1Component;
+
+	UPROPERTY(EditAnywhere, Category = Skill, meta = (AllowPrivateAccess = "true"))
+	UBoxComponent* Skill1BoxComponent;
+
+	UPROPERTY()
+	TMap<AActor*, FTimerHandle> ActiveTickDamageTargets;
 
 };

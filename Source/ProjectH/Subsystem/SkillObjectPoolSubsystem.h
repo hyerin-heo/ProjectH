@@ -43,17 +43,17 @@ public:
 	ASkillObjectBase* GetSkillObject(const TSubclassOf<ASkillObjectBase>& SkillObjectClass);
 	
 	ASkillObjectBase* SpawnSkillObject(const TSubclassOf<ASkillObjectBase>& SkillObjectClass, const FVector& SpawnLocation, const FRotator& SpawnRotation, const AActor* InstigatorActor, AActor* OwnerActor);
+	
+	/**
+	 * Must be called Server
+	 * @param PoolData - 초기화할 풀 설정
+	 */
+	void InitializeSinglePool(FSkillObjectPoolData& PoolData);
 
 private:
 	/**
 	 * Must be called Server
 	 */
 	void InitializePools();
-
-	/**
-	 * Must be called Server
-	 * @param PoolData - 초기화할 풀 설정
-	 */
-	void InitializeSinglePool(FSkillObjectPoolData& PoolData);
 	
 };

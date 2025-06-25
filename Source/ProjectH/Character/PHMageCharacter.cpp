@@ -5,16 +5,126 @@
 
 #include "EnhancedInputComponent.h"
 #include "ProjectH.h"
+#include "Common/Common.h"
 #include "Common/GlobalEnum.h"
 #include "Common/SkillObject/PHProjectileSkillObject.h"
 #include "Common/SkillObject/SkillObjectBase.h"
 #include "Component/PHCharacterStatComponent.h"
+#include "Components/BoxComponent.h"
+#include "Engine/DamageEvents.h"
+#include "Physics/PHCollision.h"
 
 APHMageCharacter::APHMageCharacter(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 {
 	Weapon->SetupAttachment(GetMesh(), TEXT("hand_rSocket"));
 	Weapon->SetIsReplicated(true);
+
+	Skill1Component = CreateDefaultSubobject<UNiagaraComponent>(TEXT("Skill1Effect"));
+	Skill1Component->SetupAttachment(GetMesh(), TEXT("hand_rWandEnd"));
+
+	Skill1BoxComponent = CreateDefaultSubobject<UBoxComponent>(TEXT("Skill1Collision"));
+	Skill1BoxComponent->SetRelativeLocation(FVector(250.0f, 0.0f, 0.0f));
+	Skill1BoxComponent->SetBoxExtent(FVector(200.0f, 32.0f, 32.0f));
+	Skill1BoxComponent->SetupAttachment(Skill1Component);
+	Skill1BoxComponent->SetCollisionProfileName(CPROFILE_TRIGGER);
+
+	Skill1BoxComponent->OnComponentBeginOverlap.AddDynamic(this, &APHMageCharacter::OnOverlapBegin);
+	Skill1BoxComponent->OnComponentEndOverlap.AddDynamic(this, &APHMageCharacter::OnOverlapEnd);
+
+	Skill1BoxComponent->SetIsReplicated(true);
+
+}
+
+void APHMageCharacter::OnOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	if (CurrentActionType != EPlayerActionType::Skill1)
+	{
+		return;
+	}
+	if (!HasAuthority())
+	{
+		return;
+	}
+	if (!OtherActor)
+	{
+		return;
+	}
+	if ((OtherActor->ActorHasTag(TAG_ALLY) && this->Owner->ActorHasTag(TAG_ALLY)) || (OtherActor->ActorHasTag(TAG_ENEMY) && this->Owner->ActorHasTag(TAG_ENEMY)))
+	{
+		//같은편이 쏜거임.
+		return;
+	}
+		
+	if ((OtherActor != nullptr) && (OtherActor != this) && OtherActor != this->Owner && (OtherComp != nullptr) && OtherComp->IsSimulatingPhysics())
+	{
+		OtherComp->AddImpulseAtLocation(GetVelocity() * 100.0f, GetActorLocation());
+	}
+
+	if (OtherActor && OtherActor != this && OtherActor != this->Owner)
+	{
+		if (!ActiveTickDamageTargets.Contains(OtherActor))
+		{
+			FTimerHandle TimerHandle;
+			GetWorldTimerManager().SetTimer(TimerHandle, [&]()
+			{
+				// TakeTickDamage(OtherActor, AttackDamage);
+			}, 1.0f, true);
+			ActiveTickDamageTargets.Add(OtherActor, TimerHandle);
+		}
+		FDamageEvent InitialDamageEvent;
+		OtherActor->TakeDamage(AttackDamage, InitialDamageEvent, GetInstigatorController(), this);
+		// UGameplayStatics::ApplyDamage(OtherActor, Damage, GetInstigatorController(), this, UDamageType::StaticClass());
+		
+	}
+}
+
+void APHMageCharacter::OnOverlapEnd(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
+{
+	if (CurrentActionType != EPlayerActionType::Skill1)
+	{
+		return;
+	}
+	if (!HasAuthority())
+	{
+		return;
+	}
+	if (!OtherActor)
+	{
+		return;
+	}
+	if ((OtherActor->ActorHasTag(TAG_ALLY) && this->Owner->ActorHasTag(TAG_ALLY)) || (OtherActor->ActorHasTag(TAG_ENEMY) && this->Owner->ActorHasTag(TAG_ENEMY)))
+	{
+		//같은편이 쏜거임.
+		return;
+	}
+	if (ActiveTickDamageTargets.Contains(OtherActor))
+	{
+		GetWorldTimerManager().ClearTimer(ActiveTickDamageTargets[OtherActor]);
+		ActiveTickDamageTargets.Remove(OtherActor);
+	}
+}
+
+void APHMageCharacter::BeginPlay()
+{
+	Super::BeginPlay();
+	// USkillObjectPoolSubsystem* PoolSubsystem = USkillObjectPoolSubsystem::Get(this);
+	// if (!PoolSubsystem)
+	// {
+	// 	return;
+	// }
+	// for (auto SO : SkillObjectsMap)
+	// {
+	// 	FSkillObjectPoolData PoolData;
+	// 	PoolData.PoolSize = 10;
+	// 	PoolData.SkillObjectClass = SO.Value;
+	// 	PoolSubsystem->InitializeSinglePool(PoolData);
+	// }
+
+	Skill1Component->SetAutoActivate(false);
+	Skill1BoxComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 }
 
 void APHMageCharacter::Tick(float DeltaTime)
@@ -44,7 +154,8 @@ void APHMageCharacter::SetSkill(EAttackType InAttackType, uint8 InStep)
 		}
 		break;
 	case EAttackType::Skill1:
-		// @PHTODO 레이저 발사
+		{
+		}
 		break;
 	case EAttackType::Skill2:
 		{
@@ -62,7 +173,6 @@ void APHMageCharacter::SetSkill(EAttackType InAttackType, uint8 InStep)
 		// 텔레포트는 타이밍이 필요없음.
 		break;
 	case EAttackType::Skill4:
-		// @PHTODO 아마겟돈 프로젝타일 쏘기
 		{
 			BaseSpawnLocation = CursorPosition + FVector(0.0f, 0.0f, 500.0f);
 			FVector DirectionToTarget = CursorPosition - BaseSpawnLocation;
@@ -90,14 +200,40 @@ void APHMageCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 	EnhancedInputComponent->BindAction(Skill3Action, ETriggerEvent::Ongoing, this, &APHMageCharacter::Skill3UI);
 }
 
-void APHMageCharacter::BeginPlay()
+void APHMageCharacter::TakeTickDamage(AActor* TargetActor, float TickDamageAmount)
 {
-	Super::BeginPlay();
+	if (IsValid(TargetActor) && ActiveTickDamageTargets.Contains(TargetActor)) // 대상이 유효하고 아직 틱 데미지 중이라면
+	{
+		FDamageEvent DamageEvent;
+		TargetActor->TakeDamage(TickDamageAmount, DamageEvent, GetInstigatorController(), this);
+		PH_LOG(LogTemp, Log, TEXT("%s took %f tick damage from %s"), *TargetActor->GetName(), TickDamageAmount, *GetName());
+	}
+	else // 대상이 유효하지 않거나 틱 데미지가 중지되었다면 타이머 해제
+	{
+		if (ActiveTickDamageTargets.Contains(TargetActor))
+		{
+			GetWorldTimerManager().ClearTimer(ActiveTickDamageTargets[TargetActor]);
+			ActiveTickDamageTargets.Remove(TargetActor);
+		}
+	}
 }
 
 void APHMageCharacter::ServerRPCSkill1_Implementation()
 {
-	Super::ServerRPCSkill1_Implementation();
+	//Super::ServerRPCSkill1_Implementation();
+	AttackDamage = StatDataComponent->GetDamage(EAttackType::Skill1);
+	StatDataComponent->StartSkillCooldown(EAttackType::Skill1);
+
+	PlayAnimMontage(ActionMontage, 1.0f, "Skill1");
+
+	FOnMontageEnded EndDelegate;
+	EndDelegate.BindLambda([this](UAnimMontage* Montage, bool bInterrupted)
+	{
+		StartLoopLaserSkill();
+	});
+	SetMontageEndDelegate(EndDelegate);
+
+	SendClientRPCPlayAnimation("Skill1", 1.0f);
 }
 
 void APHMageCharacter::ServerRPCSkill2_Implementation()
@@ -110,7 +246,6 @@ void APHMageCharacter::ServerRPCSkill3_Implementation()
 {
 	Super::ServerRPCSkill3_Implementation();
 	StatDataComponent->StartSkillCooldown(EAttackType::Skill3);
-	//GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_None);
 
 	PlayAnimMontage(ActionMontage, 1.0f, "Skill3");
 
@@ -168,8 +303,7 @@ void APHMageCharacter::Skill1()
 		FOnMontageEnded EndDelegate;
 		EndDelegate.BindLambda([&](UAnimMontage* Montage, bool bInterrupted)
 		{
-			// SetActionEnd();
-			//loop실행하고 움직이지 못하도록 세팅. 움직임이 들어오면 그냥 끝내버리기.
+			StartLoopLaserSkill();
 		});
 		SetMontageEndDelegate(EndDelegate);
 	}
@@ -270,4 +404,33 @@ void APHMageCharacter::SetTeleport()
 		SetActionEnd();
 	});
 	SetMontageEndDelegate(EndDelegate);
+}
+
+void APHMageCharacter::StartLoopLaserSkill()
+{
+	PlayAnimMontage(ActionMontage, 1.0f, "Skill1Loop");
+	// SendClientRPCPlayAnimation("Skill1Loop", 1.0f);
+	
+	Skill1Component->Activate();
+	Skill1BoxComponent->SetCollisionEnabled(ECollisionEnabled::Type::QueryOnly);
+	
+	FTimerHandle TimerHandle;
+	GetWorldTimerManager().SetTimer(TimerHandle, [&]()
+	{
+		PlayAnimMontage(ActionMontage, 1.0f, "Skill1End");
+		// SendClientRPCPlayAnimation("Skill1End", 1.0f);
+		FOnMontageEnded EndDelegate;
+		EndDelegate.BindLambda([&](UAnimMontage* Montage, bool bInterrupted)
+		{
+			for (auto& Pair : ActiveTickDamageTargets)
+			{
+				GetWorldTimerManager().ClearTimer(Pair.Value);
+			}
+			ActiveTickDamageTargets.Empty();
+			Skill1Component->Deactivate();
+			Skill1BoxComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+			SetActionEnd();
+		});
+		SetMontageEndDelegate(EndDelegate);
+	}, 5.0f, false);
 }

@@ -4,9 +4,8 @@
 #include "Common/SkillObject/SkillObjectBase.h"
 
 #include "Common/Common.h"
+#include "Common/HitObject/PHHitEffectActor.h"
 #include "Engine/DamageEvents.h"
-#include "Interface/HitEffectInterface.h"
-#include "Net/UnrealNetwork.h"
 #include "Physics/PHCollision.h"
 
 // Sets default values
@@ -24,8 +23,9 @@ ASkillObjectBase::ASkillObjectBase()
 	CollisionComponent = CreateDefaultSubobject<UCapsuleComponent>(TEXT("SphereComp"));
 	CollisionComponent->InitCapsuleSize(5.f, 10.f);
 	CollisionComponent->BodyInstance.SetCollisionProfileName(CPROFILE_TRIGGER);
-	CollisionComponent->OnComponentBeginOverlap.AddDynamic(this, &ASkillObjectBase::OnHit);
+	CollisionComponent->OnComponentBeginOverlap.AddDynamic(this, &ASkillObjectBase::OnOverlapBegin);
 	CollisionComponent->OnComponentEndOverlap.AddDynamic(this, &ASkillObjectBase::OnOverlapEnd);
+	CollisionComponent->OnComponentHit.AddDynamic(this, &ASkillObjectBase::OnHit);//바닥 충돌은 Hit로 처리.
 
 	// Unwalkable
 	CollisionComponent->SetWalkableSlopeOverride(FWalkableSlopeOverride(WalkableSlope_Unwalkable, 0.f));
@@ -49,8 +49,25 @@ void ASkillObjectBase::BeginPlay()
 	LifeSpan = 0.f;
 }
 
-void ASkillObjectBase::OnHit(UPrimitiveComponent* OverlappedComp, AActor* Other,
-	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+void ASkillObjectBase::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp,
+	FVector NormalImpulse, const FHitResult& Hit)
+{
+	if (CurrentHitType != ESkillObjectHitType::ResetOnWorldStaticHit)
+	{
+		return;
+	}
+	if (OtherComp && OtherComp->GetCollisionObjectType() == ECC_WorldStatic)
+	{
+		if (bReturnToPoolOnHit)
+		{
+			ResetProjectile();
+		}
+		HitOnWorld(Hit);
+	}
+}
+
+void ASkillObjectBase::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* Other,
+                                      UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	if (GetLocalRole() == ROLE_Authority)
 	{
@@ -71,17 +88,6 @@ void ASkillObjectBase::OnHit(UPrimitiveComponent* OverlappedComp, AActor* Other,
 
 		switch (CurrentHitType) {
 		case ESkillObjectHitType::ResetOnWorldStaticHit:
-			{
-				if (OtherComp && OtherComp->GetCollisionObjectType() == ECC_WorldStatic)
-				{
-					if (bReturnToPoolOnHit)
-					{
-						ResetProjectile();
-					}
-					HitOnWorld(SweepResult.ImpactPoint);
-					return;
-				}
-			}
 		case ESkillObjectHitType::NormalHit:
 			{
 				// Damage
@@ -90,7 +96,7 @@ void ASkillObjectBase::OnHit(UPrimitiveComponent* OverlappedComp, AActor* Other,
 					// UGameplayStatics::ApplyDamage(OtherActor, Damage, GetInstigatorController(), this, UDamageType::StaticClass());
 					FDamageEvent DamageEvent;
 					Other->TakeDamage(Damage, DamageEvent, GetInstigatorController(), this);
-					HitOnOpponent(SweepResult.ImpactPoint);
+					HitOnOpponent(SweepResult);
 				}
 				
 				if (bReturnToPoolOnHit)
@@ -113,7 +119,7 @@ void ASkillObjectBase::OnHit(UPrimitiveComponent* OverlappedComp, AActor* Other,
 				}
 				FDamageEvent InitialDamageEvent;
 				Other->TakeDamage(Damage, InitialDamageEvent, GetInstigatorController(), this);
-				HitOnOpponent(SweepResult.ImpactPoint);
+				HitOnOpponent(SweepResult);
 			}
 			break;
 		}
@@ -123,7 +129,7 @@ void ASkillObjectBase::OnHit(UPrimitiveComponent* OverlappedComp, AActor* Other,
 void ASkillObjectBase::OnOverlapEnd(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
 	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
-	if (GetLocalRole() == ROLE_Authority)
+	if (GetLocalRole() == ROLE_Authority && CurrentHitType == ESkillObjectHitType::TickDamage)
 	{
 		if (!OtherActor)
 		{
@@ -233,14 +239,30 @@ void ASkillObjectBase::Client_ResetProjectile_Implementation()
 	LifeSpanDeltaTime = 0.f;
 }
 
-void ASkillObjectBase::HitOnWorld(FVector HitLocation)
+void ASkillObjectBase::HitOnWorld(const FHitResult& HitResult)
 {
-
+	if (HitWorldEffectComponentClass)
+	{
+		FActorSpawnParameters SpawnParams;
+		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+		SpawnParams.Owner = this;
+        
+		AActor* SpawnedActor = GetWorld()->SpawnActor<AActor>(HitWorldEffectComponentClass, HitResult.ImpactPoint, FRotator::ZeroRotator, SpawnParams);
+		SpawnedActor->SetLifeSpan(100.0f);
+	}
 }
 
-void ASkillObjectBase::HitOnOpponent(FVector HitLocation)
+void ASkillObjectBase::HitOnOpponent(const FHitResult& HitResult)
 {
-
+	if (HitEffectComponentClass)
+	{
+		FActorSpawnParameters SpawnParams;
+		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+		SpawnParams.Owner = this;
+        
+		AActor* SpawnedActor = GetWorld()->SpawnActor<AActor>(HitEffectComponentClass, HitResult.ImpactPoint, HitResult.ImpactNormal.Rotation(), SpawnParams);
+		SpawnedActor->SetLifeSpan(1.0f); 
+	}
 }
 
 void ASkillObjectBase::DealTickDamage(AActor* TargetActor, float TickDamageAmount)

@@ -290,12 +290,16 @@ void APHCharacterBase::OnPossessed()
 	}
 
 
-	APHPlayerController* PlayerController = CastChecked<APHPlayerController>(GetController());
+	APlayerController* PlayerController = CastChecked<APlayerController>(GetController());
 
 	if (PlayerController)
 	{
 		EnableInput(PlayerController);
-		PlayerController->SetInGameHudActive(true);
+		APHPlayerController* PHPlayerController = Cast<APHPlayerController>(PlayerController);
+		if (PHPlayerController)
+		{
+			PHPlayerController->SetInGameHudActive(true);	
+		}
 	}
 
 	if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(
@@ -701,9 +705,10 @@ void APHCharacterBase::OnRep_ActionTargetRotation()
 ASkillObjectBase* APHCharacterBase::SpawnSkillObject(const TSubclassOf<ASkillObjectBase>& SkillObjectClass,
 	const FVector& SpawnLocation, const FRotator& SpawnRotation)
 {
-	USkillObjectPoolSubsystem* PoolSubsystem = USkillObjectPoolSubsystem::Get(this);
+ 	USkillObjectPoolSubsystem* PoolSubsystem = USkillObjectPoolSubsystem::Get(this);
 	if (!PoolSubsystem)
 	{
+		PH_LOG(LogPHCharacter, Warning, TEXT("PoolSystem is null!!"));
 		return nullptr;
 	}
 
@@ -877,7 +882,7 @@ void APHCharacterBase::RotateToCursor()
 	}
 }
 
-FVector APHCharacterBase::GetCursorWorldPosition()
+FVector APHCharacterBase::GetCursorWorldPosition() const
 {
 	APlayerController* PC = Cast<APlayerController>(GetController());
 	if (!PC)
