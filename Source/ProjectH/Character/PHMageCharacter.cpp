@@ -7,12 +7,14 @@
 #include "ProjectH.h"
 #include "Common/Common.h"
 #include "Common/GlobalEnum.h"
+#include "Common/SkillObject/PHMeshSkillObject.h"
 #include "Common/SkillObject/PHProjectileSkillObject.h"
 #include "Common/SkillObject/SkillObjectBase.h"
 #include "Component/PHCharacterStatComponent.h"
 #include "Components/BoxComponent.h"
 #include "Engine/DamageEvents.h"
 #include "Physics/PHCollision.h"
+#include "Subsystem/SkillObjectPoolSubsystem.h"
 
 APHMageCharacter::APHMageCharacter(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
@@ -22,6 +24,7 @@ APHMageCharacter::APHMageCharacter(const FObjectInitializer& ObjectInitializer)
 
 	Skill1Component = CreateDefaultSubobject<UNiagaraComponent>(TEXT("Skill1Effect"));
 	Skill1Component->SetupAttachment(GetMesh(), TEXT("hand_rWandEnd"));
+	Skill1Component->SetAutoActivate(false);
 
 	Skill1BoxComponent = CreateDefaultSubobject<UBoxComponent>(TEXT("Skill1Collision"));
 	Skill1BoxComponent->SetRelativeLocation(FVector(250.0f, 0.0f, 0.0f));
@@ -39,10 +42,6 @@ APHMageCharacter::APHMageCharacter(const FObjectInitializer& ObjectInitializer)
 void APHMageCharacter::OnOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
 	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	if (CurrentActionType != EPlayerActionType::Skill1)
-	{
-		return;
-	}
 	if (!HasAuthority())
 	{
 		return;
@@ -66,12 +65,7 @@ void APHMageCharacter::OnOverlapBegin(UPrimitiveComponent* OverlappedComponent, 
 	{
 		if (!ActiveTickDamageTargets.Contains(OtherActor))
 		{
-			FTimerHandle TimerHandle;
-			GetWorldTimerManager().SetTimer(TimerHandle, [&]()
-			{
-				// TakeTickDamage(OtherActor, AttackDamage);
-			}, 1.0f, true);
-			ActiveTickDamageTargets.Add(OtherActor, TimerHandle);
+			ActiveTickDamageTargets.Add(OtherActor);
 		}
 		FDamageEvent InitialDamageEvent;
 		OtherActor->TakeDamage(AttackDamage, InitialDamageEvent, GetInstigatorController(), this);
@@ -102,7 +96,6 @@ void APHMageCharacter::OnOverlapEnd(UPrimitiveComponent* OverlappedComponent, AA
 	}
 	if (ActiveTickDamageTargets.Contains(OtherActor))
 	{
-		GetWorldTimerManager().ClearTimer(ActiveTickDamageTargets[OtherActor]);
 		ActiveTickDamageTargets.Remove(OtherActor);
 	}
 }
@@ -123,7 +116,6 @@ void APHMageCharacter::BeginPlay()
 	// 	PoolSubsystem->InitializeSinglePool(PoolData);
 	// }
 
-	Skill1Component->SetAutoActivate(false);
 	Skill1BoxComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 }
 
@@ -135,8 +127,6 @@ void APHMageCharacter::Tick(float DeltaTime)
 void APHMageCharacter::SetSkill(EAttackType InAttackType, uint8 InStep)
 {
 	float Damage = StatDataComponent->GetDamage(InAttackType);
-	const float BaseLifetime = 2.f;
-	const float BaseSpeed = 1500.0f;
 	FVector BaseSpawnLocation = GetActorLocation();
 	FRotator SpawnRotation = GetActorRotation();
 	const TSubclassOf<ASkillObjectBase>& SkillClass = SkillObjectsMap.
@@ -174,7 +164,7 @@ void APHMageCharacter::SetSkill(EAttackType InAttackType, uint8 InStep)
 		break;
 	case EAttackType::Skill4:
 		{
-			BaseSpawnLocation = CursorPosition + FVector(0.0f, 0.0f, 500.0f);
+			BaseSpawnLocation = CursorPosition + FVector(0.0f, 0.0f, 600.0f);
 			FVector DirectionToTarget = CursorPosition - BaseSpawnLocation;
 			DirectionToTarget.Normalize();
 			SpawnRotation = DirectionToTarget.Rotation();
@@ -183,7 +173,7 @@ void APHMageCharacter::SetSkill(EAttackType InAttackType, uint8 InStep)
 				BaseSpawnLocation,
 				SpawnRotation
 			));
-			LaunchSkillObjectForward(SkillObject, BaseSpeed, BaseLifetime, Damage, false);
+			LaunchSkillObjectForward(SkillObject, BaseSpeed, 0.5f, Damage, true);
 		}
 		break;
 	default:
@@ -200,19 +190,18 @@ void APHMageCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 	EnhancedInputComponent->BindAction(Skill3Action, ETriggerEvent::Ongoing, this, &APHMageCharacter::Skill3UI);
 }
 
-void APHMageCharacter::TakeTickDamage(AActor* TargetActor, float TickDamageAmount)
+void APHMageCharacter::TakeTickDamage()
 {
-	if (IsValid(TargetActor) && ActiveTickDamageTargets.Contains(TargetActor)) // 대상이 유효하고 아직 틱 데미지 중이라면
+	for (auto TargetActor : ActiveTickDamageTargets)
 	{
-		FDamageEvent DamageEvent;
-		TargetActor->TakeDamage(TickDamageAmount, DamageEvent, GetInstigatorController(), this);
-		PH_LOG(LogTemp, Log, TEXT("%s took %f tick damage from %s"), *TargetActor->GetName(), TickDamageAmount, *GetName());
-	}
-	else // 대상이 유효하지 않거나 틱 데미지가 중지되었다면 타이머 해제
-	{
-		if (ActiveTickDamageTargets.Contains(TargetActor))
+		if (IsValid(TargetActor))
 		{
-			GetWorldTimerManager().ClearTimer(ActiveTickDamageTargets[TargetActor]);
+			FDamageEvent DamageEvent;
+			TargetActor->TakeDamage(AttackDamage, DamageEvent, GetInstigatorController(), this);
+			PH_LOG(LogTemp, Log, TEXT("%s took %f tick damage from %s"), *TargetActor->GetName(), AttackDamage, *GetName());
+		}
+		else
+		{
 			ActiveTickDamageTargets.Remove(TargetActor);
 		}
 	}
@@ -244,7 +233,8 @@ void APHMageCharacter::ServerRPCSkill2_Implementation()
 
 void APHMageCharacter::ServerRPCSkill3_Implementation()
 {
-	Super::ServerRPCSkill3_Implementation();
+	// Super::ServerRPCSkill3_Implementation();
+	AttackDamage = StatDataComponent->GetDamage(EAttackType::Skill3);
 	StatDataComponent->StartSkillCooldown(EAttackType::Skill3);
 
 	PlayAnimMontage(ActionMontage, 1.0f, "Skill3");
@@ -252,6 +242,7 @@ void APHMageCharacter::ServerRPCSkill3_Implementation()
 	FOnMontageEnded EndDelegate;
 	EndDelegate.BindLambda([this](UAnimMontage* Montage, bool bInterrupted)
 	{
+		TeleportTo(CursorPosition, GetActorRotation());
 		SetTeleport();
 	});
 	SetMontageEndDelegate(EndDelegate);
@@ -355,6 +346,8 @@ void APHMageCharacter::Skill3()
 	CursorPosition = GetCursorWorldPosition();
 	if (!HasAuthority())
 	{
+		ServerRPCCursorPosition(CursorPosition);
+		
 		PlayAnimMontage(ActionMontage, 1.0f, "Skill3");
 		FOnMontageEnded EndDelegate;
 		EndDelegate.BindLambda([&](UAnimMontage* Montage, bool bInterrupted)
@@ -365,7 +358,6 @@ void APHMageCharacter::Skill3()
 		});
 		SetMontageEndDelegate(EndDelegate);
 	}
-
 	ServerRPCSkill3();
 }
 
@@ -381,6 +373,8 @@ void APHMageCharacter::Skill4()
 	Super::Skill4();
 	if (!HasAuthority())
 	{
+		ServerRPCCursorPosition(CursorPosition);
+		
 		PlayAnimMontage(ActionMontage, 1.0f, "Skill4");
 		FOnMontageEnded EndDelegate;
 		EndDelegate.BindLambda([&](UAnimMontage* Montage, bool bInterrupted)
@@ -389,13 +383,16 @@ void APHMageCharacter::Skill4()
 		});
 		SetMontageEndDelegate(EndDelegate);
 	}
-
 	ServerRPCSkill4();
+}
+
+void APHMageCharacter::ServerRPCCursorPosition_Implementation(FVector InCursorPosition)
+{
+	CursorPosition = InCursorPosition;
 }
 
 void APHMageCharacter::SetTeleport()
 {
-	TeleportTo(CursorPosition, GetActorRotation());
 	PlayAnimMontage(ActionMontage, 1.0f, "Skill3End");
 	SendClientRPCPlayAnimation("Skill3End", 1.0f);
 	FOnMontageEnded EndDelegate;
@@ -412,7 +409,15 @@ void APHMageCharacter::StartLoopLaserSkill()
 	// SendClientRPCPlayAnimation("Skill1Loop", 1.0f);
 	
 	Skill1Component->Activate();
-	Skill1BoxComponent->SetCollisionEnabled(ECollisionEnabled::Type::QueryOnly);
+	if (HasAuthority())
+	{
+		Skill1BoxComponent->SetCollisionEnabled(ECollisionEnabled::Type::QueryOnly);
+		
+		GetWorldTimerManager().SetTimer(TickTimerHandle, [&]()
+		{
+			TakeTickDamage();
+		}, 0.5f, true);
+	}
 	
 	FTimerHandle TimerHandle;
 	GetWorldTimerManager().SetTimer(TimerHandle, [&]()
@@ -422,13 +427,16 @@ void APHMageCharacter::StartLoopLaserSkill()
 		FOnMontageEnded EndDelegate;
 		EndDelegate.BindLambda([&](UAnimMontage* Montage, bool bInterrupted)
 		{
-			for (auto& Pair : ActiveTickDamageTargets)
+			if (HasAuthority())
 			{
-				GetWorldTimerManager().ClearTimer(Pair.Value);
+				for (auto& Pair : ActiveTickDamageTargets)
+				{
+					GetWorldTimerManager().ClearTimer(TickTimerHandle);
+				}
+				ActiveTickDamageTargets.Empty();
+				Skill1BoxComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 			}
-			ActiveTickDamageTargets.Empty();
 			Skill1Component->Deactivate();
-			Skill1BoxComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 			SetActionEnd();
 		});
 		SetMontageEndDelegate(EndDelegate);

@@ -35,7 +35,7 @@ public:
 	void SetSkill(EAttackType InAttackType, uint8 InStep);
 
 	virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
-	void TakeTickDamage(AActor* TargetActor, float TickDamageAmount);
+	void TakeTickDamage();
 
 protected:
 	//Server
@@ -53,6 +53,9 @@ protected:
 	virtual void Skill3UI() override;
 	virtual void Skill3() override;
 	virtual void Skill4() override;
+
+	UFUNCTION(Server, Reliable)
+	void ServerRPCCursorPosition(FVector InCursorPosition);
 	
 private:
 
@@ -72,6 +75,10 @@ private:
 	UBoxComponent* Skill1BoxComponent;
 
 	UPROPERTY()
-	TMap<AActor*, FTimerHandle> ActiveTickDamageTargets;
+	TArray<AActor*> ActiveTickDamageTargets;
 
+	FTimerHandle TickTimerHandle;
+	
+	const float BaseLifetime = 2.f;
+	const float BaseSpeed = 1500.0f;
 };

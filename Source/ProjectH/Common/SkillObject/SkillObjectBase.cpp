@@ -52,17 +52,20 @@ void ASkillObjectBase::BeginPlay()
 void ASkillObjectBase::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp,
 	FVector NormalImpulse, const FHitResult& Hit)
 {
-	if (CurrentHitType != ESkillObjectHitType::ResetOnWorldStaticHit)
+	if (GetLocalRole() == ROLE_Authority)
 	{
-		return;
-	}
-	if (OtherComp && OtherComp->GetCollisionObjectType() == ECC_WorldStatic)
-	{
-		if (bReturnToPoolOnHit)
+		if (CurrentHitType != ESkillObjectHitType::ResetOnWorldStaticHit)
 		{
-			ResetProjectile();
+			return;
 		}
-		HitOnWorld(Hit);
+		if (OtherComp && OtherComp->GetCollisionObjectType() == ECC_WorldStatic)
+		{
+			if (bReturnToPoolOnHit)
+			{
+				ResetProjectile();
+			}
+			HitOnWorld(Hit);
+		}
 	}
 }
 
@@ -99,7 +102,7 @@ void ASkillObjectBase::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActo
 					HitOnOpponent(SweepResult);
 				}
 				
-				if (bReturnToPoolOnHit)
+				if (bReturnToPoolOnHit && CurrentHitType != ESkillObjectHitType::ResetOnWorldStaticHit)
 				{
 					ResetProjectile();
 				}
@@ -248,7 +251,7 @@ void ASkillObjectBase::HitOnWorld(const FHitResult& HitResult)
 		SpawnParams.Owner = this;
         
 		AActor* SpawnedActor = GetWorld()->SpawnActor<AActor>(HitWorldEffectComponentClass, HitResult.ImpactPoint, FRotator::ZeroRotator, SpawnParams);
-		SpawnedActor->SetLifeSpan(100.0f);
+		SpawnedActor->SetLifeSpan(3.0f);
 	}
 }
 

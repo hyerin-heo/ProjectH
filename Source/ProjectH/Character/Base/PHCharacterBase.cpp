@@ -279,6 +279,7 @@ void APHCharacterBase::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty
 	DOREPLIFETIME(APHCharacterBase, bActioning);
 	DOREPLIFETIME(APHCharacterBase, bInvincibility);
 	DOREPLIFETIME(APHCharacterBase, bIsDead);
+	DOREPLIFETIME(APHCharacterBase, CurrentActionType);
 	//DOREPLIFETIME(APHCharacterBase, NormalAttackTargetRotation);
 }
 
@@ -712,15 +713,14 @@ ASkillObjectBase* APHCharacterBase::SpawnSkillObject(const TSubclassOf<ASkillObj
 		return nullptr;
 	}
 
-	ASkillObjectBase* NewSkillObject = Cast<ASkillObjectBase>(
+	ASkillObjectBase* NewSkillObject = 
 		PoolSubsystem->SpawnSkillObject(
 			SkillObjectClass,
 			SpawnLocation,
 			SpawnRotation,
 			this, // InInstigator
 			this  // InOwner
-		)
-	);
+		);
 	return NewSkillObject;
 }
 
@@ -735,6 +735,10 @@ void APHCharacterBase::LaunchSkillObjectForward(APHProjectileSkillObject* SkillO
 		SkillObject->Init(InitialSpeed, Lifetime, bReturnToPoolOnHit);
 		// 발사 방향은 스폰될 때 액터의 Forward Vector를 사용(SpawnRotation에 의해 결정됨)
 		SkillObject->Launch(SkillObject->GetActorForwardVector(), Damage);
+	}
+	else
+	{
+		UE_LOG(LogPHCharacter, Error, TEXT("SkillObject is nullptr"));
 	}
 }
 

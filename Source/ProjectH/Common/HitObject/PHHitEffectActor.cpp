@@ -43,21 +43,21 @@ void APHHitEffectActor::BeginPlay()
 			Owner->GetInstigatorController(),
 			false
 		);
-		// Owner->GetWorld()
-		UWorld* World = GetWorld();
-		if (World)
-		{
-			DrawDebugSphere(
-				World,
-				GetActorLocation(),
-				DamageRadius,
-				32,
-				FColor::Red,
-				false,
-				2.0f,
-				0,
-				1.0f
-			);
-		}
+		// // Owner->GetWorld()
+		// UWorld* World = GetWorld();
+		// if (World)
+		// {
+		// 	DrawDebugSphere(
+		// 		World,
+		// 		GetActorLocation(),
+		// 		DamageRadius,
+		// 		32,
+		// 		FColor::Red,
+		// 		false,
+		// 		2.0f,
+		// 		0,
+		// 		1.0f
+		// 	);
+		// }
 	}
 }

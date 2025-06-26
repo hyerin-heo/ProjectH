@@ -8,6 +8,7 @@ APHMeshSkillObject::APHMeshSkillObject()
 	MeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Mesh"));
 
 	MeshComponent->SetupAttachment(RootComponent);
+	MeshComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 }
 
 void APHMeshSkillObject::PostInitializeComponents()
