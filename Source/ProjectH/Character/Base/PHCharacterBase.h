@@ -150,6 +150,8 @@ public:
 	void OnRep_ActionTargetRotation();
 	
 protected:
+
+	virtual void OnHitEnemy(const FHitResult& SweepResult);
 	
 	ASkillObjectBase* SpawnSkillObject(
 		const TSubclassOf<ASkillObjectBase>& SkillObjectClass,

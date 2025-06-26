@@ -138,6 +138,7 @@ APHCharacterBase::APHCharacterBase(const FObjectInitializer& ObjectInitializer)
 
 	Weapon = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Weapon"));
 	Weapon->SetCollisionProfileName(CPROFILE_TRIGGER);
+	Weapon->SetupAttachment(GetMesh());
 
 	HealEffect = CreateDefaultSubobject<UNiagaraComponent>(TEXT("HealEffect"));
 	HealEffect->SetupAttachment(RootComponent);
@@ -357,6 +358,7 @@ void APHCharacterBase::OnWeaponOverlap(UPrimitiveComponent* OverlappedComp, AAct
 			// 데미지 처리
 			FDamageEvent DamageEvent;
 			OtherActor->TakeDamage(AttackDamage, DamageEvent, GetController(), this);
+			OnHitEnemy(SweepResult);
 		}
 	}
 
@@ -703,8 +705,13 @@ void APHCharacterBase::OnRep_ActionTargetRotation()
 	}
 }
 
+void APHCharacterBase::OnHitEnemy(const FHitResult& SweepResult)
+{
+	
+}
+
 ASkillObjectBase* APHCharacterBase::SpawnSkillObject(const TSubclassOf<ASkillObjectBase>& SkillObjectClass,
-	const FVector& SpawnLocation, const FRotator& SpawnRotation)
+                                                     const FVector& SpawnLocation, const FRotator& SpawnRotation)
 {
  	USkillObjectPoolSubsystem* PoolSubsystem = USkillObjectPoolSubsystem::Get(this);
 	if (!PoolSubsystem)
