@@ -26,6 +26,8 @@ public:
 
 	virtual void Launch(float InDamage, float InLifeTime) override;
 
+	virtual void Launch(float InDamage, float InLifeTime, float InEnableCollisionTime) override;
+
 	virtual void Client_ActivateSkillObject_Implementation(FVector InLocation, FRotator InRotation, FVector InVelocity, float InDamage, float InLifeTime, bool bInReturnToPoolOnHit) override;
 
 	virtual void Client_ResetProjectile_Implementation() override;

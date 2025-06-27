@@ -19,6 +19,7 @@ public:
 	APHDragonNiagaraSkillObject();
 
 	virtual void PostInitializeComponents() override;
+	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
 
 	virtual void BeginPlay() override;
 
@@ -26,7 +27,7 @@ public:
 
 	virtual void Launch(float InDamage, float InLifeTime) override;
 
-	void Launch(float InDamage, float InLifeTime, float InEnableCollisionTime = 0.0f);
+	virtual void Launch(float InDamage, float InLifeTime, float InEnableCollisionTime) override;
 
 	virtual void Client_ActivateSkillObject_Implementation(FVector InLocation, FRotator InRotation, FVector InVelocity, float InDamage, float InLifeTime, bool bInReturnToPoolOnHit) override;
 
@@ -34,4 +35,7 @@ public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Effects)
 	TObjectPtr<UNiagaraComponent> NiagaraComponent2;
+
+	UPROPERTY(Replicated)
+	float EnableCollisionTime = 0.0f;
 };

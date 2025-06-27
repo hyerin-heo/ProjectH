@@ -120,6 +120,7 @@ void APHBossCharacterBase::AttackActionEnd(UAnimMontage* AnimMontage, bool bArg)
 
 void APHBossCharacterBase::PatternAttackActionEnd(UAnimMontage* AnimMontage, bool bArg)
 {
+    bIsPattern = false;
     SetCoolTime();
     OnPatternAttackFinished.ExecuteIfBound();
 }
@@ -129,6 +130,7 @@ void APHBossCharacterBase::PatternAction()
     checkf(AttackPatternActions.Num() > 0, TEXT("Special attack pattern action is empty!"));
 
     int32 Index = -1;
+    bIsPattern = true;
     do
     {
         Index = FMath::RandRange(0, AttackPatternActions.Num() - 1);
@@ -445,13 +447,20 @@ void APHBossCharacterBase::LaunchSkillObjectForward(APHProjectileSkillObject* Sk
     }
 }
 
-void APHBossCharacterBase::LaunchSkillObject(APHProjectileSkillObject* SkillObject, float Lifetime, float Damage)
+void APHBossCharacterBase::LaunchSkillObject(APHProjectileSkillObject* SkillObject, float Lifetime, float Damage, float InEnableCollisionTime)
 {
     if (SkillObject)
     {
 #if WITH_EDITOR
         SkillObject->SetFolderPath(TEXT("SpawnedSkills/BossAttack/Stationary")); 
 #endif
-        SkillObject->Launch(Damage, Lifetime);
+        if (InEnableCollisionTime <= 0.0f)
+        {
+            SkillObject->Launch(Damage, Lifetime);
+        }
+        else
+        {
+            SkillObject->Launch(Damage, Lifetime, InEnableCollisionTime);
+        }
     }
 }

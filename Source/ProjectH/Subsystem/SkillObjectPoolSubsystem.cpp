@@ -104,7 +104,7 @@ ASkillObjectBase* USkillObjectPoolSubsystem::SpawnSkillObject(const TSubclassOf<
 		SkillObject->SetActorLocation(SpawnLocation);
 		SkillObject->SetActorRotation(SpawnRotation);
 		SkillObject->SetActorHiddenInGame(false);
-		SkillObject->SetActorEnableCollision(true);
+		SkillObject->SetActorEnableCollision(false);
 		SkillObject->SetActorTickEnabled(true);
 
 		return SkillObject;

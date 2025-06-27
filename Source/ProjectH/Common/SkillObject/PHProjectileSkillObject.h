@@ -31,6 +31,8 @@ public:
 	 */
 	virtual void Launch(float InDamage, float InLifeTime);
 
+	virtual void Launch(float InDamage, float InLifeTime, float InEnableCollisionTime);
+
 	// projectile with Speed or LifeTime.
 	void Init(float InSpeed, float InLifeTime, bool ReturnToPoolOnHit);
 	// projectile go to EndLocation with Speed or LifeTime.

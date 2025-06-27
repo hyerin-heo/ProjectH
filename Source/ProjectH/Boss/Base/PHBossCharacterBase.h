@@ -104,7 +104,8 @@ protected:
 	static void LaunchSkillObject(
 		APHProjectileSkillObject* SkillObject,
 		float Lifetime,
-		float Damage
+		float Damage,
+		float InEnableCollisionTime = 0.0f
 	);
 
 	FAIAttackFinished OnAttackFinished;
@@ -166,6 +167,9 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Custom)
 	FVector StartLocation;
 
+	UPROPERTY()
+	uint8 bIsPattern : 1 = false;
+	
 	virtual void PhaseLevelChanged(const uint8& OldPhase, const uint8& NewPhase);
 	
 public:	
@@ -173,7 +177,7 @@ public:
 	float GetHP() const {return HP;}
 	float GetMaxHP() const {return MaxHP;}
 	float GetHpPercent() const {return HP / MaxHP;}
-private:
+protected:
 
 	UPROPERTY()
 	FTimerHandle PhaseTimerHandle;
@@ -188,7 +192,6 @@ private:
 
 	UPROPERTY()
 	uint8 bIsPhaseTimerDone :1;
-
 public:
 	FOnBossHpChangedDelegate OnBossHpChangedDelegate;
 };

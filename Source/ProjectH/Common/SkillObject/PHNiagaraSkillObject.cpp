@@ -44,8 +44,14 @@ void APHNiagaraSkillObject::Launch(float InDamage, float InLifeTime)
 	NiagaraComponent->Activate(true);
 }
 
+void APHNiagaraSkillObject::Launch(float InDamage, float InLifeTime, float InEnableCollisionTime)
+{
+	Super::Launch(InDamage, InLifeTime, InEnableCollisionTime);
+	NiagaraComponent->Activate(true);
+}
+
 void APHNiagaraSkillObject::Client_ActivateSkillObject_Implementation(FVector InLocation, FRotator InRotation, FVector InVelocity,
-	float InDamage, float InLifeTime, bool bInReturnToPoolOnHit)
+                                                                      float InDamage, float InLifeTime, bool bInReturnToPoolOnHit)
 {
 	if (GetLocalRole() == ROLE_Authority)
 	{

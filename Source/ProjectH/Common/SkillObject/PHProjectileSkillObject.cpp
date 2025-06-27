@@ -47,6 +47,15 @@ void APHProjectileSkillObject::Launch(float InDamage, float InLifeTime)
 	Client_ActivateSkillObject(GetActorLocation(), GetActorRotation(), MovementComponent->Velocity, InDamage, LifeSpan, bReturnToPoolOnHit);
 }
 
+void APHProjectileSkillObject::Launch(float InDamage, float InLifeTime, float InEnableCollisionTime)
+{
+	Init(InLifeTime);
+	SetActorTickEnabled(true);
+	Damage = InDamage;
+	// 클라이언트에 액터 활성화 및 초기 이동 상태를 직접 알려주는 RPC 호출
+	Client_ActivateSkillObject(GetActorLocation(), GetActorRotation(), MovementComponent->Velocity, InDamage, LifeSpan, bReturnToPoolOnHit);
+}
+
 void APHProjectileSkillObject::Init(float InSpeed, float InLifeTime, bool ReturnToPoolOnHit)
 {
 	MovementComponent->InitialSpeed = InSpeed;
