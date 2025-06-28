@@ -53,6 +53,9 @@ protected:
 	virtual void Skill4() override;
 
 	virtual void OnHitEnemy(const FHitResult& SweepResult) override;
+	
+	UFUNCTION(NetMulticast, Reliable)
+	void Skill2HitRPC();
 
 	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
 
