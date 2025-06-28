@@ -347,27 +347,15 @@ void APHTankerCharacter::Skill2HitRPC_Implementation()
 float APHTankerCharacter::TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent,
 	class AController* EventInstigator, AActor* DamageCauser)
 {
-	if (bIsShieldActive)
+	if (bIsShieldActive && DamageCauser)
 	{
-		FVector ShieldLocation = ShieldColliderComponent->GetComponentLocation();
 		FVector ShieldForwardVector = ShieldColliderComponent->GetForwardVector(); 
         
-		FVector DamageOrigin;
-		if (DamageCauser)
-		{
-			DamageOrigin = DamageCauser->GetActorLocation();
-		}
-		else
-		{
-			DamageOrigin = GetActorLocation();
-		}
+		FVector DamageOrigin = DamageCauser->GetActorForwardVector();
 
-		FVector DirectionToDamage = (DamageOrigin - ShieldLocation).GetSafeNormal();
+		float DotProduct = FVector::DotProduct(ShieldForwardVector, DamageOrigin);
 
-		float DotProduct = FVector::DotProduct(ShieldForwardVector, DirectionToDamage);
-
-		
-		if (DotProduct > 0.0f)
+		if (DotProduct < KINDA_SMALL_NUMBER)
 		{
 			// 피해가 방패의 앞쪽에서 오는 경우
 			PlayAnimMontage(ActionMontage, 1.0f, "Skill2Hit");

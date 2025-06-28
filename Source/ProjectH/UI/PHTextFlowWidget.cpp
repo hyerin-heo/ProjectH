@@ -9,7 +9,7 @@ void UPHTextFlowWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
 	CurrentCharacterIndex = 0;
-	DisplayInterval = 0.05f; // 기본값
+	DisplayInterval = 0.1f; // 기본값
 	if (FlowTextBlock)
 	{
 		FlowTextBlock->SetText(FText::GetEmpty());

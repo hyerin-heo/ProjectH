@@ -168,14 +168,14 @@ void APHPlayerController::InitWidget()
 	PHNextGameWidget = CreateWidget<UPHNextGameWidget>(this, PHNextGameWidgetClass);
 	if (PHNextGameWidget)
 	{
-		PHNextGameWidget->AddToViewport();
+		PHNextGameWidget->AddToViewport(100);
 		PHNextGameWidget->SetVisibility(ESlateVisibility::Collapsed);
 	}
 	
 	PHCountdownWidget = CreateWidget<UPHCountdownWidget>(this, PHCountdownWidgetClass);
 	if (PHCountdownWidget)
 	{
-		PHCountdownWidget->AddToViewport();
+		PHCountdownWidget->AddToViewport(100);
 		PHCountdownWidget->SetVisibility(ESlateVisibility::Collapsed);
 	}
 }
