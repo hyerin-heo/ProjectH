@@ -106,7 +106,25 @@ void APHGameMode::TrySpawnPlayerPawn(APlayerController* PlayerControllerToSpawn)
         return;
     }
 
-	// 이미 있으면 생성 안하도록
+	UWorld* const World = GetWorld();
+	if (!World)
+	{
+		return;
+	}
+	
+	TArray<AActor*> AllPlayerStarts;
+	UGameplayStatics::GetAllActorsOfClass(World, APlayerStart::StaticClass(), AllPlayerStarts);
+	APlayerStart* PlayerStart = nullptr;
+	if (AllPlayerStarts.Num() > 0)
+	{
+		int32 RandomIndex = FMath::RandRange(0, AllPlayerStarts.Num() - 1);
+		PlayerStart = Cast<APlayerStart>(AllPlayerStarts[RandomIndex]);
+	}
+
+	FVector SpawnLocation = (PlayerStart) ? PlayerStart->GetActorLocation() : FVector(-2390.000000,-130.000000,621.969011);
+	FRotator SpawnRotation = (PlayerStart) ? PlayerStart->GetActorRotation() : FRotator::ZeroRotator;
+
+	// 이미 있으면 리셋 및 포지션 다시 잡도록 세팅
     if (PlayerControllerToSpawn->GetPawn())
     {
         UE_LOG(LogTemp, Warning, TEXT("Player %s already has a Pawn."), *PlayerControllerToSpawn->GetName());
@@ -119,25 +137,8 @@ void APHGameMode::TrySpawnPlayerPawn(APlayerController* PlayerControllerToSpawn)
 		UE_LOG(LogTemp, Warning, TEXT("PlayerController is not APHPlayerController"));
 		return;
 	}
-
-    UWorld* const World = GetWorld();
-    if (!World)
-    {
-        return;
-    }
 	
-	TArray<AActor*> AllPlayerStarts;
-	UGameplayStatics::GetAllActorsOfClass(World, APlayerStart::StaticClass(), AllPlayerStarts);
-	APlayerStart* PlayerStart = nullptr;
-	if (AllPlayerStarts.Num() > 0)
-	{
-		int32 RandomIndex = FMath::RandRange(0, AllPlayerStarts.Num() - 1);
-		PlayerStart = Cast<APlayerStart>(AllPlayerStarts[RandomIndex]);
-	}
-
-    FVector SpawnLocation = (PlayerStart) ? PlayerStart->GetActorLocation() : FVector(-2390.000000,-130.000000,621.969011);
-    FRotator SpawnRotation = (PlayerStart) ? PlayerStart->GetActorRotation() : FRotator::ZeroRotator;
-
+	
     FActorSpawnParameters SpawnInfo;
     SpawnInfo.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
     SpawnInfo.Owner = PlayerControllerToSpawn;
@@ -159,7 +160,7 @@ void APHGameMode::TrySpawnPlayerPawn(APlayerController* PlayerControllerToSpawn)
     {
         // 서버에서 하면 클라에서도 복제됨.
         PlayerControllerToSpawn->Possess(NewPawn);
-        UE_LOG(LogTemp, Warning, TEXT("Player %s possessed new Pawn: %s"), *PlayerControllerToSpawn->GetName(), *NewPawn->GetName());
+        UE_LOG(LogTemp, Log, TEXT("Player %s possessed new Pawn: %s"), *PlayerControllerToSpawn->GetName(), *NewPawn->GetName());
     }
     else
     {
@@ -191,35 +192,31 @@ void APHGameMode::StartGame()
 		bool CanLoad = LevelScriptActor->LoadStageLevel(++CurrentStageIndex);
 		if (!CanLoad)
 		{
-			// @PHTODO 게임 종료.
-			// 스코어창 보여주던가 타이틀레벨로 돌아가도록.
-			// Hide Loading UI
 			if (Instance)
 			{
 				Instance->FinishGame();
+			}
+			for (APlayerController* EachPlayer : ConnectedPlayerControllers)
+			{
+				APHPlayerController* PHPlayer = Cast<APHPlayerController>(EachPlayer);
+				PHPlayer->ClientRPCGameEnd(true);
 			}
 			return;
 		}
 	}
 
 	SpawnBossCharacter();
-	
-	for (APlayerController* EachPlayer : ConnectedPlayerControllers)
+
+	if (CurrentStageIndex > 0)
 	{
-		TrySpawnPlayerPawn(EachPlayer);
+		ResetCharacter();
 	}
-	
-	//SpawnBossCharacter();
-	// SetPlayerMovementState(MOVE_None);
-	//
-	// // Hide Loading UI
-	// // Show CountDown UI
-	// // CountDown끝났을 시 콜백 호출.
-	// SetPlayerMovementState(MOVE_Walking);
-	// 보스도 움직이게 해야함.
-	if (ActiveBossCharacter)
+	else
 	{
-		ActiveBossCharacter->RunAI();
+		for (APlayerController* EachPlayer : ConnectedPlayerControllers)
+		{
+			TrySpawnPlayerPawn(EachPlayer);
+		}
 	}
 }
 
@@ -246,8 +243,9 @@ void APHGameMode::SpawnBossCharacter()
 
 	if (ActiveBossCharacter && IsValid(ActiveBossCharacter))
 	{
-		// 어차피 HiddenInGame하므로 삭제할 필요는 없다.
+		// 캐릭터에서 보스 HP를 표시할 때 문제가 생김..
 		ActiveBossCharacter->StopAI();
+		ActiveBossCharacter->Destroy();
 	}
 
 	FActorSpawnParameters SpawnParams;
@@ -256,12 +254,7 @@ void APHGameMode::SpawnBossCharacter()
 	// 보스 스폰
 	ActiveBossCharacter = World->SpawnActor<APHBossCharacterBase>(BossCharacterClass[CurrentStageIndex], FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
 
-	if (ActiveBossCharacter)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("GameMode: Boss Character spawned: %s"), *ActiveBossCharacter->GetName());
-		// @PHTODO: UI 표시 등 추가 초기화
-	}
-	else
+	if (!ActiveBossCharacter)
 	{
 		UE_LOG(LogTemp, Error, TEXT("GameMode: Failed to spawn Boss Character."));
 	}
@@ -286,6 +279,12 @@ void APHGameMode::CharacterDied(APlayerController* DeadCharacterController)
 					ActiveBossCharacter->StopAI();	
 				}
 			}
+			
+			UPHGameInstance* Instance = Cast<UPHGameInstance>(GetWorld()->GetGameInstance());
+			if (Instance)
+			{
+				Instance->FinishGame();
+			}
 		}
 	}
 }
@@ -300,10 +299,18 @@ void APHGameMode::CharacterReVive(APlayerController* ReViveCharacterController)
 
 void APHGameMode::BossDied()
 {
+	if (CurrentStageIndex >= BossCharacterClass.Num() - 1)
+	{
+		StartGame();
+		return;
+	}
 	for (APlayerController* EachPlayer : ConnectedPlayerControllers)
 	{
 		APHPlayerController* PHPlayer = Cast<APHPlayerController>(EachPlayer);
-		PHPlayer->ClientRPCGameEnd(true);
+		if (PHPlayer)
+		{
+			PHPlayer->ClientRPCNextGame();
+		}
 	}
 }
 
@@ -324,4 +331,52 @@ void APHGameMode::SetPlayerMovementState(EMovementMode Mode)
 void APHGameMode::PostInitializeComponents()
 {
 	Super::PostInitializeComponents();
+}
+
+void APHGameMode::ResetCharacter()
+{
+	const UWorld* World = GetWorld();
+	if (!World)
+	{
+		return;
+	}
+	
+	TArray<AActor*> AllPlayerStarts;
+	UGameplayStatics::GetAllActorsOfClass(World, APlayerStart::StaticClass(), AllPlayerStarts);
+	APlayerStart* PlayerStart = nullptr;
+	if (AllPlayerStarts.Num() > 0)
+	{
+		int32 RandomIndex = FMath::RandRange(0, AllPlayerStarts.Num() - 1);
+		PlayerStart = Cast<APlayerStart>(AllPlayerStarts[RandomIndex]);
+	}
+
+	FVector SpawnLocation = (PlayerStart) ? PlayerStart->GetActorLocation() : FVector(-2390.000000,-130.000000,621.969011);
+	FRotator SpawnRotation = (PlayerStart) ? PlayerStart->GetActorRotation() : FRotator::ZeroRotator;
+	for (APlayerController* EachPlayer : ConnectedPlayerControllers)
+	{
+		APHPlayerController* PHPlayer = Cast<APHPlayerController>(EachPlayer);
+		if (PHPlayer)
+		{
+			PHPlayer->GetPawn()->SetActorRotation(SpawnRotation);
+			PHPlayer->GetPawn()->SetActorLocation(SpawnLocation);
+			PHPlayer->ClientRPCResetCharacter();
+		}
+	}
+}
+
+void APHGameMode::SendStartGame()
+{
+	for (APlayerController* EachPlayer : ConnectedPlayerControllers)
+	{
+		APHPlayerController* PHPlayer = Cast<APHPlayerController>(EachPlayer);
+		if (PHPlayer)
+		{
+			PHPlayer->ClientRPCStartGame();
+		}
+	}
+	
+	if (ActiveBossCharacter)
+	{
+		ActiveBossCharacter->RunAI();
+	}
 }

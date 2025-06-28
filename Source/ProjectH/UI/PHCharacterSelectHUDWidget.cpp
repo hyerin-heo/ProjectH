@@ -64,7 +64,6 @@ void UPHCharacterSelectHUDWidget::ClickedSelectIcon(EClassType inClass)
 
 void UPHCharacterSelectHUDWidget::ShowBanIcon(EClassType inClass)
 {
-	//@PHTODO : 다른 유저가 캐릭터를 골랐을때 호출할 함수.
 	for (auto& Icon : SelectIconWidgetMap)
 	{
 		if (Icon.Key == inClass)
@@ -93,8 +92,6 @@ void UPHCharacterSelectHUDWidget::SetAllBlock()
 
 void UPHCharacterSelectHUDWidget::OnClickedSelectButton()
 {
-	//@PHTODO: 해당 캐릭터 골른걸 서버로 보내야한다.
-
 	if (APlayerController* PC = GetOwningPlayer())
 	{
 		APHPlayerController* PlayerController = Cast<APHPlayerController>(PC);

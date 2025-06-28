@@ -8,6 +8,7 @@
 #include "Common/HitObject/PHHitEffectActor.h"
 #include "Common/SkillObject/PHProjectileSkillObject.h"
 #include "Component/PHCharacterStatComponent.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "Physics/PHCollision.h"
 
 APHTankerCharacter::APHTankerCharacter(const FObjectInitializer& ObjectInitializer)
@@ -244,6 +245,7 @@ void APHTankerCharacter::Skill2()
 		return;
 	}
 	Super::Skill2();
+	GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_Walking);
 	if (!HasAuthority())
 	{
 		PlayAnimMontage(ActionMontage, 1.0f, "Skill2");

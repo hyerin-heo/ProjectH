@@ -25,6 +25,7 @@ public:
 	void UpdateCooldownTime(EAttackType InAttackType, float CurrentCoolTime, float MaxCoolTime);
 
 	void InitializeBossHpBar(float NewMaxHp);
+	void ResetBossHpBar();
 	void UpdateBossHpBar(float NewCurrentHp);
 
 protected:
@@ -39,4 +40,6 @@ private:
 	TObjectPtr<class UPHSkillBarWidget> SkillBar;
 	UPROPERTY()
 	TObjectPtr<class UPHBossHpBarWidget> BossHpBar;
+
+	uint8 bIsInitializeBossHpBar:1;
 };

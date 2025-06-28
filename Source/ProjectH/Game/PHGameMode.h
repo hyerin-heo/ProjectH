@@ -50,6 +50,8 @@ public:
 	void CharacterReVive(APlayerController* ReViveCharacterController);
 	void BossDied();
 
+	void SendStartGame();
+
 	UPROPERTY(VisibleAnywhere, Category = Subsystems)
 	TSubclassOf<USkillObjectPoolSubsystem> SkillObjectPoolSubsystem;
 
@@ -62,6 +64,8 @@ protected:
 	void SetPlayerMovementState(EMovementMode Mode);
 	
 	virtual void PostInitializeComponents() override;
+
+	void ResetCharacter();
 
 	UPROPERTY()
 	TArray<APlayerController*> ConnectedPlayerControllers;

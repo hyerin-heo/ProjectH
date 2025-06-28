@@ -24,13 +24,24 @@ public:
 	
 	UFUNCTION(Client, Reliable)
 	void ClientRPCGameEnd(bool IsClear);
+	
+	UFUNCTION(Client, Reliable)
+	void ClientRPCNextGame();
+	
+	UFUNCTION(Client, Reliable)
+	void ClientRPCResetCharacter();
+	
+	UFUNCTION(Client, Reliable)
+	void ClientRPCStartGame();
 
 	void SetInGameHudActive(bool InGameHudActive);
 	void SetInGameEndHudActive(bool InGameEndHudActive);
 	void SetHiddenCharacterSelectHUD();
 
+	void SetCountdownWidget();
+
 	void InitWidget();
-	
+
 	void HostGameStart();
 
 protected:
@@ -59,6 +70,19 @@ protected:
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = HUD)
 	TObjectPtr<class UPHGameEndWidget> PHGameEndWidget;
+	
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = HUD)
+	TSubclassOf<class UPHCountdownWidget> PHCountdownWidgetClass;
+	
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = HUD)
+	TObjectPtr<class UPHCountdownWidget> PHCountdownWidget;
+	
+	
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = HUD)
+	TSubclassOf<class UPHNextGameWidget> PHNextGameWidgetClass;
+	
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = HUD)
+	TObjectPtr<class UPHNextGameWidget> PHNextGameWidget;
 	
 	
 };

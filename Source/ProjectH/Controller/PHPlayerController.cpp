@@ -8,19 +8,30 @@
 #include "Character/Base/PHCharacterBase.h"
 #include "Game/PHGameMode.h"
 #include "UI/PHCharacterSelectHUDWidget.h"
+#include "UI/PHCountdownWidget.h"
 #include "UI/PHInGameHUDWidget.h"
 #include "UI/PHGameEndWidget.h"
+#include "UI/PHNextGameWidget.h"
 
 APHPlayerController::APHPlayerController()
 {
-	static ConstructorHelpers::FClassFinder<UPHInGameHUDWidget> InGameHUDWidgetRef(TEXT("/Game/ProjectH/UI/WBP_PHInGameHUD.WBP_PHInGameHUD_C"));
-	static ConstructorHelpers::FClassFinder<UPHCharacterSelectHUDWidget> CharacterSelectedHUDWidgetRef(TEXT("/Game/ProjectH/UI/WBP_PHCharacterSelectHUD.WBP_PHCharacterSelectHUD_C"));
-	static ConstructorHelpers::FClassFinder<UPHGameEndWidget>GameEndWidgetRef(TEXT("/Game/ProjectH/UI/WBP_GameEnd.WBP_GameEnd_C"));
+	static ConstructorHelpers::FClassFinder<UPHInGameHUDWidget> InGameHUDWidgetRef(
+		TEXT("/Game/ProjectH/UI/WBP_PHInGameHUD.WBP_PHInGameHUD_C"));
+	static ConstructorHelpers::FClassFinder<UPHCharacterSelectHUDWidget> CharacterSelectedHUDWidgetRef(
+		TEXT("/Game/ProjectH/UI/WBP_PHCharacterSelectHUD.WBP_PHCharacterSelectHUD_C"));
+	static ConstructorHelpers::FClassFinder<UPHGameEndWidget> GameEndWidgetRef(
+		TEXT("/Game/ProjectH/UI/WBP_GameEnd.WBP_GameEnd_C"));
+	
+	static ConstructorHelpers::FClassFinder<UPHCountdownWidget> CountdownWidgetRef(
+		TEXT("/Game/ProjectH/UI/WBP_Countdown.WBP_Countdown_C"));
+	
+	static ConstructorHelpers::FClassFinder<UPHNextGameWidget> NextGameWidgetRef(
+		TEXT("/Game/ProjectH/UI/WBP_NextStageWidget.WBP_NextStageWidget_C"));
 	if (InGameHUDWidgetRef.Class)
 	{
 		PHInGameHUDWidgetClass = InGameHUDWidgetRef.Class;
 	}
-	
+
 	if (CharacterSelectedHUDWidgetRef.Class)
 	{
 		PHCharacterSelectHUDWidgetClass = CharacterSelectedHUDWidgetRef.Class;
@@ -30,11 +41,21 @@ APHPlayerController::APHPlayerController()
 	{
 		PHGameEndWidgetClass = GameEndWidgetRef.Class;
 	}
-	
+
+	if (CountdownWidgetRef.Class)
+	{
+		PHCountdownWidgetClass = CountdownWidgetRef.Class;
+	}
+
+	if (NextGameWidgetRef.Class)
+	{
+		PHNextGameWidgetClass = NextGameWidgetRef.Class;
+	}
+
 	bShowMouseCursor = true;
 
 	MinNetUpdateFrequency = 0.1f;
-	NetUpdateFrequency=3.0f;
+	NetUpdateFrequency = 3.0f;
 }
 
 void APHPlayerController::PostInitializeComponents()
@@ -54,7 +75,6 @@ void APHPlayerController::OnPossess(APawn* InPawn)
 	APHCharacterBase* CharacterBase = Cast<APHCharacterBase>(InPawn);
 	if (CharacterBase)
 	{
-		
 		CharacterBase->OnPossessed();
 	}
 }
@@ -84,9 +104,9 @@ void APHPlayerController::ServerRPC_SelectCharacter_Implementation(EClassType Cl
 
 void APHPlayerController::ClientRPCGameEnd_Implementation(bool IsClear)
 {
-	PHGameEndWidget->IsClear(IsClear);
 	SetInGameHudActive(false);
 	SetInGameEndHudActive(true);
+	PHGameEndWidget->IsClear(IsClear);
 }
 
 void APHPlayerController::SetHiddenCharacterSelectHUD()
@@ -94,6 +114,28 @@ void APHPlayerController::SetHiddenCharacterSelectHUD()
 	if (PHCharacterSelectHUDWidget)
 	{
 		PHCharacterSelectHUDWidget->SetVisibility(ESlateVisibility::Collapsed);
+	}
+}
+
+void APHPlayerController::SetCountdownWidget()
+{
+	if (PHCountdownWidget)
+	{
+		PHCountdownWidget->SetVisibility(ESlateVisibility::Visible);
+		if (HasAuthority())
+		{
+			PHCountdownWidget->OnCountdownFinished.AddLambda([&]()
+			{
+				if (HasAuthority())
+				{
+					APHGameMode* GM = GetWorld()->GetAuthGameMode<APHGameMode>();
+					if (GM)
+					{
+						GM->SendStartGame();
+					}
+				}
+			});	
+		}
 	}
 }
 
@@ -121,27 +163,74 @@ void APHPlayerController::InitWidget()
 
 	// PHInGameHUDWidget->SetVisibility(ESlateVisibility::Collapsed);
 	// PHGameEndWidget->SetVisibility(ESlateVisibility::Collapsed);
+
+	
+	PHNextGameWidget = CreateWidget<UPHNextGameWidget>(this, PHNextGameWidgetClass);
+	if (PHNextGameWidget)
+	{
+		PHNextGameWidget->AddToViewport();
+		PHNextGameWidget->SetVisibility(ESlateVisibility::Collapsed);
+	}
+	
+	PHCountdownWidget = CreateWidget<UPHCountdownWidget>(this, PHCountdownWidgetClass);
+	if (PHCountdownWidget)
+	{
+		PHCountdownWidget->AddToViewport();
+		PHCountdownWidget->SetVisibility(ESlateVisibility::Collapsed);
+	}
+}
+
+void APHPlayerController::ClientRPCNextGame_Implementation()
+{
+	SetInGameHudActive(false);
+	PHNextGameWidget->SetVisibility(ESlateVisibility::Visible);
+}
+
+void APHPlayerController::ClientRPCResetCharacter_Implementation()
+{
+	PHNextGameWidget->SetVisibility(ESlateVisibility::Collapsed);
+	APHCharacterBase* CharacterBase = Cast<APHCharacterBase>(GetPawn());
+	if (CharacterBase)
+	{
+		CharacterBase->Init();
+	}
+	PHCountdownWidget->SetVisibility(ESlateVisibility::Visible);
+}
+
+void APHPlayerController::ClientRPCStartGame_Implementation()
+{
+	APHCharacterBase* CharacterBase = Cast<APHCharacterBase>(GetPawn());
+	if (CharacterBase)
+	{
+		CharacterBase->Start();
+	}
+
+	for (TActorIterator<APHBossCharacterBase> It(GetWorld()); It; ++It)
+	{
+		if (It->GetHP() > KINDA_SMALL_NUMBER)
+		{
+			PHInGameHUDWidget->InitializeBossHpBar(It->GetMaxHP());
+			It->OnBossHpChangedDelegate.AddUObject(PHInGameHUDWidget, &UPHInGameHUDWidget::UpdateBossHpBar);
+			break; // HP가 0보다 큰 보스만 바인딩
+		}
+	}
 }
 
 void APHPlayerController::SetInGameHudActive(bool InGameHudActive)
 {
 	if (InGameHudActive)
 	{
-		PHInGameHUDWidget = CreateWidget<UPHInGameHUDWidget>(this, PHInGameHUDWidgetClass);
-		if (PHInGameHUDWidget)
+		if (!PHInGameHUDWidget)
 		{
-			PHInGameHUDWidget->AddToViewport();
+			PHInGameHUDWidget = CreateWidget<UPHInGameHUDWidget>(this, PHInGameHUDWidgetClass);
+			if (PHInGameHUDWidget)
+			{
+				PHInGameHUDWidget->AddToViewport();
+			}
 		}
-		
+
+		PHInGameHUDWidget->ResetBossHpBar();
 		PHInGameHUDWidget->SetVisibility(ESlateVisibility::Visible);
-		
-		
-		for (TActorIterator<APHBossCharacterBase> It(GetWorld()); It; ++It)
-		{
-			PHInGameHUDWidget->InitializeBossHpBar(It->GetMaxHP());
-			It->OnBossHpChangedDelegate.AddUObject(PHInGameHUDWidget, &UPHInGameHUDWidget::UpdateBossHpBar);
-			break;  // 첫 번째 보스만 바인딩
-		}
 	}
 	else
 	{
@@ -159,7 +248,7 @@ void APHPlayerController::SetInGameEndHudActive(bool InGameEndHudActive)
 		{
 			PHGameEndWidget->AddToViewport();
 		}
-		
+
 		PHGameEndWidget->SetVisibility(ESlateVisibility::Visible);
 	}
 	else

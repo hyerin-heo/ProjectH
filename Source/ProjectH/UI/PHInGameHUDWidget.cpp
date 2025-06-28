@@ -44,6 +44,12 @@ void UPHInGameHUDWidget::InitializeBossHpBar(float NewMaxHp)
 	BossHpBar->InitializeBossHpBar(NewMaxHp);
 }
 
+void UPHInGameHUDWidget::ResetBossHpBar()
+{
+	bIsInitializeBossHpBar = false;
+	BossHpBar->SetVisibility(ESlateVisibility::Hidden); 
+}
+
 void UPHInGameHUDWidget::UpdateBossHpBar(float NewCurrentHp)
 {
 	BossHpBar->SetVisibility(ESlateVisibility::Visible); 
@@ -63,7 +69,7 @@ void UPHInGameHUDWidget::NativeConstruct()
 	BossHpBar = Cast<UPHBossHpBarWidget>(GetWidgetFromName("BossHpBar"));
 	ensure(BossHpBar);
 
-	BossHpBar->SetVisibility(ESlateVisibility::Hidden); 
+	ResetBossHpBar();
 
 	IPHCharacterHUDInterface* HUDPawn = Cast<IPHCharacterHUDInterface>(GetOwningPlayerPawn());
 

@@ -284,6 +284,28 @@ void APHCharacterBase::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty
 	//DOREPLIFETIME(APHCharacterBase, NormalAttackTargetRotation);
 }
 
+void APHCharacterBase::Init()
+{
+	if (bIsDead)
+	{
+		MulticastRPC_Revive();
+	}
+	APHPlayerController* PHPlayerController = Cast<APHPlayerController>(GetController());
+	if (PHPlayerController)
+	{
+		PHPlayerController->SetInGameHudActive(true);
+		PHPlayerController->SetCountdownWidget();
+	}
+
+	StatDataComponent->ResetStat();
+	bIsGameStart = false;
+}
+
+void APHCharacterBase::Start()
+{
+	bIsGameStart = true;
+}
+
 void APHCharacterBase::OnPossessed()
 {
 	if (!IsLocallyControlled() || !InputMappingContext)
@@ -297,11 +319,7 @@ void APHCharacterBase::OnPossessed()
 	if (PlayerController)
 	{
 		EnableInput(PlayerController);
-		APHPlayerController* PHPlayerController = Cast<APHPlayerController>(PlayerController);
-		if (PHPlayerController)
-		{
-			PHPlayerController->SetInGameHudActive(true);	
-		}
+		Init();
 	}
 
 	if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(
@@ -384,6 +402,10 @@ void APHCharacterBase::EnableWeaponCollision(bool bActive)
 
 void APHCharacterBase::MouseClickMove()
 {
+	if (!bIsGameStart)
+	{
+		return;
+	}
 	if (bUIActioning)
 	{
 		CurrentActionType = EPlayerActionType::None;
@@ -463,6 +485,10 @@ void APHCharacterBase::MulticastRPCSetNewLocation_Implementation(FVector NewLoca
 
 void APHCharacterBase::SetAction()
 {
+	if (!bIsGameStart)
+	{
+		return;
+	}
 	if (!bUIActioning || bActioning) return; //아무런 행동을 안하고 있으면  return.
 
 	switch (CurrentActionType)
@@ -528,6 +554,10 @@ void APHCharacterBase::SetMontageEndDelegate(FOnMontageEnded& EndDelegate)
 
 void APHCharacterBase::NormalAttackUI()
 {
+	if (!bIsGameStart)
+	{
+		return;
+	}
 	//현재 무슨 행동중이면 return.
 	if (bUIActioning) return;
 
@@ -560,6 +590,10 @@ void APHCharacterBase::Evasion()
 
 void APHCharacterBase::Skill1UI()
 {
+	if (!bIsGameStart)
+	{
+		return;
+	}
 	//현재 무슨 행동중이면 return.
 	if (bUIActioning) return;
 
@@ -579,6 +613,10 @@ void APHCharacterBase::Skill1()
 
 void APHCharacterBase::Skill2UI()
 {
+	if (!bIsGameStart)
+	{
+		return;
+	}
 	//현재 무슨 행동중이면 return.
 	if (bUIActioning) return;
 
@@ -598,6 +636,10 @@ void APHCharacterBase::Skill2()
 
 void APHCharacterBase::Skill3UI()
 {
+	if (!bIsGameStart)
+	{
+		return;
+	}
 	//현재 무슨 행동중이면 return.
 	if (bUIActioning) return;
 
@@ -617,6 +659,10 @@ void APHCharacterBase::Skill3()
 
 void APHCharacterBase::Skill4UI()
 {
+	if (!bIsGameStart)
+	{
+		return;
+	}
 	//현재 무슨 행동중이면 return.
 	if (bUIActioning) return;
 

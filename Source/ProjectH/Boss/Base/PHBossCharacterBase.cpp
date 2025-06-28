@@ -240,21 +240,23 @@ void APHBossCharacterBase::AttackHitCheck()
             }
         }
         FDamageEvent DamageEvent;
-        
-        for (const FHitResult& HitResult : OutHitResults)
+        if (ShieldingActor)
         {
-            AActor* HitActor = HitResult.GetActor();
-            if (!HitActor || HitActor == ShieldingActor) continue;
-
-            FVector RelativePositionToShield = HitActor->GetActorLocation() - ShieldingActor->GetActorLocation();
-
-            float DotProduct = FVector::DotProduct(RelativePositionToShield, Forward);
-
-            // 쉴드 액터 앞에 있음.
-            if (DotProduct > KINDA_SMALL_NUMBER)
+            for (const FHitResult& HitResult : OutHitResults)
             {
-                HitActor->TakeDamage(AttackDamage, DamageEvent, GetController(), this);
-            }
+                AActor* HitActor = HitResult.GetActor();
+                if (!HitActor || HitActor == ShieldingActor) continue;
+
+                FVector RelativePositionToShield = HitActor->GetActorLocation() - ShieldingActor->GetActorLocation();
+
+                float DotProduct = FVector::DotProduct(RelativePositionToShield, Forward);
+
+                // 쉴드 액터 앞에 있음.
+                if (DotProduct > KINDA_SMALL_NUMBER)
+                {
+                    HitActor->TakeDamage(AttackDamage, DamageEvent, GetController(), this);
+                }
+            }   
         }
 
         // 쉴드를 켠 액터가 있다면, 해당 액터에게만 대미지 적용

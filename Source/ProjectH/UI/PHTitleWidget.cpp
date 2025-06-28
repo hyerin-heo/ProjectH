@@ -14,7 +14,6 @@ UPHTitleWidget::UPHTitleWidget(const FObjectInitializer& ObjectInitializer)
 void UPHTitleWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
-	// 버튼이 유효한지 확인하고 클릭 이벤트에 함수 바인딩
 	if (StartBtn)
 	{
 		StartBtn->OnClicked.AddDynamic(this, &UPHTitleWidget::OnStartGameButtonClicked);
@@ -28,8 +27,6 @@ void UPHTitleWidget::NativeConstruct()
 
 void UPHTitleWidget::OnStartGameButtonClicked()
 {
-	UE_LOG(LogTemp, Warning, TEXT("Start Game Button Clicked!"));
-
 	if (GameModeRef)
 	{
 		GameModeRef->JoinGame();

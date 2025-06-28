@@ -44,6 +44,9 @@ public:
 	//프로퍼티 리플리케이션
 	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
 
+	void Init();
+	void Start();
+	
 	UFUNCTION(BlueprintCallable)
 	virtual void OnPossessed();
 
@@ -229,6 +232,9 @@ protected:
 	uint8 bInvincibility : 1;
 	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly)
 	uint8 bIsDead : 1;
+
+	UPROPERTY()
+	uint8 bIsGameStart: 1;
 
 	UPROPERTY(ReplicatedUsing=OnRep_ActionTargetRotation)
 	FRotator ActionTargetRotation;

@@ -7,16 +7,16 @@
 
 bool APHInGameLevelScriptActor::LoadStageLevel(int32 Index)
 {
-	if (Index - 1 >= 0)
-	{
-		UnLoadStageLevel(Index - 1);
-	}
 	if (StageLevelNames.Num() <= Index)
 	{
 		return false;
 	}
 	UGameplayStatics::LoadStreamLevel(this, StageLevelNames[Index], true, false, FLatentActionInfo());
 	LoadStageLevelRPC(Index);
+	if (Index - 1 >= 0)
+	{
+		UnLoadStageLevel(Index - 1);
+	}
 	return true;
 }
 
@@ -30,6 +30,8 @@ void APHInGameLevelScriptActor::LoadStageLevelRPC_Implementation(int32 Index)
 
 void APHInGameLevelScriptActor::UnLoadStageLevel(int32 Index)
 {
+	auto Level = UGameplayStatics::GetStreamingLevel(GetWorld(), StageLevelNames[Index]);
+	Level->SetShouldBeVisible(false);
 	UGameplayStatics::UnloadStreamLevel(this, StageLevelNames[Index], FLatentActionInfo(), false);
 	UnLoadStageLevelRPC(Index);
 }
@@ -38,6 +40,8 @@ void APHInGameLevelScriptActor::UnLoadStageLevelRPC_Implementation(int32 Index)
 {
 	if (!HasAuthority())
 	{
+		auto Level = UGameplayStatics::GetStreamingLevel(GetWorld(), StageLevelNames[Index]);
+		Level->SetShouldBeVisible(false);
 		UGameplayStatics::UnloadStreamLevel(this, StageLevelNames[Index], FLatentActionInfo(), false);
 	}
 }
@@ -45,7 +49,6 @@ void APHInGameLevelScriptActor::UnLoadStageLevelRPC_Implementation(int32 Index)
 void APHInGameLevelScriptActor::BeginPlay()
 {
 	Super::BeginPlay();
-	UE_LOG(LogTemp, Warning, TEXT("APHInGameLevelScriptActor BeginPlay Called!"));
 }
 
 void APHInGameLevelScriptActor::PostInitializeComponents()
