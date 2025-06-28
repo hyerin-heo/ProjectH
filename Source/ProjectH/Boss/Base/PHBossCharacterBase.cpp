@@ -7,7 +7,7 @@
 #include "TimerManager.h"
 #include "AI/PHAIController.h"
 #include "Animation/AnimInstance.h"
-#include "Blueprint/WidgetBlueprintLibrary.h"
+#include "Character/PHTankerCharacter.h"
 #include "Common/Common.h"
 #include "Common/SkillObject/PHProjectileSkillObject.h"
 #include "Components/CapsuleComponent.h"
@@ -18,7 +18,6 @@
 #include "Net/UnrealNetwork.h"
 #include "Physics/PHCollision.h"
 #include "Subsystem/SkillObjectPoolSubsystem.h"
-#include "UI/PHInGameHUDWidget.h"
 
 // Sets default values
 APHBossCharacterBase::APHBossCharacterBase()
@@ -185,15 +184,15 @@ void APHBossCharacterBase::AttackHitCheck()
     {
         return;
     }
-    FHitResult OutHitResult;
+    TArray<FHitResult> OutHitResults;
     FCollisionQueryParams Params(SCENE_QUERY_STAT(Attack), false, this);
 
     const FVector Forward = GetActorForwardVector();
     const FVector Start = GetActorLocation() + Forward * GetCapsuleComponent()->GetScaledCapsuleRadius();
     const FVector End = Start + Forward * AttackRange;
 
-    bool HitDetected = GetWorld()->SweepSingleByChannel(
-        OutHitResult,
+    bool HitDetected = GetWorld()->SweepMultiByChannel(
+        OutHitResults,
         Start,
         End,
         FQuat::Identity,
@@ -219,17 +218,65 @@ void APHBossCharacterBase::AttackHitCheck()
         );
     
 #endif
-    
     if (HitDetected)
     {
+        AActor* ShieldingActor = nullptr;
+        float MinDistanceToShield = FLT_MAX;
+
+        for (const FHitResult& HitResult : OutHitResults)
+        {
+            AActor* HitActor = HitResult.GetActor();
+            if (!HitActor) continue;
+
+            IPHCharacterShieldInterface* PlayerChar = Cast<IPHCharacterShieldInterface>(HitActor);
+            if (PlayerChar && PlayerChar->IsShieldActive())
+            {
+                float Dist = FVector::DistSquared(GetActorLocation(), HitActor->GetActorLocation());
+                if (Dist < MinDistanceToShield)
+                {
+                    MinDistanceToShield = Dist;
+                    ShieldingActor = HitActor;
+                }
+            }
+        }
         FDamageEvent DamageEvent;
-        OutHitResult.GetActor()->TakeDamage(AttackDamage, DamageEvent, GetController(), this);
+        
+        for (const FHitResult& HitResult : OutHitResults)
+        {
+            AActor* HitActor = HitResult.GetActor();
+            if (!HitActor || HitActor == ShieldingActor) continue;
+
+            FVector RelativePositionToShield = HitActor->GetActorLocation() - ShieldingActor->GetActorLocation();
+
+            float DotProduct = FVector::DotProduct(RelativePositionToShield, Forward);
+
+            // 쉴드 액터 앞에 있음.
+            if (DotProduct > KINDA_SMALL_NUMBER)
+            {
+                HitActor->TakeDamage(AttackDamage, DamageEvent, GetController(), this);
+            }
+        }
+
+        // 쉴드를 켠 액터가 있다면, 해당 액터에게만 대미지 적용
+        // 맞았다는 액션을 취하기 위함.
+        if (ShieldingActor)
+        {
+            ShieldingActor->TakeDamage(AttackDamage, DamageEvent, GetController(), this);
+        }
+        else 
+        {
+            // 쉴드 없을 때
+            for (auto Result:OutHitResults)
+            {
+                Result.GetActor()->TakeDamage(AttackDamage, DamageEvent, GetController(), this);
+            }
+        }
     }
 }
 
 void APHBossCharacterBase::PatternHitCheck(const int32& InPatternIndex, const uint8& InStep)
 {
-    // @PHTODO Pattern Attack Hit
+    
 }
 
 void APHBossCharacterBase::AttackActionRPC_Implementation()
@@ -331,14 +378,13 @@ void APHBossCharacterBase::StopAI()
 
 void APHBossCharacterBase::OnRep_MaxHP()
 {
-    // @PHTODO 최대 체력 변경됐을 때, UI업데이트 필요.
+    
 }
 
 void APHBossCharacterBase::OnRep_HP()
 {
     OnBossHpChangedDelegate.Broadcast(HP);
     
-    // @PHTODO 체력 변경됐을 때, UI업데이트 필요.
     if (HP <= KINDA_SMALL_NUMBER)
     {
         PlayDeadAnimation();

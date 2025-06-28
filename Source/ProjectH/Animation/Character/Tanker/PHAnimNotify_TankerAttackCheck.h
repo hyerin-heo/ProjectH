@@ -20,8 +20,4 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=Custom)
 	EAttackType AttackType;
-	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=Custom)
-	uint8 Step;
-	
 };

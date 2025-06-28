@@ -4,6 +4,7 @@
 #include "Character/PHTankerCharacter.h"
 
 #include "ProjectH.h"
+#include "Common/Common.h"
 #include "Common/HitObject/PHHitEffectActor.h"
 #include "Common/SkillObject/PHProjectileSkillObject.h"
 #include "Component/PHCharacterStatComponent.h"
@@ -17,11 +18,22 @@ APHTankerCharacter::APHTankerCharacter(const FObjectInitializer& ObjectInitializ
 	Shield->SetupAttachment(GetMesh(), TEXT("LeftWeaponShield"));
 	Weapon->SetIsReplicated(true);
 	Weapon->SetupAttachment(GetMesh(), TEXT("hand_rSocket"));
+	
+	ShieldNiagaraComponent = CreateDefaultSubobject<UNiagaraComponent>(TEXT("ShieldNiagaraFX"));
+	ShieldNiagaraComponent->SetupAttachment(Shield);
+	ShieldColliderComponent = CreateDefaultSubobject<UBoxComponent>(TEXT("ShieldCollider"));
+	ShieldColliderComponent->SetupAttachment(ShieldNiagaraComponent);
+
+	ShieldColliderComponent->SetCollisionProfileName(CPROFILE_SHIELD);
+
+	// 자동 재생 비활성화
+	ShieldNiagaraComponent->bAutoActivate = false;
 }
 
 void APHTankerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+	ShieldColliderComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 }
 
 void APHTankerCharacter::Tick(float DeltaTime)
@@ -29,7 +41,7 @@ void APHTankerCharacter::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 }
 
-void APHTankerCharacter::SetSkill(EAttackType InAttackType, uint8 Step)
+void APHTankerCharacter::SetSkill(EAttackType InAttackType)
 {
 	const float InitialSpeed = 1500.0f;
 	const float LifeTime = 2.0f;
@@ -101,9 +113,35 @@ void APHTankerCharacter::OnPossessed()
 	{
 		// 서버에서만 Overlap검사 한다.
 		Weapon->OnComponentBeginOverlap.AddDynamic(this, &APHTankerCharacter::OnWeaponOverlap);
+		
+		ShieldColliderComponent->OnComponentBeginOverlap.AddDynamic(this, &APHTankerCharacter::OnShieldOverlap);
 	}
 
 	Weapon->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+}
+
+void APHTankerCharacter::OnShieldOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	if (!HasAuthority())
+	{
+		return;
+	}
+	if (!OtherActor)
+	{
+		return;
+	}
+	if (OtherActor->ActorHasTag(TAG_ALLY) || (OtherActor->Owner && OtherActor->Owner->ActorHasTag(TAG_ALLY)))
+	{
+		//같은편이 쏜거임.
+		return;
+	}
+	// @PHTODO 방향 계산하여 쉴드 방향으로 맞았는지 쉴드 뒷방향으로 맞았는지 확인 필요.
+	ASkillObjectBase* SkillObject = Cast<ASkillObjectBase>(OtherActor);
+	if (SkillObject)
+	{
+		SkillObject->ResetProjectile();
+	}
 }
 
 void APHTankerCharacter::ServerRPCSkill1_Implementation()
@@ -113,7 +151,32 @@ void APHTankerCharacter::ServerRPCSkill1_Implementation()
 
 void APHTankerCharacter::ServerRPCSkill2_Implementation()
 {
-	Super::ServerRPCSkill2_Implementation();
+	// Super::ServerRPCSkill2_Implementation();
+
+	bIsShieldActive = true;
+	
+	AttackDamage = StatDataComponent->GetDamage(EAttackType::Skill2);
+	StatDataComponent->StartSkillCooldown(EAttackType::Skill2);
+
+	ShieldNiagaraComponent->Activate(true);
+	ShieldColliderComponent->SetCollisionEnabled(ECollisionEnabled::Type::QueryAndPhysics);
+
+	PlayAnimMontage(ActionMontage, 1.0f, "Skill2");
+	GetWorldTimerManager().SetTimer(ShieldTimerHandle, [&]()
+	{
+		bIsShieldActive = false;
+		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+		if (AnimInstance)
+		{
+			AnimInstance->Montage_Stop(0.2f);
+		}
+
+		ShieldNiagaraComponent->DeactivateImmediate();
+		ShieldColliderComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		SetActionEnd();
+	}, 3.0f, false);
+
+	SendClientRPCPlayAnimation("Skill2", 1.0f);
 }
 
 void APHTankerCharacter::ServerRPCSkill3_Implementation()
@@ -184,12 +247,18 @@ void APHTankerCharacter::Skill2()
 	if (!HasAuthority())
 	{
 		PlayAnimMontage(ActionMontage, 1.0f, "Skill2");
-		FOnMontageEnded EndDelegate;
-		EndDelegate.BindLambda([&](UAnimMontage* Montage, bool bInterrupted)
+		
+		ShieldNiagaraComponent->Activate(true);
+		GetWorldTimerManager().SetTimer(ShieldTimerHandle, [&]()
 		{
+			UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+			if (AnimInstance)
+			{
+				AnimInstance->Montage_Stop(0.2f);
+			}
+			ShieldNiagaraComponent->DeactivateImmediate();
 			SetActionEnd();
-		});
-		SetMontageEndDelegate(EndDelegate);
+		}, 3.0f, false);
 	}
 
 	ServerRPCSkill2();
@@ -253,4 +322,48 @@ void APHTankerCharacter::OnHitEnemy(const FHitResult& SweepResult)
 		                                                      SweepResult.ImpactNormal.Rotation(), SpawnParams);
 		SpawnedActor->SetLifeSpan(1.0f);
 	}
+}
+
+float APHTankerCharacter::TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent,
+	class AController* EventInstigator, AActor* DamageCauser)
+{
+	if (bIsShieldActive)
+	{
+		FVector ShieldLocation = ShieldColliderComponent->GetComponentLocation();
+		FVector ShieldForwardVector = ShieldColliderComponent->GetForwardVector(); 
+        
+		FVector DamageOrigin;
+		if (DamageCauser)
+		{
+			DamageOrigin = DamageCauser->GetActorLocation();
+		}
+		else
+		{
+			DamageOrigin = GetActorLocation();
+		}
+
+		FVector DirectionToDamage = (DamageOrigin - ShieldLocation).GetSafeNormal();
+
+		float DotProduct = FVector::DotProduct(ShieldForwardVector, DirectionToDamage);
+
+		
+		if (DotProduct > 0.0f)
+		{
+			// 피해가 방패의 앞쪽에서 오는 경우
+			PlayAnimMontage(ActionMontage, 1.0f, "Skill2Hit");
+			FOnMontageEnded EndDelegate;
+			EndDelegate.BindLambda([&](UAnimMontage* Montage, bool bInterrupted)
+			{
+				// 아직 스킬 2중임.
+				if (GetWorldTimerManager().IsTimerActive(ShieldTimerHandle))
+				{
+					PlayAnimMontage(ActionMontage, 1.0f, "Skill2");
+				}
+			});
+			SetMontageEndDelegate(EndDelegate);
+			//피해를 안입음.
+			return 0.0f; 
+		}
+	}
+	return Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
 }

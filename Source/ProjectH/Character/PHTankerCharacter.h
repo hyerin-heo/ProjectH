@@ -4,6 +4,9 @@
 
 #include "CoreMinimal.h"
 #include "Character/Base/PHCharacterBase.h"
+#include "Interface/Character/PHCharacterShieldInterface.h"
+#include "NiagaraComponent.h"
+#include "Components/BoxComponent.h"
 #include "PHTankerCharacter.generated.h"
 
 class APHHitEffectActor;
@@ -12,7 +15,7 @@ enum class EAttackType : uint8;
  * 
  */
 UCLASS()
-class PROJECTH_API APHTankerCharacter : public APHCharacterBase
+class PROJECTH_API APHTankerCharacter : public APHCharacterBase, public IPHCharacterShieldInterface
 {
 	GENERATED_BODY()
 
@@ -24,9 +27,14 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-	void SetSkill(EAttackType InAttackType, uint8 Step);
+	void SetSkill(EAttackType InAttackType);
 
 	virtual void OnPossessed() override;
+
+	virtual bool IsShieldActive() const override {return bIsShieldActive;}
+	
+	UFUNCTION()
+	void OnShieldOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
 protected:
 	//Server
@@ -46,6 +54,8 @@ protected:
 
 	virtual void OnHitEnemy(const FHitResult& SweepResult) override;
 
+	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
+
 private:
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Skill|Effects", meta = (AllowPrivateAccess = "true"))
@@ -56,4 +66,15 @@ private:
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Equipment, Meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UStaticMeshComponent> Shield;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Skill|Effects", Meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UBoxComponent> ShieldColliderComponent;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Skill|Effects", Meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UNiagaraComponent> ShieldNiagaraComponent;
+
+	UPROPERTY()
+	uint8 bIsShieldActive:1;
+
+	FTimerHandle ShieldTimerHandle;
 };

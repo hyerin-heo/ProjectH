@@ -18,7 +18,7 @@ void UPHAnimNotify_TankerAttackCheck::Notify(USkeletalMeshComponent* MeshComp, U
 			if (AttackPawn->HasAuthority())
 			{
 				// 내부에서 복제한다.
-				AttackPawn->SetSkill(AttackType, Step);	
+				AttackPawn->SetSkill(AttackType);	
 			}
 		}
 	}
