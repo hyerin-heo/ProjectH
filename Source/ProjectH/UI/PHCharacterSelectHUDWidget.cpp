@@ -17,6 +17,8 @@ void UPHCharacterSelectHUDWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
 
+	bSelectCharacter = false;
+
 	for (int8 Type = (int8)EClassType::Warrior; Type < (int8)EClassType::End; ++Type)
 	{
 		const FName SelectName = *FString::Printf(TEXT("PHCharacterSelectItem_%d"), Type);
@@ -48,22 +50,34 @@ void UPHCharacterSelectHUDWidget::NativeConstruct()
 		}
 	}
 	
+	SelectButton->SetVisibility(ESlateVisibility::Hidden);
 }
 
 void UPHCharacterSelectHUDWidget::ClickedSelectIcon(EClassType inClass)
 {
 	CurrentSelectClass = inClass;
-
 	for (auto& Icon : SelectIconWidgetMap)
 	{
 		if (Icon.Key == CurrentSelectClass || Icon.Value->GetIsBan()) continue;
 
 		Icon.Value->CancelClicked();
 	}
+
+	SelectButton->SetVisibility(ESlateVisibility::Visible);
 }
 
 void UPHCharacterSelectHUDWidget::ShowBanIcon(EClassType inClass)
 {
+	if (CurrentSelectClass ==  inClass)
+	{
+		if (SelectIconWidgetMap.Contains(CurrentSelectClass))
+		{
+			SelectIconWidgetMap[CurrentSelectClass]->SetFrameColorChange(FSlateColor(FLinearColor::White));
+		}
+		CurrentSelectClass = EClassType::None;
+		SelectButton->SetVisibility(ESlateVisibility::Hidden);
+	}
+	
 	for (auto& Icon : SelectIconWidgetMap)
 	{
 		if (Icon.Key == inClass)

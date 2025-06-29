@@ -47,5 +47,7 @@ private:
 	
 	UPROPERTY()
 	EClassType CurrentSelectClass = EClassType::None;
+
+	bool bSelectCharacter;
 	
 };

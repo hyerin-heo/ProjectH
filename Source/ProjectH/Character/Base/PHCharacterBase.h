@@ -92,6 +92,7 @@ public:
 
 	// Attack/Skill Action
 	void SetAction();
+	void SetMouseCursor();
 	//Attack.
 	virtual void NormalAttackUI();
 	virtual void NormalAttack();
@@ -256,6 +257,9 @@ protected:
 	TObjectPtr<class UNiagaraComponent> AllHealEffect;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Effect, Meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<class UNiagaraComponent> ReviveEffect;
+
+	UPROPERTY(EditDefaultsOnly, Category = "FX")
+	TObjectPtr<class UNiagaraSystem> TrackMarkerMove;
 
 };
 

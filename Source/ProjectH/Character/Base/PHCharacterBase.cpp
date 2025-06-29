@@ -14,9 +14,9 @@
 #include "EnhancedInputSubsystems.h"
 #include "ProjectH.h"
 #include "Character/Component/PHCharacterStatComponent.h"
-#include "Engine/AssetManager.h"
 #include "Net/UnrealNetwork.h"
 #include "NavigationSystem.h"
+#include "NiagaraFunctionLibrary.h"
 #include "NiagaraComponent.h"
 #include "Animation/PHCharacterBaseAnimInstance.h"
 #include "Character/Component/PHWidgetComponent.h"
@@ -412,9 +412,10 @@ void APHCharacterBase::MouseClickMove()
 		bUIActioning = false;
 		PH_LOG(LogPHCharacter, Log, TEXT("NormalAttack Or Skill Canceled"));
 		//@PHTODO : 나중에 스킬를 눌르고 스킬 범위를 취소할때 오른쪽 눌르면 이동이 아니고 취소되게 해야한다.
-	
 		return;
 	}
+
+	SetMouseCursor();
 
 	if (Controller == nullptr)
 	{
@@ -444,6 +445,18 @@ void APHCharacterBase::MouseClickMove()
 		if (GetWorld()->LineTraceSingleByChannel(Hit, TraceStart, TraceEnd, ECC_Visibility, Params))
 		{
 			FVector HitLocation = Hit.Location;
+
+			if (TrackMarkerMove) // UPROPERTY로 등록된 NiagaraSystem
+			{
+				UNiagaraFunctionLibrary::SpawnSystemAtLocation(
+					GetWorld(),
+					TrackMarkerMove,
+					HitLocation,
+					FRotator::ZeroRotator,
+					FVector(0.5f),
+					true
+				);
+			}
 
 			SetNewLocation(HitLocation);
 		}
@@ -496,6 +509,7 @@ void APHCharacterBase::SetAction()
 	case EPlayerActionType::NormalAttack:
 		{
 			NormalAttack();
+			
 			break;
 		}
 	case EPlayerActionType::Evasion:
@@ -526,6 +540,22 @@ void APHCharacterBase::SetAction()
 	}
 	
 	bUIActioning = false;
+}
+
+void APHCharacterBase::SetMouseCursor()
+{
+	APlayerController* const PC = Cast<APlayerController>(GetController());
+	if (PC)
+	{
+		if (bUIActioning)
+		{
+			PC->CurrentMouseCursor = EMouseCursor::Crosshairs;	
+		}
+		else
+		{
+			PC->CurrentMouseCursor = EMouseCursor::Default;	
+		}
+	}
 }
 
 void APHCharacterBase::SetActionEnd()
@@ -563,6 +593,7 @@ void APHCharacterBase::NormalAttackUI()
 
 	CurrentActionType = EPlayerActionType::NormalAttack;
 	bUIActioning = true;
+	SetMouseCursor();
 }
 
 void APHCharacterBase::NormalAttack()
@@ -581,6 +612,7 @@ void APHCharacterBase::EvasionUI()
 
 	CurrentActionType = EPlayerActionType::Evasion;
 	bUIActioning = true;
+	SetMouseCursor();
 }
 
 void APHCharacterBase::Evasion()
@@ -599,6 +631,7 @@ void APHCharacterBase::Skill1UI()
 
 	CurrentActionType = EPlayerActionType::Skill1;
 	bUIActioning = true;
+	SetMouseCursor();
 }
 
 void APHCharacterBase::Skill1()
@@ -622,6 +655,7 @@ void APHCharacterBase::Skill2UI()
 
 	CurrentActionType = EPlayerActionType::Skill2;
 	bUIActioning = true;
+	SetMouseCursor();
 }
 
 void APHCharacterBase::Skill2()
@@ -645,6 +679,7 @@ void APHCharacterBase::Skill3UI()
 
 	CurrentActionType = EPlayerActionType::Skill3;
 	bUIActioning = true;
+	SetMouseCursor();
 }
 
 void APHCharacterBase::Skill3()
@@ -668,6 +703,7 @@ void APHCharacterBase::Skill4UI()
 
 	CurrentActionType = EPlayerActionType::Skill4;
 	bUIActioning = true;
+	SetMouseCursor();
 }
 
 void APHCharacterBase::Skill4()

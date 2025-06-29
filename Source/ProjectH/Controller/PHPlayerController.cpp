@@ -7,6 +7,7 @@
 #include "Boss/Base/PHBossCharacterBase.h"
 #include "Character/Base/PHCharacterBase.h"
 #include "Game/PHGameMode.h"
+#include "Subsystem/PHSoundManager.h"
 #include "UI/PHCharacterSelectHUDWidget.h"
 #include "UI/PHCountdownWidget.h"
 #include "UI/PHInGameHUDWidget.h"
@@ -62,6 +63,7 @@ APHPlayerController::APHPlayerController()
 	}
 
 	bShowMouseCursor = true;
+	
 
 	MinNetUpdateFrequency = 0.1f;
 	NetUpdateFrequency = 3.0f;
@@ -85,6 +87,7 @@ void APHPlayerController::OnPossess(APawn* InPawn)
 	if (CharacterBase)
 	{
 		CharacterBase->OnPossessed();
+		CurrentMouseCursor = EMouseCursor::Default;
 	}
 }
 
@@ -100,6 +103,15 @@ void APHPlayerController::BeginPlay()
 	//마우스 클릭 이동이라 필요 없음.
 	//FInputModeGameOnly GameOnlyInputMode;
 	//SetInputMode(GameOnlyInputMode);
+	// 1. GameInstance에서 SoundManagerSubsystem 가져오기
+	if (UGameInstance* GI = GetGameInstance())
+	{
+		if (UPHSoundManager* SoundManager = GI->GetSubsystem<UPHSoundManager>())
+		{
+			// 2. BGM 재생 (카테고리, 사운드 이름, 페이드 인 시간)
+			SoundManager->PlayBGM(ESoundCategory::BGM, TEXT("CharacterSelect"), 1.0f);
+		}
+	}
 }
 
 void APHPlayerController::ServerRPC_SelectCharacter_Implementation(EClassType ClassType)
