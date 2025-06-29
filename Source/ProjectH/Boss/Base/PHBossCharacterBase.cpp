@@ -3,6 +3,7 @@
 
 #include "Boss/Base/PHBossCharacterBase.h"
 
+#include "MovieSceneSequencePlaybackSettings.h"
 #include "ProjectH.h"
 #include "TimerManager.h"
 #include "AI/PHAIController.h"
@@ -15,8 +16,11 @@
 #include "Engine/DamageEvents.h"
 #include "Game/PHGameMode.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"
 #include "Physics/PHCollision.h"
+#include "Runtime/LevelSequence/Public/LevelSequenceActor.h"
+#include "Runtime/LevelSequence/Public/LevelSequencePlayer.h"
 #include "Subsystem/SkillObjectPoolSubsystem.h"
 
 // Sets default values
@@ -343,21 +347,16 @@ void APHBossCharacterBase::PlayDeadAnimation()
     SetCanBeDamaged(false);
     GetCharacterMovement()->DisableMovement();
     GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-
-    FTimerHandle DeadTimerHandle;
-    GetWorld()->GetTimerManager().SetTimer(DeadTimerHandle, FTimerDelegate::CreateLambda(
-        [&]()
+    PH_LOG(LogPHBoss, Log, TEXT("Boss dead!!"));
+    PlayCinematicSequence();
+    if (HasAuthority())
+    {
+        APHGameMode* GameMode = Cast<APHGameMode>(GetWorld()->GetAuthGameMode());
+        if (GameMode)
         {
-            // @PHTODO 죽었을 떄 Destroy 할지 아니면 다음 레벨로 넘길지 체크
-            PH_LOG(LogPHBoss, Log, TEXT("Boss dead!!"));
-            // Destroy();
-            APHGameMode* GameMode = Cast<APHGameMode>(GetWorld()->GetAuthGameMode());
-            if (GameMode)
-            {
-                GameMode->BossDied();
-            }
-        }
-    ), 5.0f, false);
+            GameMode->BossDied();
+        }   
+    }
 }
 
 void APHBossCharacterBase::RunAI()

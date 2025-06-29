@@ -23,7 +23,13 @@ public class ProjectH : ModuleRules
 			"HTTP",  // http연결
 			"Sockets",
 			"Json",
-			"JsonUtilities"
+			"JsonUtilities",
+			"LevelSequence",
+			"MovieScene",
+			"MediaAssets",
+			"MediaUtils",
+			"Slate",
+			"SlateCore"
 		});
 		
 		PublicIncludePaths.AddRange(new string[] { "ProjectH" });

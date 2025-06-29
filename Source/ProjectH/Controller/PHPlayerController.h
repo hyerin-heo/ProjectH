@@ -7,6 +7,7 @@
 #include "GameFramework/PlayerController.h"
 #include "PHPlayerController.generated.h"
 
+class UFileMediaSource;
 /**
  * 
  */
@@ -30,6 +31,9 @@ public:
 	
 	UFUNCTION(Client, Reliable)
 	void ClientRPCResetCharacter();
+	
+	UFUNCTION(Client, Reliable)
+	void ClientRPCPlayBossCine(UFileMediaSource* VideoFileSource);
 	
 	UFUNCTION(Client, Reliable)
 	void ClientRPCStartGame();
@@ -83,6 +87,13 @@ protected:
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = HUD)
 	TObjectPtr<class UPHNextGameWidget> PHNextGameWidget;
+	
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = HUD)
+	TSubclassOf<class UPHVideoWidget> PHVideoWidgetClass;
+	
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = HUD)
+	TObjectPtr<class UPHVideoWidget> PHVideoWidget;
 	
 	
 };

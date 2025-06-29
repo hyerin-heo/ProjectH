@@ -8,8 +8,19 @@
 #include "Subsystem/SkillObjectPoolSubsystem.h"
 #include "PHGameMode.generated.h"
 
+class UFileMediaSource;
 class APHCharacterBase;
 class APHBossCharacterBase;
+
+USTRUCT(BlueprintType)
+struct FBossInfo
+{
+	GENERATED_BODY()
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Boss)
+	TSubclassOf<APHBossCharacterBase> BossClass;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Boss)
+	UFileMediaSource* DiedVideoFileSource;
+};
 /**
  * 
  */
@@ -55,9 +66,10 @@ public:
 	UPROPERTY(VisibleAnywhere, Category = Subsystems)
 	TSubclassOf<USkillObjectPoolSubsystem> SkillObjectPoolSubsystem;
 
-public:
 	//캐릭터 선택 함수.
 	void PlayerSelectCharacter(APlayerController* InPC, EClassType ClassType);
+
+	void SetNextGame();
 	
 protected:
 
@@ -74,7 +86,7 @@ protected:
 	TArray<APlayerController*> DeadPlayerControllers;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = Boss)
-	TArray<TSubclassOf<APHBossCharacterBase>> BossCharacterClass;
+	TMap<uint8, FBossInfo> BossCharacterClass;
 
 	UPROPERTY(EditAnywhere)
 	TMap<EClassType, TSubclassOf<APHCharacterBase>> CharacterClassMap;

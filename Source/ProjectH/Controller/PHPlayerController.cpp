@@ -12,6 +12,7 @@
 #include "UI/PHInGameHUDWidget.h"
 #include "UI/PHGameEndWidget.h"
 #include "UI/PHNextGameWidget.h"
+#include "UI/PHVideoWidget.h"
 
 APHPlayerController::APHPlayerController()
 {
@@ -21,12 +22,15 @@ APHPlayerController::APHPlayerController()
 		TEXT("/Game/ProjectH/UI/WBP_PHCharacterSelectHUD.WBP_PHCharacterSelectHUD_C"));
 	static ConstructorHelpers::FClassFinder<UPHGameEndWidget> GameEndWidgetRef(
 		TEXT("/Game/ProjectH/UI/WBP_GameEnd.WBP_GameEnd_C"));
-	
+
 	static ConstructorHelpers::FClassFinder<UPHCountdownWidget> CountdownWidgetRef(
 		TEXT("/Game/ProjectH/UI/WBP_Countdown.WBP_Countdown_C"));
-	
+
 	static ConstructorHelpers::FClassFinder<UPHNextGameWidget> NextGameWidgetRef(
 		TEXT("/Game/ProjectH/UI/WBP_NextStageWidget.WBP_NextStageWidget_C"));
+
+	static ConstructorHelpers::FClassFinder<UPHVideoWidget> VideoWidgetRef(
+		TEXT("/Game/ProjectH/UI/WBP_VideoWidget.WBP_VideoWidget_C"));
 	if (InGameHUDWidgetRef.Class)
 	{
 		PHInGameHUDWidgetClass = InGameHUDWidgetRef.Class;
@@ -50,6 +54,11 @@ APHPlayerController::APHPlayerController()
 	if (NextGameWidgetRef.Class)
 	{
 		PHNextGameWidgetClass = NextGameWidgetRef.Class;
+	}
+
+	if (VideoWidgetRef.Class)
+	{
+		PHVideoWidgetClass = VideoWidgetRef.Class;
 	}
 
 	bShowMouseCursor = true;
@@ -134,7 +143,7 @@ void APHPlayerController::SetCountdownWidget()
 						GM->SendStartGame();
 					}
 				}
-			});	
+			});
 		}
 	}
 }
@@ -164,19 +173,26 @@ void APHPlayerController::InitWidget()
 	// PHInGameHUDWidget->SetVisibility(ESlateVisibility::Collapsed);
 	// PHGameEndWidget->SetVisibility(ESlateVisibility::Collapsed);
 
-	
+
 	PHNextGameWidget = CreateWidget<UPHNextGameWidget>(this, PHNextGameWidgetClass);
 	if (PHNextGameWidget)
 	{
 		PHNextGameWidget->AddToViewport(100);
 		PHNextGameWidget->SetVisibility(ESlateVisibility::Collapsed);
 	}
-	
+
 	PHCountdownWidget = CreateWidget<UPHCountdownWidget>(this, PHCountdownWidgetClass);
 	if (PHCountdownWidget)
 	{
 		PHCountdownWidget->AddToViewport(100);
 		PHCountdownWidget->SetVisibility(ESlateVisibility::Collapsed);
+	}
+
+	PHVideoWidget = CreateWidget<UPHVideoWidget>(this, PHVideoWidgetClass);
+	if (PHVideoWidget)
+	{
+		PHVideoWidget->AddToViewport(200);
+		PHVideoWidget->SetVisibility(ESlateVisibility::Collapsed);
 	}
 }
 
@@ -213,6 +229,27 @@ void APHPlayerController::ClientRPCStartGame_Implementation()
 			It->OnBossHpChangedDelegate.AddUObject(PHInGameHUDWidget, &UPHInGameHUDWidget::UpdateBossHpBar);
 			break; // HP가 0보다 큰 보스만 바인딩
 		}
+	}
+}
+
+void APHPlayerController::ClientRPCPlayBossCine_Implementation(UFileMediaSource* VideoFileSource)
+{
+	if (PHVideoWidget)
+	{
+		PHVideoWidget->SetVisibility(ESlateVisibility::Visible);
+		PHVideoWidget->OnFinishCinematic.AddLambda([&]()
+		{
+			PHVideoWidget->SetVisibility(ESlateVisibility::Collapsed);
+			if (HasAuthority())
+			{
+				APHGameMode* GM = GetWorld()->GetAuthGameMode<APHGameMode>();
+				if (GM)
+				{
+					GM->SetNextGame();
+				}
+			}
+		});
+		PHVideoWidget->SetMediaSource(VideoFileSource);
 	}
 }
 

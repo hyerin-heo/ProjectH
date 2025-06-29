@@ -53,6 +53,8 @@ private:
 	void HandleConnectionTimeout();
 
 	void DeleteCurrentRoom();
+
+	void LoadConfigFile();
 	
 	FTimerHandle ConnectionAttemptTimerHandle;
 	FString CurrentConnectingAddress;

@@ -91,6 +91,23 @@ void APHGameMode::PlayerSelectCharacter(APlayerController* InPC, EClassType Clas
 	}
 }
 
+void APHGameMode::SetNextGame()
+{
+	if (CurrentStageIndex >= BossCharacterClass.Num() - 1)
+	{
+		StartGame();
+		return;
+	}
+	for (APlayerController* EachPlayer : ConnectedPlayerControllers)
+	{
+		APHPlayerController* PHPlayer = Cast<APHPlayerController>(EachPlayer);
+		if (PHPlayer)
+		{
+			PHPlayer->ClientRPCNextGame();
+		}
+	}
+}
+
 void APHGameMode::TrySpawnPlayerPawn(APlayerController* PlayerControllerToSpawn)
 {
 	
@@ -251,8 +268,9 @@ void APHGameMode::SpawnBossCharacter()
 	FActorSpawnParameters SpawnParams;
 	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
 
+	auto BossInfo = BossCharacterClass.FindChecked(CurrentStageIndex);
 	// 보스 스폰
-	ActiveBossCharacter = World->SpawnActor<APHBossCharacterBase>(BossCharacterClass[CurrentStageIndex], FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
+	ActiveBossCharacter = World->SpawnActor<APHBossCharacterBase>(BossInfo.BossClass, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
 
 	if (!ActiveBossCharacter)
 	{
@@ -299,17 +317,13 @@ void APHGameMode::CharacterReVive(APlayerController* ReViveCharacterController)
 
 void APHGameMode::BossDied()
 {
-	if (CurrentStageIndex >= BossCharacterClass.Num() - 1)
-	{
-		StartGame();
-		return;
-	}
+	auto BossInfo = BossCharacterClass.FindChecked(CurrentStageIndex);
 	for (APlayerController* EachPlayer : ConnectedPlayerControllers)
 	{
 		APHPlayerController* PHPlayer = Cast<APHPlayerController>(EachPlayer);
 		if (PHPlayer)
 		{
-			PHPlayer->ClientRPCNextGame();
+			PHPlayer->ClientRPCPlayBossCine(BossInfo.DiedVideoFileSource);
 		}
 	}
 }

@@ -18,6 +18,11 @@ void UPHGameInstance::Init()
 	bIsAttemptingConnection = false;
 	bIsListenServer = false;
 	bUseServer = false;
+
+	if (!bUseServer)
+	{
+		LoadConfigFile();
+	}
 }
 
 void UPHGameInstance::Shutdown()
@@ -34,6 +39,13 @@ void UPHGameInstance::JoinGame()
 {
 	if (!bUseServer)
 	{
+		// if (bIsListenServer)
+		// {
+		// 	HostServer();
+		// }else
+		// {
+		// 	TryConnectToServer(CurrentConnectingAddress);
+		// }
 		if (UWorld* World = GetWorld())
 		{
 			ENetMode NetMode = World->GetNetMode();
@@ -210,4 +222,59 @@ void UPHGameInstance::DeleteCurrentRoom()
 										  UE_LOG(LogPHGameFlow, Error, TEXT("Delete Failed: %s"), *ErrorMessage);
 	                                  }
 	);
+}
+
+void UPHGameInstance::LoadConfigFile()
+{
+	FString SavedDir = FPaths::ProjectSavedDir();
+
+    FString MyGameDataDir = FPaths::Combine(SavedDir, TEXT("MyGameData"));
+
+    IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
+    if (!PlatformFile.DirectoryExists(*MyGameDataDir))
+    {
+        PlatformFile.CreateDirectory(*MyGameDataDir);
+    }
+
+    FString FilePath = FPaths::Combine(MyGameDataDir, TEXT("MyConfigFile.txt"));
+
+    FString FileContent;
+    if (!FFileHelper::LoadFileToString(FileContent, *FilePath))
+    {
+        UE_LOG(LogTemp, Warning, TEXT("Failed to load file: %s"), *FilePath);
+    }
+
+    TArray<FString> Lines;
+    FileContent.ParseIntoArrayLines(Lines);
+
+    for (const FString& Line : Lines)
+    {
+        FString TrimmedLine = Line.TrimStartAndEnd();
+        if (TrimmedLine.IsEmpty())
+        {
+            continue;
+        }
+
+        FString Key;
+        FString Value;
+        if (TrimmedLine.Split(TEXT("="), &Key, &Value))
+        {
+            Key = Key.TrimStartAndEnd();
+            Value = Value.TrimStartAndEnd();
+
+            if (Key == TEXT("IsHostServer"))
+            {
+                bIsListenServer = Value.Equals(TEXT("true"), ESearchCase::IgnoreCase);
+            }
+            else if (Key == TEXT("HostServerAddress"))
+            {
+                CurrentConnectingAddress = Value;
+            }
+        }
+    }
+
+    UE_LOG(LogTemp, Log, TEXT("Config Loaded Successfully from: %s"), *FilePath);
+    UE_LOG(LogTemp, Log, TEXT("bIsListenServer: %s"), bIsListenServer?TEXT("true"):TEXT("false"));
+    UE_LOG(LogTemp, Log, TEXT("CurrentConnectingAddress: %s"), *CurrentConnectingAddress);
+
 }
