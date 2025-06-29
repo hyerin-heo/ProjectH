@@ -226,7 +226,7 @@ void UPHGameInstance::DeleteCurrentRoom()
 
 void UPHGameInstance::LoadConfigFile()
 {
-	FString SavedDir = FPaths::ProjectSavedDir();
+	FString SavedDir = FPaths::ProjectDir();
 
     FString MyGameDataDir = FPaths::Combine(SavedDir, TEXT("MyGameData"));
 
