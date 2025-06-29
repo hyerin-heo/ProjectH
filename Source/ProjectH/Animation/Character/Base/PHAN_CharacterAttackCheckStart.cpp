@@ -28,7 +28,7 @@ void UPHAN_CharacterAttackCheckStart::Notify(USkeletalMeshComponent* MeshComp, U
 				{
 					if (UPHSoundManager* SoundManager = GI->GetSubsystem<UPHSoundManager>())
 					{
-						SoundManager->PlaySFX(ESoundCategory::SFX, TEXT("SwordSound"));
+						SoundManager->PlaySFX(ESoundCategory::SFX, TEXT("SwordSound"), 0.7f);
 					}
 				}
 			}

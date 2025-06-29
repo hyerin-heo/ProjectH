@@ -14,6 +14,7 @@
 #include "Components/BoxComponent.h"
 #include "Engine/DamageEvents.h"
 #include "Physics/PHCollision.h"
+#include "Subsystem/PHSoundManager.h"
 #include "Subsystem/SkillObjectPoolSubsystem.h"
 
 APHMageCharacter::APHMageCharacter(const FObjectInitializer& ObjectInitializer)
@@ -407,6 +408,17 @@ void APHMageCharacter::StartLoopLaserSkill()
 {
 	PlayAnimMontage(ActionMontage, 1.0f, "Skill1Loop");
 	// SendClientRPCPlayAnimation("Skill1Loop", 1.0f);
+
+	if (UWorld* World = GetWorld())
+	{
+		if (UGameInstance* GI = World->GetGameInstance())
+		{
+			if (UPHSoundManager* SoundManager = GI->GetSubsystem<UPHSoundManager>())
+			{
+				SoundManager->PlayLoopingSFX(ESoundCategory::SFX, TEXT("Flamethrower_Fire_Loop_2"), 0.7f);
+			}
+		}
+	}
 	
 	Skill1Component->Activate();
 	if (HasAuthority())
@@ -438,6 +450,16 @@ void APHMageCharacter::StartLoopLaserSkill()
 			}
 			Skill1Component->Deactivate();
 			SetActionEnd();
+			if (UWorld* World = GetWorld())
+            	{
+            		if (UGameInstance* GI = World->GetGameInstance())
+            		{
+            			if (UPHSoundManager* SoundManager = GI->GetSubsystem<UPHSoundManager>())
+            			{
+            				SoundManager->StopLoopingSFX(TEXT("Flamethrower_Fire_Loop_2"));
+            			}
+            		}
+            	}
 		});
 		SetMontageEndDelegate(EndDelegate);
 	}, 5.0f, false);

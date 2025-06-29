@@ -28,11 +28,11 @@ public:
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 	virtual void Deinitialize() override;
 
-	// 🔧 공통 로딩
+	// 공통 로딩
 	TSoftObjectPtr<USoundBase> LoadSoundByName(ESoundCategory Type, const FString& SoundName);
 	//UAudioComponent* CreateAudioComponent(TSoftObjectPtr<USoundBase> SoundAsset, bool bAutoActivate);
 	
-	// 🔊 간단한 재생 함수
+	// 간단한 재생 함수
 	UFUNCTION(BlueprintCallable, Category="Sound")
 	void PlayBGM(const ESoundCategory Type, const FString& SoundName, float FadeInTime = 1.0f);
 
@@ -45,6 +45,12 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Sound")
 	void PlaySFX3D(const ESoundCategory Type, const FString& SoundName, FVector Location, float Volume = 1.0f);
 
+	UFUNCTION(BlueprintCallable, Category="Sound")
+	UAudioComponent* PlayLoopingSFX(const ESoundCategory Type, const FString& SoundName, float Volume = 1.0f);
+
+	UFUNCTION(BlueprintCallable, Category="Sound")
+	void StopLoopingSFX(const FString& SoundName);
+
 private:
 	UPROPERTY()
 	UAudioComponent* BGMComponent;
@@ -53,6 +59,7 @@ private:
 	TMap<FString, TSoftObjectPtr<USoundBase>> CachedBGMSounds;
 	TMap<FString, TSoftObjectPtr<USoundBase>> CachedSFXSounds;
 	TMap<FString, TSoftObjectPtr<USoundBase>> CachedUISounds;
+	TMap<FString, UAudioComponent*> ActiveLoopingSFXMap;
 
 	//경로 prefix
 	const FString BaseBGMPath = TEXT("/Game/ProjectH/Sound/");

@@ -86,24 +86,6 @@ TSoftObjectPtr<USoundBase> UPHSoundManager::LoadSoundByName(ESoundCategory Type,
 	return SoundAsset;
 }
 
-// UAudioComponent* UPHSoundManager::CreateAudioComponent(TSoftObjectPtr<USoundBase> SoundAsset, bool bAutoActivate)
-// {
-// 	if (!SoundAsset.IsValid())
-// 	{
-// 		SoundAsset.LoadSynchronous();
-// 	}
-//
-// 	if (SoundAsset.IsValid())
-// 	{
-// 		UAudioComponent* Comp = NewObject<UAudioComponent>(this);
-// 		Comp->RegisterComponent();
-// 		Comp->SetSound(SoundAsset.Get());
-// 		Comp->bAutoActivate = bAutoActivate;
-// 		return Comp;
-// 	}
-// 	return nullptr;
-// }
-
 void UPHSoundManager::PlayBGM(const ESoundCategory Type, const FString& SoundName, float FadeInTime)
 {
 	auto SoundAsset = LoadSoundByName(Type, SoundName);
@@ -127,7 +109,7 @@ void UPHSoundManager::PlayBGM(const ESoundCategory Type, const FString& SoundNam
 	if (BGMComponent)
 	{
 		BGMComponent->bAllowSpatialization = false;
-		BGMComponent->FadeIn(FadeInTime, 1.0f);
+		BGMComponent->FadeIn(FadeInTime, 0.5f);
 	}
 }
 
@@ -154,5 +136,51 @@ void UPHSoundManager::PlaySFX3D(const ESoundCategory Type, const FString& SoundN
 	if (SoundAsset.IsValid())
 	{
 		UGameplayStatics::PlaySoundAtLocation(GetWorld(), SoundAsset.Get(), Location, Volume);
+	}
+}
+
+UAudioComponent* UPHSoundManager::PlayLoopingSFX(const ESoundCategory Type, const FString& SoundName, float Volume)
+{
+	if (ActiveLoopingSFXMap.Contains(SoundName))
+	{
+		UAudioComponent* ExistingComp = ActiveLoopingSFXMap[SoundName];
+		if (ExistingComp && ExistingComp->IsPlaying())
+		{
+			return ExistingComp; // 이미 재생 중이면 무시
+		}
+	}
+
+	auto SoundAsset = LoadSoundByName(Type, SoundName);
+	if (!SoundAsset.IsValid())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("[SoundManager] Looping SFX not found: %s"), *SoundName);
+		return nullptr;
+	}
+
+	UAudioComponent* Comp = NewObject<UAudioComponent>(GetWorld()->GetWorldSettings());
+	Comp->bAutoActivate = false;
+	Comp->bAllowSpatialization = false;
+	Comp->SetSound(SoundAsset.Get());
+	Comp->SetVolumeMultiplier(Volume);
+	Comp->RegisterComponent();
+	Comp->Play();
+
+	ActiveLoopingSFXMap.Add(SoundName, Comp);
+
+	return Comp;
+}
+
+void UPHSoundManager::StopLoopingSFX(const FString& SoundName)
+{
+	if (ActiveLoopingSFXMap.Contains(SoundName))
+	{
+		UAudioComponent* Comp = ActiveLoopingSFXMap[SoundName];
+		if (Comp)
+		{
+			Comp->FadeOut(0.5f, 0.0f); // 부드럽게 사라지게 (선택)
+			Comp->Stop();
+			Comp->DestroyComponent();
+		}
+		ActiveLoopingSFXMap.Remove(SoundName);
 	}
 }
