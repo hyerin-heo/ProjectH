@@ -39,25 +39,25 @@ void UPHGameInstance::JoinGame()
 {
 	if (!bUseServer)
 	{
-		// if (bIsListenServer)
-		// {
-		// 	HostServer();
-		// }else
-		// {
-		// 	TryConnectToServer(CurrentConnectingAddress);
-		// }
-		if (UWorld* World = GetWorld())
+		if (bIsListenServer)
 		{
-			ENetMode NetMode = World->GetNetMode();
-
-			if (NetMode == NM_DedicatedServer || NetMode == NM_ListenServer)
-			{
-				HostServer();
-			}else
-			{
-				TryConnectToServer(TEXT("127.0.0.1"));
-			}
+			HostServer();
+		}else
+		{
+			TryConnectToServer(CurrentConnectingAddress);
 		}
+		// if (UWorld* World = GetWorld())
+		// {
+		// 	ENetMode NetMode = World->GetNetMode();
+		//
+		// 	if (NetMode == NM_DedicatedServer || NetMode == NM_ListenServer)
+		// 	{
+		// 		HostServer();
+		// 	}else
+		// 	{
+		// 		TryConnectToServer(TEXT("127.0.0.1"));
+		// 	}
+		// }
 		return;
 	}
 	if (!APIClient)
