@@ -348,7 +348,6 @@ void APHBossCharacterBase::PlayDeadAnimation()
     GetCharacterMovement()->DisableMovement();
     GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
     PH_LOG(LogPHBoss, Log, TEXT("Boss dead!!"));
-    PlayCinematicSequence();
     if (HasAuthority())
     {
         APHGameMode* GameMode = Cast<APHGameMode>(GetWorld()->GetAuthGameMode());
