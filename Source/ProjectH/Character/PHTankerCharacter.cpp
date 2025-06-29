@@ -177,7 +177,8 @@ void APHTankerCharacter::ServerRPCSkill2_Implementation()
 		SetActionEnd();
 	}, 3.0f, false);
 
-	SendClientRPCPlayAnimation("Skill2", 1.0f);
+	
+	Skill2RPC();
 }
 
 void APHTankerCharacter::ServerRPCSkill3_Implementation()
@@ -344,8 +345,25 @@ void APHTankerCharacter::Skill2HitRPC_Implementation()
 	}
 }
 
+void APHTankerCharacter::Skill2RPC_Implementation()
+{
+	PlayAnimMontage(ActionMontage, 1.0f, "Skill2");
+		
+	ShieldNiagaraComponent->Activate(true);
+	GetWorldTimerManager().SetTimer(ShieldTimerHandle, [&]()
+	{
+		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+		if (AnimInstance)
+		{
+			AnimInstance->Montage_Stop(0.2f);
+		}
+		ShieldNiagaraComponent->DeactivateImmediate();
+		SetActionEnd();
+	}, 3.0f, false);
+}
+
 float APHTankerCharacter::TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent,
-	class AController* EventInstigator, AActor* DamageCauser)
+                                     class AController* EventInstigator, AActor* DamageCauser)
 {
 	if (bIsShieldActive && DamageCauser)
 	{

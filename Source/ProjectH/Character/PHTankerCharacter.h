@@ -57,6 +57,9 @@ protected:
 	UFUNCTION(NetMulticast, Reliable)
 	void Skill2HitRPC();
 
+	UFUNCTION(NetMulticast, Reliable)
+	void Skill2RPC();
+
 	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
 
 private:
