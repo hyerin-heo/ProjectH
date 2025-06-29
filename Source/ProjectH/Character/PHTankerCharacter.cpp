@@ -329,24 +329,25 @@ void APHTankerCharacter::OnHitEnemy(const FHitResult& SweepResult)
 
 void APHTankerCharacter::Skill2HitRPC_Implementation()
 {
-	if (!HasAuthority())
+	PlayAnimMontage(ActionMontage, 1.0f, "Skill2Hit");
+	FOnMontageEnded EndDelegate;
+	EndDelegate.BindLambda([&](UAnimMontage* Montage, bool bInterrupted)
 	{
-		PlayAnimMontage(ActionMontage, 1.0f, "Skill2Hit");
-		FOnMontageEnded EndDelegate;
-		EndDelegate.BindLambda([&](UAnimMontage* Montage, bool bInterrupted)
+		// 아직 스킬 2중임.
+		if (GetWorldTimerManager().IsTimerActive(ShieldTimerHandle))
 		{
-			// 아직 스킬 2중임.
-			if (GetWorldTimerManager().IsTimerActive(ShieldTimerHandle))
-			{
-				PlayAnimMontage(ActionMontage, 1.0f, "Skill2");
-			}
-		});
-		SetMontageEndDelegate(EndDelegate);
-	}
+			PlayAnimMontage(ActionMontage, 1.0f, "Skill2");
+		}
+	});
+	SetMontageEndDelegate(EndDelegate);
 }
 
 void APHTankerCharacter::Skill2RPC_Implementation()
 {
+	if (HasAuthority())
+	{
+		return;
+	}
 	PlayAnimMontage(ActionMontage, 1.0f, "Skill2");
 		
 	ShieldNiagaraComponent->Activate(true);
@@ -376,17 +377,6 @@ float APHTankerCharacter::TakeDamage(float DamageAmount, struct FDamageEvent con
 		if (DotProduct < KINDA_SMALL_NUMBER)
 		{
 			// 피해가 방패의 앞쪽에서 오는 경우
-			PlayAnimMontage(ActionMontage, 1.0f, "Skill2Hit");
-			FOnMontageEnded EndDelegate;
-			EndDelegate.BindLambda([&](UAnimMontage* Montage, bool bInterrupted)
-			{
-				// 아직 스킬 2중임.
-				if (GetWorldTimerManager().IsTimerActive(ShieldTimerHandle))
-				{
-					PlayAnimMontage(ActionMontage, 1.0f, "Skill2");
-				}
-			});
-			SetMontageEndDelegate(EndDelegate);
 			Skill2HitRPC();
 			//피해를 안입음.
 			return 0.0f; 
