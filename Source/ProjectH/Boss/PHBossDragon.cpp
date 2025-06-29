@@ -6,6 +6,7 @@
 #include "NavigationSystem.h"
 #include "Common/SkillObject/PHProjectileSkillObject.h"
 #include "Net/UnrealNetwork.h"
+#include "Subsystem/PHSoundManager.h"
 
 APHBossDragon::APHBossDragon()
 {
@@ -85,6 +86,17 @@ void APHBossDragon::Pattern1HitCheck(const FBossPatternInfo& PatternInfo, const 
 
 			LaunchSkillObjectForward(SkillObject, BaseSpeed, BaseLifetime, PatternInfo.AttackDamage, true);	
 		}
+
+		if (UWorld* World = GetWorld())
+		{
+			if (UGameInstance* GI = World->GetGameInstance())
+			{
+				if (UPHSoundManager* SoundManager = GI->GetSubsystem<UPHSoundManager>())
+				{
+					SoundManager->PlaySFX(ESoundCategory::SFX, TEXT("DragonFire"), 0.7f);
+				}
+			}
+		}
 		
 	}), 0.25f, true);	
 }
@@ -152,7 +164,7 @@ void APHBossDragon::Pattern3HitCheck(const FBossPatternInfo& PatternInfo, const 
 			APHProjectileSkillObject* SkillObject = Cast<APHProjectileSkillObject>(
 				SpawnSkillObject(SkillClass, OutLocation.Location, FRotator::ZeroRotator));
 			
-			LaunchSkillObject(SkillObject, BaseLifetime, PatternInfo.AttackDamage, 0.9f);
+			LaunchSkillObject(SkillObject, BaseLifetime, PatternInfo.AttackDamage, 0.8f);
 		}
 		
 	}

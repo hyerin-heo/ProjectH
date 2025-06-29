@@ -20,7 +20,7 @@ void UPHAN_CharacterAttackCheckStart::Notify(USkeletalMeshComponent* MeshComp, U
 		{
 			WarriorPawn->EnableWeaponCollision(true);
 
-			// ✅ 사운드 매니저 사용
+			// 사운드 매니저 사용
 			
 			if (UWorld* World = WarriorPawn->GetWorld())
 			{
@@ -28,7 +28,7 @@ void UPHAN_CharacterAttackCheckStart::Notify(USkeletalMeshComponent* MeshComp, U
 				{
 					if (UPHSoundManager* SoundManager = GI->GetSubsystem<UPHSoundManager>())
 					{
-						SoundManager->PlaySFX(ESoundCategory::SFX, TEXT("SwordSound"), 0.7f);
+						SoundManager->PlaySFX(ESoundCategory::SFX, TEXT("SwordSound"), 0.5f);
 					}
 				}
 			}

@@ -5,6 +5,7 @@
 
 #include "NiagaraComponent.h"
 #include "Net/UnrealNetwork.h"
+#include "Subsystem/PHSoundManager.h"
 
 APHDragonNiagaraSkillObject::APHDragonNiagaraSkillObject()
 {
@@ -89,6 +90,7 @@ void APHDragonNiagaraSkillObject::Launch(float InDamage, float InLifeTime, float
 		GetWorld()->GetTimerManager().SetTimer(TimerHandle, FTimerDelegate::CreateLambda([&]
 		{
 			SetActorEnableCollision(true);
+			SetPlaySFX();
 		}), EnableCollisionTime, false);	
 	}
 
@@ -121,6 +123,7 @@ void APHDragonNiagaraSkillObject::Client_ActivateSkillObject_Implementation(FVec
 		GetWorld()->GetTimerManager().SetTimer(TimerHandle, FTimerDelegate::CreateLambda([&]
 		{
 			SetActorEnableCollision(true);
+			SetPlaySFX();
 		}), EnableCollisionTime, false);	
 	}
 
@@ -151,4 +154,34 @@ void APHDragonNiagaraSkillObject::Client_ResetProjectile_Implementation()
 		NiagaraComponent2->Deactivate();
 	}
 	SetActorEnableCollision(false);
+}
+
+void APHDragonNiagaraSkillObject::SetPlaySFX()
+{
+	if (SkillNumber == 2)
+	{
+		if (UWorld* World = GetWorld())
+		{
+			if (UGameInstance* GI = World->GetGameInstance())
+			{
+				if (UPHSoundManager* SoundManager = GI->GetSubsystem<UPHSoundManager>())
+				{
+					SoundManager->PlaySFX(ESoundCategory::SFX, TEXT("Explosion_Space_2"), 0.7f);
+				}
+			}
+		}
+	}
+	else if (SkillNumber == 3)
+	{
+		if (UWorld* World = GetWorld())
+		{
+			if (UGameInstance* GI = World->GetGameInstance())
+			{
+				if (UPHSoundManager* SoundManager = GI->GetSubsystem<UPHSoundManager>())
+				{
+					SoundManager->PlaySFX(ESoundCategory::SFX, TEXT("Cannon_shots_7"), 0.7f);
+				}
+			}
+		}
+	}
 }

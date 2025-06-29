@@ -123,10 +123,36 @@ void UPHSoundManager::StopBGM(float FadeOutTime)
 
 void UPHSoundManager::PlaySFX(const ESoundCategory Type, const FString& SoundName, float Volume)
 {
+
+	const float CurrentTime = GetWorld()->GetTimeSeconds();
+	const float Cooldown = 0.1f; // 동일 사운드 중복 재생 제한 시간 (초)
+	const float MaxKeepDuration = 2.0f; // 오래된 기록 보존 시간 (초)
+
+	// 오래된 항목 정리 (최대 1~2초 이상 지난 것 제거)
+	for (auto It = RecentPlayedSFXMap.CreateIterator(); It; ++It)
+	{
+		if (CurrentTime - It.Value() > MaxKeepDuration)
+		{
+			It.RemoveCurrent();
+		}
+	}
+
+	// 최근에 재생된 적 있다면 시간 차 확인
+	if (RecentPlayedSFXMap.Contains(SoundName))
+	{
+		const float LastPlayedTime = RecentPlayedSFXMap[SoundName];
+		if (CurrentTime - LastPlayedTime < Cooldown)
+		{
+			// 너무 짧은 시간 내 중복 → 무시
+			return;
+		}
+	}
+	
 	auto SoundAsset = LoadSoundByName(Type, SoundName);
 	if (SoundAsset.IsValid())
 	{
 		UGameplayStatics::PlaySound2D(GetWorld(), SoundAsset.Get(), Volume);
+		RecentPlayedSFXMap.Add(SoundName, CurrentTime);
 	}
 }
 

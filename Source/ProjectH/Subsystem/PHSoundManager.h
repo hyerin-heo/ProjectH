@@ -61,6 +61,9 @@ private:
 	TMap<FString, TSoftObjectPtr<USoundBase>> CachedUISounds;
 	TMap<FString, UAudioComponent*> ActiveLoopingSFXMap;
 
+	// 최근 사운드 재생 시간 기록용 (중복 방지용)
+	TMap<FString, float> RecentPlayedSFXMap;
+
 	//경로 prefix
 	const FString BaseBGMPath = TEXT("/Game/ProjectH/Sound/");
 	const FString BaseSFXPath = TEXT("/Game/ProjectH/Sound/SFX/");

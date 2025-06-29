@@ -33,9 +33,14 @@ public:
 
 	virtual void Client_ResetProjectile_Implementation() override;
 
+	void SetPlaySFX();
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Effects)
 	TObjectPtr<UNiagaraComponent> NiagaraComponent2;
 
 	UPROPERTY(Replicated)
 	float EnableCollisionTime = 0.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = SkillNum, meta = (AllowPrivateAccess = "true"))
+	uint8 SkillNumber = 0;
 };

@@ -7,6 +7,7 @@
 #include "Character/Base/PHCharacterBase.h"
 #include "Components/SphereComponent.h"
 #include "Engine/DamageEvents.h"
+#include "Subsystem/PHSoundManager.h"
 
 // Sets default values
 APHHealerSkill3Object::APHHealerSkill3Object()
@@ -79,6 +80,20 @@ void APHHealerSkill3Object::EnableSphereCollision(bool bActive)
 	|| GetWorld()->GetNetMode() == NM_Standalone)
 	{
 		TriggerSphere->SetCollisionEnabled(bActive ? ECollisionEnabled::QueryOnly : ECollisionEnabled::NoCollision);
+
+		if (bActive)
+		{
+			if (UWorld* World = GetWorld())
+			{
+				if (UGameInstance* GI = World->GetGameInstance())
+				{
+					if (UPHSoundManager* SoundManager = GI->GetSubsystem<UPHSoundManager>())
+					{
+						SoundManager->PlaySFX(ESoundCategory::SFX, TEXT("HealerSkill3"), 0.7f);
+					}
+				}
+			}
+		}
 	}
 }
 

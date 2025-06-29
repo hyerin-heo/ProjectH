@@ -6,6 +6,7 @@
 #include "NiagaraComponent.h"
 #include "Engine/DamageEvents.h"
 #include "Interface/Boss/PHBossAIInterface.h"
+#include "Subsystem/PHSoundManager.h"
 
 
 // Sets default values
@@ -79,6 +80,17 @@ void APHWarriorSkill3Object::BeginPlay()
 	if (FireEffect)
 	{
 		FireEffect->Activate(true);
+	}
+
+	if (UWorld* World = GetWorld())
+	{
+		if (UGameInstance* GI = World->GetGameInstance())
+		{
+			if (UPHSoundManager* SoundManager = GI->GetSubsystem<UPHSoundManager>())
+			{
+				SoundManager->PlaySFX(ESoundCategory::SFX, TEXT("Explosion_Barrel"), 0.7f);
+			}
+		}
 	}
 }
 

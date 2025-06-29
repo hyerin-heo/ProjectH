@@ -4,6 +4,7 @@
 #include "Animation/Character/Healer/AnimNotify_HealerNomalAttack.h"
 
 #include "Character/PHHealerCharacter.h"
+#include "Subsystem/PHSoundManager.h"
 
 void UAnimNotify_HealerNomalAttack::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation,
                                            const FAnimNotifyEventReference& EventReference)
@@ -16,7 +17,18 @@ void UAnimNotify_HealerNomalAttack::Notify(USkeletalMeshComponent* MeshComp, UAn
 
 		if (HealerPawn)
 		{
-			// 💡 서버에서만 스폰하도록 제한
+			if (UWorld* World = HealerPawn->GetWorld())
+			{
+				if (UGameInstance* GI = World->GetGameInstance())
+				{
+					if (UPHSoundManager* SoundManager = GI->GetSubsystem<UPHSoundManager>())
+					{
+						SoundManager->PlaySFX(ESoundCategory::SFX, TEXT("HolyAttack"), 0.7f);
+					}
+				}
+			}
+			
+			// 서버에서만 스폰하도록 제한
 			if (HealerPawn->HasAuthority())
 			{
 				HealerPawn->SpawnNormalAttackObject();
