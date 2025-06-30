@@ -13,6 +13,7 @@ APHNiagaraSkillObject::APHNiagaraSkillObject()
 
 	// 자동 재생 비활성화
 	NiagaraComponent->bAutoActivate = false;
+	NiagaraComponent->SetIsReplicated(true);
 }
 
 void APHNiagaraSkillObject::PostInitializeComponents()

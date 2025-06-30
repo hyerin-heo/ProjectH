@@ -9,6 +9,8 @@ APHMeshSkillObject::APHMeshSkillObject()
 
 	MeshComponent->SetupAttachment(RootComponent);
 	MeshComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+	MeshComponent->SetIsReplicated(true);
 }
 
 void APHMeshSkillObject::PostInitializeComponents()

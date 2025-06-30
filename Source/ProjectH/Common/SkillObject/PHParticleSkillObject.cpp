@@ -10,6 +10,7 @@ APHParticleSkillObject::APHParticleSkillObject()
 	ParticleComponent = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("ParticleFX"));
 	ParticleComponent->SetupAttachment(RootComponent);
 	ParticleComponent->bAutoActivate = false;
+	ParticleComponent->SetIsReplicated(true);
 }
 
 void APHParticleSkillObject::PostInitializeComponents()
