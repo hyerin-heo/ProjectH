@@ -19,8 +19,12 @@ void APHHitEffectActor::BeginPlay()
 	Super::BeginPlay();
 	if (bShouldDealDamage)
 	{
-		TArray<AActor*> IgnoreActors;
+		if (!Owner)
+		{
+			return;
+		}
 
+		TArray<AActor*> IgnoreActors;
 		FName Tag = Owner->ActorHasTag(TAG_ALLY) ? TAG_ALLY : Owner->ActorHasTag(TAG_ENEMY) ? TAG_ENEMY : TEXT("None");
 
 		// 월드 내 모든 액터 탐색
