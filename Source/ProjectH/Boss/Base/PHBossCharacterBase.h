@@ -11,6 +11,7 @@
 #include "PHBossCharacterBase.generated.h"
 
 
+struct FSkillObjectPoolData;
 class APHProjectileSkillObject;
 class ASkillObjectBase;
 DECLARE_DELEGATE(FOnAttackPattern);
@@ -106,7 +107,10 @@ protected:
 		float Lifetime,
 		float Damage,
 		float InEnableCollisionTime = 0.0f
-	);
+		);
+
+	UPROPERTY(EditDefaultsOnly, Category = Pooling)
+	TArray<FSkillObjectPoolData> SkillObjectPoolDataset;
 
 	FAIAttackFinished OnAttackFinished;
 	FAIPatternAttackFinished OnPatternAttackFinished;

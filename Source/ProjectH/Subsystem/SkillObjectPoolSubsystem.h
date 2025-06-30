@@ -28,9 +28,6 @@ public:
 
 
 protected:
-
-	UPROPERTY(EditDefaultsOnly, Category = Pooling)
-	TArray<FSkillObjectPoolData> SkillObjectPoolDataset;
 	
 	TMap<TSubclassOf<ASkillObjectBase>, FSkillObjectPoolData> SkillObjectPoolMap;
 
@@ -48,12 +45,6 @@ public:
 	 * Must be called Server
 	 * @param PoolData - 초기화할 풀 설정
 	 */
-	void InitializeSinglePool(FSkillObjectPoolData& PoolData);
-
-private:
-	/**
-	 * Must be called Server
-	 */
-	void InitializePools();
+	void InitializeSinglePool(FSkillObjectPoolData& PoolData, APawn* InPawn);
 	
 };

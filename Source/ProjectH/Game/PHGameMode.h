@@ -63,9 +63,6 @@ public:
 
 	void SendStartGame();
 
-	UPROPERTY(VisibleAnywhere, Category = Subsystems)
-	TSubclassOf<USkillObjectPoolSubsystem> SkillObjectPoolSubsystem;
-
 	//캐릭터 선택 함수.
 	void PlayerSelectCharacter(APlayerController* InPC, EClassType ClassType);
 

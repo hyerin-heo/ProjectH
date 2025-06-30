@@ -7,7 +7,7 @@ bool USkillObjectPoolSubsystem::ShouldCreateSubsystem(UObject* Outer) const
 {
 	// 게임 월드에서만 생성되도록.
 	UWorld* World = Cast<UWorld>(Outer);
-	if (World && World->IsGameWorld() && !SkillObjectPoolDataset.IsEmpty())
+	if (World && World->IsGameWorld())
 	{
 		return Super::ShouldCreateSubsystem(Outer);
 	}
@@ -20,13 +20,6 @@ void USkillObjectPoolSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 	UE_LOG(LogTemp, Log, TEXT("USkillObjectPoolSubsystem initialized. Role: %s"),
 	       GetWorld()->GetNetMode() == NM_DedicatedServer ? TEXT("Dedicated Server") :
 	       GetWorld()->GetNetMode() == NM_ListenServer ? TEXT("Listen Server") : TEXT("Client"));
-
-	// 클라이언트는 서버가 스폰한 풀을 복제하도록 
-	// if (GetWorld()->GetNetMode() == NM_DedicatedServer || GetWorld()->GetNetMode() == NM_ListenServer
-	// 	|| GetWorld()->GetNetMode() == NM_Standalone)
-	// {
-		InitializePools();
-	// }
 }
 
 void USkillObjectPoolSubsystem::Deinitialize()
@@ -118,26 +111,7 @@ ASkillObjectBase* USkillObjectPoolSubsystem::SpawnSkillObject(const TSubclassOf<
 	return nullptr;
 }
 
-void USkillObjectPoolSubsystem::InitializePools()
-{
-	UWorld* World = GetWorld();
-	if (!World)
-	{
-		UE_LOG(LogTemp, Error, TEXT("USkillObjectPoolSubsystem: Invalid World during InitializePools."));
-		return;
-	}
-
-	SkillObjectPoolMap.Empty();
-
-	for (FSkillObjectPoolData ConfigData : SkillObjectPoolDataset)
-	{
-		InitializeSinglePool(ConfigData);
-	}
-
-	UE_LOG(LogTemp, Log, TEXT("Initialized %d SkillObject pools based on configs."), SkillObjectPoolMap.Num());
-}
-
-void USkillObjectPoolSubsystem::InitializeSinglePool(FSkillObjectPoolData& PoolData)
+void USkillObjectPoolSubsystem::InitializeSinglePool(FSkillObjectPoolData& PoolData, APawn* InPawn)
 {
 	if (!PoolData.SkillObjectClass)
 	{
@@ -164,6 +138,9 @@ void USkillObjectPoolSubsystem::InitializeSinglePool(FSkillObjectPoolData& PoolD
 		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 		// 스폰 실패 시에도 크래시 방지
 		SpawnParams.bNoFail = true;
+		SpawnParams.Instigator = InPawn->GetInstigator();
+		SpawnParams.Owner = InPawn;
+		// SpawnParams.
 
 		FVector SpawnLocation = FVector::Zero();
 		FRotator SpawnRotation = FRotator::ZeroRotator;
@@ -173,6 +150,7 @@ void USkillObjectPoolSubsystem::InitializeSinglePool(FSkillObjectPoolData& PoolD
 		if (NewSkillObject)
 		{
 			// 스폰 후 비활성화
+			NewSkillObject->SetReplicates(true);
 			NewSkillObject->SetActorHiddenInGame(true);
 			NewSkillObject->SetActorEnableCollision(false);
 			NewSkillObject->SetActorTickEnabled(false);

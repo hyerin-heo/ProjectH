@@ -176,6 +176,19 @@ void APHCharacterBase::PostInitializeComponents()
 void APHCharacterBase::BeginPlay()
 {
 	Super::BeginPlay();
+
+	if (HasAuthority())
+	{
+		USkillObjectPoolSubsystem* PoolSubsystem = USkillObjectPoolSubsystem::Get(this);
+		if (!PoolSubsystem)
+		{
+			return;
+		}
+		for (auto SO : SkillObjectPoolDataset)
+		{
+			PoolSubsystem->InitializeSinglePool(SO, this);
+		}
+	}
 }
 
 //Owner가 빙의 되는 함수.(클라이언트에서는 호출이 안된다.)

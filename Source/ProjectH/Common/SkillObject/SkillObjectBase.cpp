@@ -47,10 +47,20 @@ void ASkillObjectBase::BeginPlay()
 	Super::BeginPlay();
 	LifeSpanDeltaTime = 0.f;
 	LifeSpan = 0.f;
+	// if (!HasAuthority())
+	{
+		PH_LOG(LogPHGameFlow, Warning, TEXT("SpawnSkillObject Name: %s"), *GetName());	
+	}
+}
+
+void ASkillObjectBase::PostNetInit()
+{
+	Super::PostNetInit();
+	PH_LOG(LogPHGameFlow, Warning, TEXT("Name : %s"), *GetName());
 }
 
 void ASkillObjectBase::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp,
-	FVector NormalImpulse, const FHitResult& Hit)
+                             FVector NormalImpulse, const FHitResult& Hit)
 {
 	if (GetLocalRole() == ROLE_Authority)
 	{

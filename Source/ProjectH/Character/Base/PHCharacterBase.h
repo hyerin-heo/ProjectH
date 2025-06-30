@@ -10,6 +10,7 @@
 #include "Interface/Character/PHCharacterWidgetInterface.h"
 #include "PHCharacterBase.generated.h"
 
+struct FSkillObjectPoolData;
 class APHProjectileSkillObject;
 class ASkillObjectBase;
 DECLARE_DELEGATE_TwoParams(FOnMontageEnd, UAnimMontage*, bool);
@@ -154,6 +155,9 @@ public:
 	void OnRep_ActionTargetRotation();
 	
 protected:
+
+	UPROPERTY(EditDefaultsOnly, Category = Pooling)
+	TArray<FSkillObjectPoolData> SkillObjectPoolDataset;
 
 	virtual void OnHitEnemy(const FHitResult& SweepResult);
 	

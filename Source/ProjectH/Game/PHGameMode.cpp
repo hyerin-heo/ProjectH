@@ -56,15 +56,6 @@ void APHGameMode::Logout(AController* Exiting)
 void APHGameMode::InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage)
 {
 	Super::InitGame(MapName, Options, ErrorMessage);
-	if (SkillObjectPoolSubsystem && GetWorld())
-	{
-		USkillObjectPoolSubsystem* MyPooledSubsystem = GetWorld()->GetSubsystem<USkillObjectPoolSubsystem>();
-		if (MyPooledSubsystem && MyPooledSubsystem->GetClass() != SkillObjectPoolSubsystem)
-		{
-			UE_LOG(LogTemp, Warning, TEXT("World Subsystem does not match configured class! Expected %s, got %s"),
-				*SkillObjectPoolSubsystem->GetName(), *MyPooledSubsystem->GetClass()->GetName());
-		}
-	}
 }
 
 void APHGameMode::StartPlay()

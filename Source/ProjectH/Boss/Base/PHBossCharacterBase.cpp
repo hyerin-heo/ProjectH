@@ -438,6 +438,19 @@ void APHBossCharacterBase::BeginPlay()
 
         GetCharacterMovement()->MaxWalkSpeed = Speed;
     }
+
+    if (HasAuthority())
+    {
+        USkillObjectPoolSubsystem* PoolSubsystem = USkillObjectPoolSubsystem::Get(this);
+        if (!PoolSubsystem)
+        {
+        	return;
+        }
+        for (auto SO : SkillObjectPoolDataset)
+        {
+        	PoolSubsystem->InitializeSinglePool(SO, this);
+        }
+    }
 }
 
 void APHBossCharacterBase::SetAIAttackDelegate(const FAIAttackFinished& InOnAttackFinished)
