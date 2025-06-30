@@ -17,7 +17,8 @@ APHDragonNiagaraSkillObject::APHDragonNiagaraSkillObject()
 
 	NiagaraComponent2->SetIsReplicated(true);
 	SetActorEnableCollision(false);
-	SetReplicates(true);
+	//SetReplicates(true);
+	bReplicates = true;
 	
 }
 
