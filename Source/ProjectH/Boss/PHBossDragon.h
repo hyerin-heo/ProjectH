@@ -53,6 +53,8 @@ protected:
 	TMap<EDragonSkillObjectType, TSubclassOf<ASkillObjectBase>> SkillObjectsMap;
 	
 	FTimerHandle Pattern1TimerHandle;
+	FTimerHandle Pattern2TimerHandle;
+	FTimerHandle Pattern4TimerHandle;
 	uint8 InnerStep = 0;
 	
 };

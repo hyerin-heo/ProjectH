@@ -39,6 +39,7 @@ ASkillObjectBase::ASkillObjectBase()
 	InitialLifeSpan = 0.0f;
 
 	CurrentHitType = ESkillObjectHitType::NormalHit;
+	bAlwaysRelevant = true;
 }
 
 // Called when the game starts or when spawned

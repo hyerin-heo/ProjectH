@@ -29,8 +29,6 @@ public:
 	void ServerRPCHealTarget(APHCharacterBase* InHealTargetCharacter);
 	UFUNCTION(Server, Unreliable)
 	void ServerRPCAllHealTarget();
-	UFUNCTION(Server, Unreliable)
-	void ServerRPCReviveTarget(APHCharacterBase* InReviveTargetCharacter);
 	
 
 	UFUNCTION(NetMulticast, Unreliable)

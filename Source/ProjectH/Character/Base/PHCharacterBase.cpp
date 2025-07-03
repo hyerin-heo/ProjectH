@@ -37,7 +37,7 @@ APHCharacterBase::APHCharacterBase(const FObjectInitializer& ObjectInitializer)
 	// SpringArm
 	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
 	CameraBoom->SetupAttachment(RootComponent);
-	CameraBoom->TargetArmLength = 1200.0f;
+	CameraBoom->TargetArmLength = 2000.0f;
 	CameraBoom->bUsePawnControlRotation = false;
 	CameraBoom->SetUsingAbsoluteRotation(true); //스프링암의 회전이 Root컴포넌트와 상위컴포넌트회전을 따라가지않고 월드좌표계회전을 따라가도록.
 	CameraBoom->SetRelativeRotation(FRotator(-60.0f, 50.0f, 0.0f));
@@ -778,6 +778,16 @@ void APHCharacterBase::ServerRPCNotifyRevive_Implementation()
 		// GameMode에 이 캐릭터가 다시 살았다는걸 알린다.
 		GameMode->CharacterReVive(Cast<APlayerController>(GetController()));
 	}
+}
+
+void APHCharacterBase::ServerRPCReviveTarget_Implementation(APHCharacterBase* InReviveTargetCharacter)
+{
+	if (!InReviveTargetCharacter || !InReviveTargetCharacter->GetIsDead())
+	{
+		return;
+	}
+
+	InReviveTargetCharacter->MulticastRPC_Revive();
 }
 
 void APHCharacterBase::OnRep_ActionTargetRotation()

@@ -103,17 +103,16 @@ void APHBossDragon::Pattern1HitCheck(const FBossPatternInfo& PatternInfo, const 
 
 void APHBossDragon::Pattern2HitCheck(const FBossPatternInfo& PatternInfo, const uint8& Step)
 {
-	GetWorld()->GetTimerManager().SetTimer(Pattern1TimerHandle, FTimerDelegate::CreateLambda([&]()
+	GetWorld()->GetTimerManager().SetTimer(Pattern2TimerHandle, FTimerDelegate::CreateLambda([&]()
 	{
 		if (!bIsPattern)
 		{
-			GetWorld()->GetTimerManager().ClearTimer(Pattern1TimerHandle);
+			GetWorld()->GetTimerManager().ClearTimer(Pattern2TimerHandle);
 			InnerStep = 0;
 			return;
 		}
 
 		const TSubclassOf<ASkillObjectBase>& SkillClass = SkillObjectsMap.FindChecked(EDragonSkillObjectType::DragonSkillObject1);
-		const FVector BoneLocation = GetMesh()->GetBoneLocation(TEXT("Extra_Tongue3_Joint"), EBoneSpaces::WorldSpace);
 		const FVector BaseSpawnLocation = FVector(GetActorLocation().X, GetActorLocation().Y, GetActorLocation().Z - 70.0f);
 		const float BaseSpeed = 1000.f;
 		const float BaseLifetime = 3.f;
@@ -175,11 +174,11 @@ void APHBossDragon::Pattern4HitCheck(const FBossPatternInfo& PatternInfo, const 
 {
 	const TSubclassOf<ASkillObjectBase>& SkillClass = SkillObjectsMap.FindChecked(EDragonSkillObjectType::DragonSkillObject3);
 
-	GetWorld()->GetTimerManager().SetTimer(Pattern1TimerHandle, FTimerDelegate::CreateLambda([&]()
+	GetWorld()->GetTimerManager().SetTimer(Pattern4TimerHandle, FTimerDelegate::CreateLambda([&]()
 	{
 		if (!bIsPattern)
 		{
-			GetWorld()->GetTimerManager().ClearTimer(Pattern1TimerHandle);
+			GetWorld()->GetTimerManager().ClearTimer(Pattern4TimerHandle);
 			return;
 		}
 		

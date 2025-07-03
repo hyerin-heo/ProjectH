@@ -134,6 +134,8 @@ public:
 	void ServerRPCNotifyDeath();
 	UFUNCTION(Server, Reliable)
 	void ServerRPCNotifyRevive();
+	UFUNCTION(Server, Unreliable)
+	void ServerRPCReviveTarget(APHCharacterBase* InReviveTargetCharacter);
 	
 
 	//clientRPC

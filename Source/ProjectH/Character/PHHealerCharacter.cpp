@@ -139,7 +139,7 @@ void APHHealerCharacter::Skill1()
 
 		FHitResult Hit;
 		FCollisionQueryParams Params;
-		float SphereRadius = 90.0f; // ← 반경 조절 가능
+		float SphereRadius = 120.0f; // ← 반경 조절 가능
 		
 
 		if (GetWorld()->SweepSingleByChannel(Hit, TraceStart, TraceEnd, FQuat::Identity,ECC_Visibility,FCollisionShape::MakeSphere(SphereRadius), Params))
@@ -262,7 +262,7 @@ void APHHealerCharacter::Skill4()
 
 		FHitResult Hit;
 		FCollisionQueryParams Params;
-		float SphereRadius = 100.0f; // ← 반경 조절 가능
+		float SphereRadius = 120.0f; // ← 반경 조절 가능
 		
 
 		if (GetWorld()->SweepSingleByChannel(Hit, TraceStart, TraceEnd, FQuat::Identity,ECC_Visibility,FCollisionShape::MakeSphere(SphereRadius), Params))
@@ -399,15 +399,15 @@ void APHHealerCharacter::ServerRPCAllHealTarget_Implementation()
 	}
 }
 
-void APHHealerCharacter::ServerRPCReviveTarget_Implementation(APHCharacterBase* InReviveTargetCharacter)
-{
-	if (!InReviveTargetCharacter || !InReviveTargetCharacter->GetIsDead())
-	{
-		return;
-	}
-
-	InReviveTargetCharacter->MulticastRPC_Revive();
-}
+// void APHHealerCharacter::ServerRPCReviveTarget_Implementation(APHCharacterBase* InReviveTargetCharacter)
+// {
+// 	if (!InReviveTargetCharacter || !InReviveTargetCharacter->GetIsDead())
+// 	{
+// 		return;
+// 	}
+//
+// 	InReviveTargetCharacter->MulticastRPC_Revive();
+// }
 
 void APHHealerCharacter::Multicast_SetSkill3ObjectActive_Implementation(bool bActive)
 {
