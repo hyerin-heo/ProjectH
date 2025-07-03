@@ -172,8 +172,6 @@ void APHBossDragon::Pattern3HitCheck(const FBossPatternInfo& PatternInfo, const 
 
 void APHBossDragon::Pattern4HitCheck(const FBossPatternInfo& PatternInfo, const uint8& Step)
 {
-	const TSubclassOf<ASkillObjectBase>& SkillClass = SkillObjectsMap.FindChecked(EDragonSkillObjectType::DragonSkillObject3);
-
 	GetWorld()->GetTimerManager().SetTimer(Pattern4TimerHandle, FTimerDelegate::CreateLambda([&]()
 	{
 		if (!bIsPattern)
