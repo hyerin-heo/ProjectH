@@ -137,11 +137,17 @@ void APHTankerCharacter::OnShieldOverlap(UPrimitiveComponent* OverlappedComponen
 		//같은편이 쏜거임.
 		return;
 	}
-	// @PHTODO 방향 계산하여 쉴드 방향으로 맞았는지 쉴드 뒷방향으로 맞았는지 확인 필요.
-	ASkillObjectBase* SkillObject = Cast<ASkillObjectBase>(OtherActor);
-	if (SkillObject)
+	FVector ShieldForwardVector = ShieldColliderComponent->GetForwardVector(); 
+	FVector DamageOrigin = OtherActor->GetActorForwardVector();
+	float DotProduct = FVector::DotProduct(ShieldForwardVector, DamageOrigin);
+	if (DotProduct < KINDA_SMALL_NUMBER)
 	{
-		SkillObject->ResetProjectile();
+		// 피해가 방패의 앞쪽에서 오는 경우
+		ASkillObjectBase* SkillObject = Cast<ASkillObjectBase>(OtherActor);
+		if (SkillObject)
+		{
+			SkillObject->ResetProjectile();
+		}
 	}
 }
 
